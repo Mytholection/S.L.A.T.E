@@ -38,7 +38,7 @@ pip install -e ".[dev]"
 python -m pytest tests/ -v
 
 # Check system status
-python aurora_core/slatepi_status.py --quick
+python slate/slate_status.py --quick
 ```
 
 ## Code Style
@@ -88,7 +88,7 @@ from fastapi import FastAPI
 WORKSPACE_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(WORKSPACE_ROOT))
 
-from aurora_core import get_status
+from slate import get_status
 ```
 
 ### File Locking
@@ -130,10 +130,10 @@ python -m pytest tests/ -v
 python -m pytest tests/test_greeting.py -v
 
 # With coverage
-python -m pytest tests/ --cov=aurora_core -q
+python -m pytest tests/ --cov=slate -q
 
 # Coverage report
-python -m pytest tests/ --cov=aurora_core --cov-report=html
+python -m pytest tests/ --cov=slate --cov-report=html
 ```
 
 ### Test Structure
@@ -150,7 +150,7 @@ tests/
 
 ```python
 import pytest
-from aurora_core.greeting import greet
+from slate.greeting import greet
 
 class TestGreeting:
     """Tests for greeting module."""
@@ -176,7 +176,7 @@ class TestGreeting:
 
 ### Coverage Requirements
 
-- Target: 50%+ coverage for `aurora_core/` and `slate_core/`
+- Target: 50%+ coverage for `slate/` and `slate_core/`
 - All new code must include tests
 - Critical paths require higher coverage
 
@@ -217,16 +217,16 @@ chore: Update dependencies
 ## Project Structure
 
 ```
-aurora_core/          # Core modules
+slate/                # Core modules
   __init__.py         # Package exports
   action_guard.py     # Security enforcement
   ollama_client.py    # Ollama integration
   foundry_local.py    # Foundry Local client
   unified_ai_backend.py # AI routing
-  slatepi_*.py        # CLI tools
+  slate_*.py          # CLI tools
 
 agents/               # Agent implementations
-  aurora_dashboard_server.py
+  slate_dashboard_server.py
 
 slate_core/           # Shared infrastructure
   file_lock.py        # File locking
@@ -266,14 +266,14 @@ import pytest
 def test_new_feature_basic():
     """Test basic functionality."""
     # This will fail until implemented
-    from aurora_core.new_feature import do_thing
+    from slate.new_feature import do_thing
     assert do_thing() == "expected result"
 ```
 
 ### 3. Implement Feature
 
 ```python
-# aurora_core/new_feature.py
+# slate/new_feature.py
 """New feature module."""
 
 def do_thing() -> str:
@@ -288,7 +288,7 @@ def do_thing() -> str:
 ### 4. Export from Package
 
 ```python
-# aurora_core/__init__.py
+# slate/__init__.py
 from .new_feature import do_thing
 
 __all__ = [
@@ -316,10 +316,10 @@ logging.basicConfig(level=logging.DEBUG)
 
 ```bash
 # Full status
-python aurora_core/slatepi_status.py
+python slate/slate_status.py
 
 # Check specific integration
-python aurora_core/slatepi_runtime.py --check ollama
+python slate/slate_runtime.py --check ollama
 ```
 
 ### Common Debug Points

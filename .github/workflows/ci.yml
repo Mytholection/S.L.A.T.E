@@ -47,8 +47,8 @@ jobs:
         continue-on-error: true
       - name: Run smoke tests
         run: |
-          python aurora_core/build_smoke_tests.py --json > smoke_test_results.json
-          python aurora_core/build_smoke_tests.py
+          python slate/build_smoke_tests.py --json > smoke_test_results.json
+          python slate/build_smoke_tests.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -66,9 +66,9 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - run: pip install ruff
       - name: Ruff lint
-        run: ruff check aurora_core/ agents/ --output-format=github || true
+        run: ruff check slate/ agents/ --output-format=github || true
       - name: Ruff format check
-        run: ruff format --check aurora_core/ agents/ --diff || true
+        run: ruff format --check slate/ agents/ --diff || true
 
   unit-tests:
     name: Unit Tests
@@ -91,7 +91,7 @@ jobs:
         run: python -m pytest tests/ -v --tb=short --ignore=tests/integration/ -x
         continue-on-error: true
       - name: Generate coverage
-        run: python -m pytest tests/ --cov=aurora_core --cov-report=xml --cov-report=html -q
+        run: python -m pytest tests/ --cov=slate --cov-report=xml --cov-report=html -q
         continue-on-error: true
       - uses: actions/upload-artifact@v4
         if: always()
@@ -120,15 +120,15 @@ jobs:
         continue-on-error: true
       - name: Check version
         run: |
-          python aurora_core/build_versioning.py --version
-          python aurora_core/build_versioning.py --stats
+          python slate/build_versioning.py --version
+          python slate/build_versioning.py --stats
       - name: Verify SDK imports
         run: |
-          python -c "import aurora_core; print(f'SDK v{aurora_core.__version__}')"
-          python -c "import aurora_core.action_guard; print('action_guard OK')"
-          python -c "import aurora_core.smart_task_router; print('smart_task_router OK')"
-          python -c "import aurora_core.slate_status; print('slate_status OK')"
-          python -c "import aurora_core.feature_flags; print('feature_flags OK')"
+          python -c "import slate; print(f'SDK v{slate.__version__}')"
+          python -c "import slate.action_guard; print('action_guard OK')"
+          python -c "import slate.smart_task_router; print('smart_task_router OK')"
+          python -c "import slate.slate_status; print('slate_status OK')"
+          python -c "import slate.feature_flags; print('feature_flags OK')"
 
   security:
     name: Security Scan
@@ -142,7 +142,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - run: pip install bandit safety
       - name: Bandit scan
-        run: bandit -r aurora_core/ agents/ -ll -ii -x "**/test*" -f json -o bandit-results.json || true
+        run: bandit -r slate/ agents/ -ll -ii -x "**/test*" -f json -o bandit-results.json || true
       - name: Safety check
         run: |
           pip install -r requirements.txt

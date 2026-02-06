@@ -75,13 +75,13 @@ fork_security:
   protected_files:
     - .github/workflows/*
     - .github/CODEOWNERS
-    - aurora_core/action_guard.py
-    - aurora_core/sdk_source_guard.py
+    - slate/action_guard.py
+    - slate/sdk_source_guard.py
 
   # Required for valid fork contribution
   prerequisites:
-    - aurora_core/__init__.py
-    - aurora_core/slate_status.py
+    - slate/__init__.py
+    - slate/slate_status.py
     - current_tasks.json
     - pyproject.toml
     - CLAUDE.md
@@ -103,7 +103,7 @@ fork_security:
 
 # User Fork Management
 fork_manager:
-  script: aurora_core/slate_fork_manager.py
+  script: slate/slate_fork_manager.py
   upstream: https://github.com/SynchronizedLivingArchitecture/S.L.A.T.E..git
   local_config: .slate_fork/config.json
   local_state: .slate_fork/state.json

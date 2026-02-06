@@ -3,13 +3,13 @@
 # Format: path @owner
 
 # Core SLATE System - Requires maintainer review
-/aurora_core/                    @SynchronizedLivingArchitecture/slate-maintainers
+/slate/                          @SynchronizedLivingArchitecture/slate-maintainers
 /slate_core/                     @SynchronizedLivingArchitecture/slate-maintainers
 /agents/                         @SynchronizedLivingArchitecture/slate-maintainers
 
 # Security-Critical Files - Strict review required
-/aurora_core/action_guard.py    @SynchronizedLivingArchitecture/slate-security
-/aurora_core/sdk_source_guard.py @SynchronizedLivingArchitecture/slate-security
+/slate/action_guard.py           @SynchronizedLivingArchitecture/slate-security
+/slate/sdk_source_guard.py       @SynchronizedLivingArchitecture/slate-security
 /.github/workflows/              @SynchronizedLivingArchitecture/slate-security
 /pyproject.toml                  @SynchronizedLivingArchitecture/slate-maintainers
 /requirements.txt                @SynchronizedLivingArchitecture/slate-security

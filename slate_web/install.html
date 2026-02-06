@@ -444,7 +444,7 @@ function renderSummary(st) {
     const ok = st.steps.filter(s => s.status === 'success').length;
     const warn = st.steps.filter(s => s.status === 'warning').length;
     title.innerHTML = '<span style="color:var(--success)">✓ Installation Complete</span>';
-    detail.innerHTML = `SLATE v${st.slate_version || '?'} — ${ok} passed` + (warn ? `, ${warn} warnings` : '') + `<br>Ready to use: <code>python aurora_core/slate_status.py --quick</code>`;
+    detail.innerHTML = `SLATE v${st.slate_version || '?'} — ${ok} passed` + (warn ? `, ${warn} warnings` : '') + `<br>Ready to use: <code>python slate/slate_status.py --quick</code>`;
   } else {
     card.classList.add('failed');
     const fail = st.steps.filter(s => s.status === 'failed').length;

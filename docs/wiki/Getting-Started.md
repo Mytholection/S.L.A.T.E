@@ -62,7 +62,7 @@ This script will:
 
 ```bash
 # Check system status
-python aurora_core/slatepi_status.py --quick
+python slate/slate_status.py --quick
 ```
 
 Expected output:
@@ -79,7 +79,7 @@ Status: Ready
 ### Start the Dashboard
 
 ```bash
-python agents/aurora_dashboard_server.py
+python agents/slate_dashboard_server.py
 ```
 
 Open your browser to: http://127.0.0.1:8080
@@ -87,7 +87,7 @@ Open your browser to: http://127.0.0.1:8080
 ### Check All Integrations
 
 ```bash
-python aurora_core/slatepi_runtime.py --check-all
+python slate/slate_runtime.py --check-all
 ```
 
 This verifies:
@@ -124,7 +124,7 @@ Tasks are managed in `current_tasks.json`:
 ### Using Python API
 
 ```python
-from aurora_core import create_task, get_tasks
+from slate import create_task, get_tasks
 
 # Create a new task
 task = create_task(
@@ -184,13 +184,13 @@ SLATE automatically detects your hardware. For manual optimization:
 
 ```bash
 # Detect hardware capabilities
-python aurora_core/slatepi_hardware_optimizer.py
+python slate/slate_hardware_optimizer.py
 
 # Install optimal PyTorch for your GPU
-python aurora_core/slatepi_hardware_optimizer.py --install-pytorch
+python slate/slate_hardware_optimizer.py --install-pytorch
 
 # Apply runtime optimizations
-python aurora_core/slatepi_hardware_optimizer.py --optimize
+python slate/slate_hardware_optimizer.py --optimize
 ```
 
 ## Next Steps

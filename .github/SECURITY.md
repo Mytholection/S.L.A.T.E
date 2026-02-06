@@ -71,13 +71,13 @@ All checks must pass before review.
 
 ## Security Features
 
-### ActionGuard (`aurora_core/action_guard.py`)
+### ActionGuard (`slate/action_guard.py`)
 - Validates all agent actions before execution
 - Blocks dangerous operations (rm -rf, format, etc.)
 - Rate limits API calls
 - Logs all security decisions
 
-### SDK Source Guard (`aurora_core/sdk_source_guard.py`)
+### SDK Source Guard (`slate/sdk_source_guard.py`)
 - Validates package publishers
 - Blocks typosquatting packages
 - Enforces trusted sources only

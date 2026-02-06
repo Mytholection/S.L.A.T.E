@@ -63,10 +63,10 @@ source .venv/bin/activate  # Linux/macOS
 pip install -e ".[dev]"
 
 # Initialize fork manager
-python aurora_core/slate_fork_manager.py --init --name "Your Name" --email "your@email.com"
+python slate/slate_fork_manager.py --init --name "Your Name" --email "your@email.com"
 
 # Set up your fork URL
-python aurora_core/slate_fork_manager.py --setup-fork https://github.com/YOUR-USERNAME/S.L.A.T.E..git
+python slate/slate_fork_manager.py --setup-fork https://github.com/YOUR-USERNAME/S.L.A.T.E..git
 ```
 
 ## Making Contributions
@@ -83,7 +83,7 @@ git fetch upstream
 git merge upstream/main
 
 # Or use the fork manager
-python aurora_core/slate_fork_manager.py --sync
+python slate/slate_fork_manager.py --sync
 ```
 
 ### 2. Create a Feature Branch
@@ -95,19 +95,19 @@ git checkout -b feature/your-feature-name
 Or use the fork manager:
 
 ```bash
-python aurora_core/slate_fork_manager.py --contribute "your-feature" --title "Add feature X"
+python slate/slate_fork_manager.py --contribute "your-feature" --title "Add feature X"
 ```
 
 ### 3. Make Your Changes
 
 - Follow the [Development Guide](Development)
 - Run tests: `python -m pytest tests/ -v`
-- Validate: `python aurora_core/slate_fork_manager.py --validate`
+- Validate: `python slate/slate_fork_manager.py --validate`
 
 ### 4. Validate Before Pushing
 
 ```bash
-python aurora_core/slate_fork_manager.py --validate
+python slate/slate_fork_manager.py --validate
 ```
 
 This checks:
@@ -142,8 +142,8 @@ These files cannot be modified by contributors:
 |------|--------|
 | `.github/workflows/*` | Security-critical automation |
 | `.github/CODEOWNERS` | Access control |
-| `aurora_core/action_guard.py` | Security enforcement |
-| `aurora_core/sdk_source_guard.py` | Package validation |
+| `slate/action_guard.py` | Security enforcement |
+| `slate/sdk_source_guard.py` | Package validation |
 
 ### Security Requirements
 
@@ -235,7 +235,7 @@ Each SLATE user:
 
 Run locally:
 ```bash
-python aurora_core/slate_fork_manager.py --validate
+python slate/slate_fork_manager.py --validate
 ```
 
 Fix any errors shown.

@@ -59,7 +59,7 @@ This document describes the SLATE system architecture and core components.
 Handles inter-agent communication using pub/sub messaging.
 
 ```python
-from aurora_core import get_broker, create_event
+from slate import get_broker, create_event
 
 broker = get_broker()
 
@@ -88,7 +88,7 @@ broker.subscribe("tasks", handle_event)
 Vector-based memory system using ChromaDB.
 
 ```python
-from aurora_core import get_memory_manager
+from slate import get_memory_manager
 
 memory = get_memory_manager()
 
@@ -109,7 +109,7 @@ results = memory.search("authentication flow", top_k=5)
 Manages GPU workload distribution across devices.
 
 ```python
-from aurora_core import get_scheduler, ComputeType
+from slate import get_scheduler, ComputeType
 
 scheduler = get_scheduler()
 
@@ -135,7 +135,7 @@ print(f"GPU 0: {stats['gpu_0_utilization']}%")
 Response caching to reduce redundant API calls.
 
 ```python
-from aurora_core import LLMCache
+from slate import LLMCache
 
 cache = LLMCache()
 
@@ -212,7 +212,7 @@ Unified Backend
 ## Module Dependencies
 
 ```
-aurora_core/
+slate/
 ├── Core (no dependencies)
 │   ├── message_broker.py
 │   ├── file_lock.py
@@ -229,8 +229,8 @@ aurora_core/
 │   └── foundry_local.py      → llm_cache
 │
 ├── Agent Layer (depends on AI)
-│   ├── aurora_agent_v2.py → unified_ai_backend, rag_memory
-│   └── aurora_orchestrator.py → agent_v2
+│   ├── slate_agent_v2.py → unified_ai_backend, rag_memory
+│   └── slate_orchestrator.py → agent_v2
 │
 └── Tools (depends on various)
     ├── metrics_aggregator.py → gpu_scheduler
@@ -254,7 +254,7 @@ host = "127.0.0.1"  # Never "0.0.0.0"
 The `action_guard.py` module validates all agent actions:
 
 ```python
-from aurora_core.action_guard import validate_action
+from slate.action_guard import validate_action
 
 # Blocks dangerous operations
 result = validate_action("rm -rf /")  # Blocked
@@ -272,7 +272,7 @@ result = validate_action("pip install pkg")  # Allowed
 API endpoints are rate-limited:
 
 ```python
-from aurora_core import rate_limiter
+from slate import rate_limiter
 
 @rate_limiter.limit("10/minute")
 async def api_endpoint():

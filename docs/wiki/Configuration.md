@@ -46,7 +46,7 @@ SLATE_RATE_LIMIT_ENABLED=true
 Set the default Ollama model:
 
 ```python
-# In aurora_core/ollama_client.py
+# In slate/ollama_client.py
 DEFAULT_MODEL = "mistral-nemo"
 ```
 
@@ -106,7 +106,7 @@ SLATE automatically detects your GPU architecture:
 
 ```python
 # Check detected GPU
-python aurora_core/slatepi_hardware_optimizer.py --verbose
+python slate/slate_hardware_optimizer.py --verbose
 ```
 
 ### Manual GPU Selection
@@ -122,7 +122,7 @@ export CUDA_VISIBLE_DEVICES=0,1
 ### Memory Management
 
 ```python
-# In aurora_core/slatepi_hardware_optimizer.py
+# In slate/slate_hardware_optimizer.py
 GPU_MEMORY_CONFIGS = {
     "blackwell": {"fraction": 0.9, "allow_growth": True},
     "ada": {"fraction": 0.85, "allow_growth": True},
@@ -170,7 +170,7 @@ Configure agent task preferences in `current_tasks.json`:
 ### Port Configuration
 
 ```python
-# In agents/aurora_dashboard_server.py
+# In agents/slate_dashboard_server.py
 DEFAULT_PORT = 8080
 DEFAULT_HOST = "127.0.0.1"
 ```
@@ -191,7 +191,7 @@ RATE_LIMITS = {
 ### Collection Settings
 
 ```python
-# In aurora_core/rag_memory.py
+# In slate/rag_memory.py
 CHROMA_SETTINGS = {
     "collection_name": "slate_memory",
     "embedding_function": "default",
@@ -224,7 +224,7 @@ logging.CRITICAL # Critical failures
 ### Custom Log Format
 
 ```python
-# In aurora_core/__init__.py
+# In slate/__init__.py
 LOG_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
 ```
 
@@ -239,7 +239,7 @@ Logs are stored in:
 ### ActionGuard Settings
 
 ```python
-# In aurora_core/action_guard.py
+# In slate/action_guard.py
 BLOCKED_DOMAINS = [
     "api.openai.com",
     "api.anthropic.com",
@@ -289,12 +289,12 @@ Validate your configuration:
 
 ```bash
 # Check all settings
-python aurora_core/slatepi_runtime.py --check-all
+python slate/slate_runtime.py --check-all
 
 # Test specific component
-python aurora_core/slatepi_runtime.py --check ollama
-python aurora_core/slatepi_runtime.py --check gpu
-python aurora_core/slatepi_runtime.py --check chromadb
+python slate/slate_runtime.py --check ollama
+python slate/slate_runtime.py --check gpu
+python slate/slate_runtime.py --check chromadb
 ```
 
 ## Next Steps

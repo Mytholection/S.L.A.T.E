@@ -41,10 +41,10 @@ dev = [
 ]
 
 [project.scripts]
-slate-status = "aurora_core.slate_status:main"
-slate-runtime = "aurora_core.slate_runtime:main"
-slate-benchmark = "aurora_core.slate_benchmark:main"
-slate-hardware = "aurora_core.slate_hardware_optimizer:main"
+slate-status = "slate.slate_status:main"
+slate-runtime = "slate.slate_runtime:main"
+slate-benchmark = "slate.slate_benchmark:main"
+slate-hardware = "slate.slate_hardware_optimizer:main"
 
 [project.urls]
 Homepage = "https://github.com/SynchronizedLivingArchitecture/S.L.A.T.E."

@@ -22,13 +22,13 @@ Last updated: 2026-02-06
 
 ```powershell
 # Check provider status
-.\.venv\Scripts\python.exe aurora_core/foundry_local.py --check
+.\.venv\Scripts\python.exe slate/foundry_local.py --check
 
 # List all local models
-.\.venv\Scripts\python.exe aurora_core/foundry_local.py --models
+.\.venv\Scripts\python.exe slate/foundry_local.py --models
 
 # Generate with auto-provider selection
-.\.venv\Scripts\python.exe aurora_core/foundry_local.py --generate "your prompt"
+.\.venv\Scripts\python.exe slate/foundry_local.py --generate "your prompt"
 
 # Download Foundry Local models (run in PowerShell)
 foundry model download microsoft/Phi-3.5-mini-instruct-onnx
@@ -56,22 +56,22 @@ planning           -> speckit          (FREE)
 
 ```powershell
 # Check all backend status
-.\.venv\Scripts\python.exe aurora_core/unified_ai_backend.py --status
+.\.venv\Scripts\python.exe slate/unified_ai_backend.py --status
 
 # Execute task with auto-routing
-.\.venv\Scripts\python.exe aurora_core/unified_ai_backend.py --task "your task"
+.\.venv\Scripts\python.exe slate/unified_ai_backend.py --task "your task"
 ```
 
 **Key Files**:
-- `aurora_core/unified_ai_backend.py` - Central routing (Ollama, Foundry, Copilot, Claude)
-- `aurora_core/foundry_local.py` - Foundry Local + Ollama unified client
-- `aurora_core/inference_instructions.py` - ML-based code generation guidance
-- `aurora_core/action_guard.py` - Security (blocks paid APIs)
+- `slate/unified_ai_backend.py` - Central routing (Ollama, Foundry, Copilot, Claude)
+- `slate/foundry_local.py` - Foundry Local + Ollama unified client
+- `slate/inference_instructions.py` - ML-based code generation guidance
+- `slate/action_guard.py` - Security (blocks paid APIs)
 
 ## Project Structure
 
 ```text
-aurora_core/       # Core SLATE engine modules
+slate/             # Core SLATE engine modules
 agents/            # Agent implementations (ALPHA, BETA, GAMMA, DELTA)
 slate_core/        # Shared infrastructure (agents, locks, memory, GPU scheduler)
 specs/             # Active specifications
@@ -89,26 +89,26 @@ tests/             # Test suite
 ## Commands
 
 ```powershell
+# Start SLATE (dashboard + runner + workflow monitor)
+.\.venv\Scripts\python.exe slate/slate_orchestrator.py start
+
+# Check all services status
+.\.venv\Scripts\python.exe slate/slate_orchestrator.py status
+
+# Stop all SLATE services
+.\.venv\Scripts\python.exe slate/slate_orchestrator.py stop
+
+# Quick system status (auto-detects GPU, services)
+.\.venv\Scripts\python.exe slate/slate_status.py --quick
+
+# Workflow health (stale tasks, abandoned, duplicates)
+.\.venv\Scripts\python.exe slate/slate_workflow_manager.py --status
+
 # Run tests
 .\.venv\Scripts\python.exe -m pytest tests/ -v
 
-# Run with coverage
-.\.venv\Scripts\python.exe -m pytest tests/ --cov=aurora_core -q
-
 # Lint
 ruff check .
-
-# Start dashboard
-.\.venv\Scripts\python.exe agents/aurora_dashboard_server.py
-
-# Start orchestrator (prevents duplicate processes)
-.\.venv\Scripts\python.exe slate_core/slate_orchestrator.py start
-
-# Check SLATE status
-.\.venv\Scripts\python.exe aurora_core/slate_status.py --quick
-
-# Check task summary
-.\.venv\Scripts\python.exe aurora_core/slate_status.py --tasks
 ```
 
 ## Code Style
@@ -122,13 +122,13 @@ ruff check .
 
 - **All servers bind to `127.0.0.1` only** — never `0.0.0.0`
 - No external network calls unless explicitly requested by user
-- ActionGuard (`aurora_core/action_guard.py`) validates all agent actions
+- ActionGuard (`slate/action_guard.py`) validates all agent actions
 - Content Security Policy enforced — no external CDN/fonts
 - Rate limiting active on dashboard API endpoints
 
 ### SDK Source Guard (Trusted Publishers Only)
 
-SDKSourceGuard (`aurora_core/sdk_source_guard.py`) enforces that ALL packages come from trusted primary sources:
+SDKSourceGuard (`slate/sdk_source_guard.py`) enforces that ALL packages come from trusted primary sources:
 
 | Trusted Source | Examples |
 |----------------|----------|
@@ -142,13 +142,13 @@ SDKSourceGuard (`aurora_core/sdk_source_guard.py`) enforces that ALL packages co
 
 ```powershell
 # Check SDK security status
-.\.venv\Scripts\python.exe aurora_core/sdk_source_guard.py --report
+.\.venv\Scripts\python.exe slate/sdk_source_guard.py --report
 
 # Validate a specific package
-.\.venv\Scripts\python.exe aurora_core/sdk_source_guard.py --validate "some-package"
+.\.venv\Scripts\python.exe slate/sdk_source_guard.py --validate "some-package"
 
 # Check all requirements.txt packages
-.\.venv\Scripts\python.exe aurora_core/sdk_source_guard.py --check-requirements
+.\.venv\Scripts\python.exe slate/sdk_source_guard.py --check-requirements
 ```
 
 **Blocked Sources:**
@@ -178,7 +178,7 @@ Tasks with `assigned_to: "auto"` use ML-based smart routing.
 
 ## Test-Driven Development (Constitution Mandate)
 
-All code changes must be accompanied by tests. Target 50%+ coverage for `aurora_core/` and `slate_core/`.
+All code changes must be accompanied by tests. Target 50%+ coverage for `slate/` and `slate_core/`.
 
 ```text
 1. WRITE TEST → failing test defining expected behavior
@@ -253,7 +253,7 @@ SLATE uses a secure fork validation system for external contributions:
 
 1. Fork the repository from https://github.com/SynchronizedLivingArchitecture/S.L.A.T.E.
 2. Create a local SLATE installation with your own git
-3. Run `python aurora_core/slate_fork_manager.py --init` to set up
+3. Run `python slate/slate_fork_manager.py --init` to set up
 4. Make changes following SLATE prerequisites
 5. Submit PR - it will be validated by fork-validation workflow
 
@@ -271,3 +271,122 @@ Repository: https://github.com/SynchronizedLivingArchitecture/S.L.A.T.E.
 - Branch protection on `main` requires reviews and passing checks
 - CODEOWNERS enforces review requirements for critical paths
 - All PRs must pass SLATE compatibility checklist
+
+## GitHub Agentic Workflow System
+
+SLATE uses GitHub as an **agentic task execution platform**. The GitHub ecosystem manages the entire project lifecycle autonomously: issues → tasks → agent routing → workflow execution → PR completion.
+
+### Agentic Architecture
+
+```
+GitHub Issues/Tasks → current_tasks.json → Agent Assignment → Workflow Dispatch
+        ↓                     ↓                   ↓                    ↓
+    Tracking              Task Queue          ALPHA/BETA           Self-hosted
+                                             GAMMA/DELTA             Runner
+                                                  ↓                    ↓
+                                              AI Execution    →    PR/Commit
+```
+
+### Workflow Files
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `ci.yml` | Push/PR | Smoke tests, lint, unit tests, security |
+| `slate.yml` | Core path changes | Tech tree, task queue, agent validation |
+| `nightly.yml` | Daily 4am UTC | Full test suite, dependency audit |
+| `cd.yml` | Tags/main | Build EXE, create releases |
+| `fork-validation.yml` | Fork PRs | Security gate |
+
+### Auto-Configured Runner
+
+SLATE **auto-detects** and configures the GitHub Actions runner. No manual setup required:
+
+```powershell
+# Auto-detect runner, GPUs, and GitHub state
+.\.venv\Scripts\python.exe slate/slate_runner_manager.py --status
+
+# Auto-configure hooks, environment, and labels
+.\.venv\Scripts\python.exe slate/slate_runner_manager.py --setup
+
+# Dispatch a workflow for agentic execution
+.\.venv\Scripts\python.exe slate/slate_runner_manager.py --dispatch "ci.yml"
+```
+
+The runner manager automatically:
+- **Detects** GPU configuration (count, architecture, CUDA capability)
+- **Creates** pre-job hooks for environment setup
+- **Generates** labels (self-hosted, slate, gpu, cuda, blackwell, multi-gpu)
+- **Configures** SLATE workspace paths and venv
+
+### Workflow Management
+
+```powershell
+# Analyze task workflow health
+.\.venv\Scripts\python.exe slate/slate_workflow_manager.py --status
+
+# Auto-cleanup stale/abandoned/duplicate tasks
+.\.venv\Scripts\python.exe slate/slate_workflow_manager.py --cleanup
+
+# Check if workflow can accept new tasks
+.\.venv\Scripts\python.exe slate/slate_workflow_manager.py --enforce
+```
+
+Automatic rules:
+- **Stale** (in-progress > 4h) → auto-reset to pending
+- **Abandoned** (pending > 24h) → flagged for review
+- **Duplicates** → auto-archived
+- **Max concurrent** → 5 tasks before blocking
+
+## System Auto-Detection
+
+SLATE auto-detects all components on startup:
+
+```powershell
+# Full system auto-detection
+.\.venv\Scripts\python.exe slate/slate_status.py --quick
+
+# Runtime integration check
+.\.venv\Scripts\python.exe slate/slate_runtime.py --check-all
+
+# JSON for automation pipelines
+.\.venv\Scripts\python.exe slate/slate_status.py --json
+```
+
+### Auto-Detected Components
+
+| Component | Detection Method | Auto-Config |
+|-----------|------------------|-------------|
+| Python | Version check | Validates 3.11+ |
+| GPU | nvidia-smi | Compute cap, memory, architecture |
+| PyTorch | Import + CUDA | Version, device count |
+| Ollama | Service query | Model list |
+| GitHub Runner | .runner file | Labels, hooks, service |
+| venv | Path check | Activation |
+
+## System Services
+
+| Service | Port | Auto-Checked By |
+|---------|------|-----------------|
+| Dashboard | 8080 | `slate/slate_status.py` |
+| Ollama | 11434 | `slate/slate_status.py` |
+| Foundry Local | 5272 | `slate/slate_status.py` |
+| GitHub Runner | N/A | `slate/slate_runner_manager.py` |
+
+## Quick Reference
+
+```powershell
+# Full system status (auto-detects everything)
+.\.venv\Scripts\python.exe slate/slate_status.py --quick
+
+# Workflow health
+.\.venv\Scripts\python.exe slate/slate_workflow_manager.py --status
+
+# Runner status and auto-config
+.\.venv\Scripts\python.exe slate/slate_runner_manager.py --status
+
+# Run tests
+.\.venv\Scripts\python.exe -m pytest tests/ -v
+
+# Start dashboard
+.\.venv\Scripts\python.exe agents/slate_dashboard_server.py
+```

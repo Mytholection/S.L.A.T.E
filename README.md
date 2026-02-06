@@ -141,16 +141,16 @@ This will:
 
 ```bash
 # Quick status check
-python aurora_core/slatepi_status.py --quick
+python slate/slate_status.py --quick
 
 # Full system check
-python aurora_core/slatepi_runtime.py --check-all
+python slate/slate_runtime.py --check-all
 ```
 
 ### 4. Start the Dashboard
 
 ```bash
-python agents/aurora_dashboard_server.py
+python agents/slate_dashboard_server.py
 ```
 
 Open http://127.0.0.1:8080 in your browser.
@@ -177,7 +177,7 @@ Open http://127.0.0.1:8080 in your browser.
 ## Core Modules
 
 ```
-aurora_core/
+slate/
 ├── Core Infrastructure
 │   ├── message_broker.py      # Redis/memory pub-sub messaging
 │   ├── rag_memory.py          # ChromaDB vector memory
@@ -226,7 +226,7 @@ Tasks are automatically routed based on:
 
 ```python
 # Example: Create a task
-from aurora_core import create_task
+from slate import create_task
 
 task = create_task(
     title="Implement user authentication",
@@ -260,7 +260,7 @@ curl http://127.0.0.1:11434/api/tags
 foundry model download microsoft/Phi-3.5-mini-instruct-onnx
 
 # Check status
-python aurora_core/foundry_local.py --check
+python slate/foundry_local.py --check
 ```
 
 ### Provider Priority
@@ -296,52 +296,52 @@ The UI uses a modern glassmorphism design:
 
 ```bash
 # Quick status
-python aurora_core/slatepi_status.py --quick
+python slate/slate_status.py --quick
 
 # Task summary
-python aurora_core/slatepi_status.py --tasks
+python slate/slate_status.py --tasks
 
 # Full integration check
-python aurora_core/slatepi_runtime.py --check-all
+python slate/slate_runtime.py --check-all
 ```
 
 ### Hardware Commands
 
 ```bash
 # Detect hardware
-python aurora_core/slatepi_hardware_optimizer.py
+python slate/slate_hardware_optimizer.py
 
 # Install optimal PyTorch
-python aurora_core/slatepi_hardware_optimizer.py --install-pytorch
+python slate/slate_hardware_optimizer.py --install-pytorch
 
 # Apply optimizations
-python aurora_core/slatepi_hardware_optimizer.py --optimize
+python slate/slate_hardware_optimizer.py --optimize
 ```
 
 ### Benchmark Commands
 
 ```bash
 # Full benchmark
-python aurora_core/slatepi_benchmark.py
+python slate/slate_benchmark.py
 
 # CPU only
-python aurora_core/slatepi_benchmark.py --cpu-only
+python slate/slate_benchmark.py --cpu-only
 
 # Quick benchmark
-python aurora_core/slatepi_benchmark.py --quick
+python slate/slate_benchmark.py --quick
 ```
 
 ### AI Backend Commands
 
 ```bash
 # Check all backends
-python aurora_core/unified_ai_backend.py --status
+python slate/unified_ai_backend.py --status
 
 # Generate with specific backend
-python aurora_core/foundry_local.py --generate "Explain async/await"
+python slate/foundry_local.py --generate "Explain async/await"
 
 # List local models
-python aurora_core/foundry_local.py --models
+python slate/foundry_local.py --models
 ```
 
 ## Configuration
@@ -370,7 +370,7 @@ export SLATE_LOG_LEVEL=INFO
 ### Feature Flags
 
 ```python
-from aurora_core import is_enabled
+from slate import is_enabled
 
 if is_enabled("slate.new_router"):
     # Use new ML-based routing
@@ -442,6 +442,190 @@ Co-Authored-By: Your Name <email>
 - [ ] Multi-machine clustering
 - [ ] Custom model training
 - [ ] Plugin ecosystem
+
+## GitHub Agentic Workflow System
+
+SLATE uses GitHub as an **agentic task execution platform**. The entire project lifecycle is managed autonomously: issues become tasks, agents claim work, workflows execute, and PRs track completion.
+
+### Architecture
+
+```
+GitHub Issues → current_tasks.json → Agent Routing → Workflow Dispatch → PR/Commit
+     ↓                 ↓                  ↓                  ↓              ↓
+  Tracking         Task Queue         ALPHA/BETA        Self-hosted     Completion
+                                     GAMMA/DELTA          Runner
+```
+
+### Workflow Overview
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `ci.yml` | Push/PR | Smoke tests, linting, unit tests, security scans |
+| `slate.yml` | Push to core paths | SLATE-specific validation (tech tree, task queue, agents) |
+| `nightly.yml` | Daily at 4am UTC | Full test suite, dependency checks, SDK import audit |
+| `cd.yml` | Push to main/tags | Build EXE, create releases |
+| `fork-validation.yml` | Fork PRs | Security gate, prerequisite validation |
+
+### Auto-Configured Runner
+
+SLATE **automatically detects and configures** the GitHub Actions runner. No manual setup required:
+
+```bash
+# Check runner status, GPU config, and GitHub state
+python slate/slate_runner_manager.py --status
+
+# Auto-configure hooks, environment, and labels
+python slate/slate_runner_manager.py --setup
+
+# Dispatch a workflow for agentic execution
+python slate/slate_runner_manager.py --dispatch "ci.yml"
+
+# JSON output for automation
+python slate/slate_runner_manager.py --detect --json
+```
+
+The runner manager automatically:
+- **Detects** GPU configuration (count, architecture, CUDA capability)
+- **Creates** pre-job hooks for SLATE environment
+- **Generates** labels (self-hosted, slate, gpu, cuda, blackwell, multi-gpu)
+- **Configures** workspace paths and Python venv
+
+### Workflow Management
+
+```bash
+# Check workflow health and task status
+python slate/slate_workflow_manager.py --status
+
+# Auto-cleanup stale, abandoned, and duplicate tasks
+python slate/slate_workflow_manager.py --cleanup
+
+# Check if new tasks can be accepted
+python slate/slate_workflow_manager.py --enforce
+```
+
+Automatic task lifecycle:
+- **Stale tasks** (in-progress > 4h) → auto-reset to pending
+- **Abandoned tasks** (pending > 24h) → flagged for review
+- **Duplicates** → auto-archived
+- **Max concurrent** → 5 in-progress before blocking
+
+### Required Status Checks
+
+All PRs to `main` must pass:
+- CodeQL Advanced
+- SLATE Integration / SLATE Status Check
+- SLATE Integration / Tech Tree Validation
+- Fork Validation / Security Gate
+- Fork Validation / SLATE Prerequisites
+
+## Dual-Repository Development
+
+SLATE uses a dual-repo model for structured development:
+
+```
+SLATE (origin)         = Main repository (the product)
+       ↑
+       │ contribute-to-main.yml
+       │
+SLATE-BETA (beta)      = Developer fork
+```
+
+### Setup
+
+```bash
+# Verify remotes
+git remote -v
+# Should show:
+# origin  https://github.com/SynchronizedLivingArchitecture/S.L.A.T.E..git
+# beta    https://github.com/SynchronizedLivingArchitecture/S.L.A.T.E.-BETA.git
+
+# Add beta remote if missing
+git remote add beta https://github.com/SynchronizedLivingArchitecture/S.L.A.T.E.-BETA.git
+```
+
+### Development Workflow
+
+1. **Create feature branch**: `git checkout -b feature/my-feature`
+2. **Sync with main**: `git fetch origin && git merge origin/main`
+3. **Push to beta**: `git push beta HEAD:main`
+4. **Contribute to main**: Run `contribute-to-main.yml` workflow
+
+### Required Secrets
+
+Set `MAIN_REPO_TOKEN` in BETA repo (Settings → Secrets → Actions):
+- PAT with `repo` and `workflow` scope
+
+## System Architecture
+
+### Core Services
+
+| Service | Port | Purpose |
+|---------|------|---------|
+| Dashboard | 8080 | Web UI for monitoring |
+| Ollama | 11434 | Local LLM inference |
+| Foundry Local | 5272 | ONNX model inference |
+
+### Directory Structure
+
+```
+slate/                 # Core SDK modules
+agents/                # Agent implementations
+slate_core/            # Shared infrastructure
+slate/                 # SLATE workflow tools
+.github/               # CI/CD workflows
+actions-runner/        # Self-hosted runner (optional)
+  hooks/               # Pre/post job scripts
+  _work/               # Workflow workspace
+.slate_tech_tree/      # Tech tree state
+.slate_nemo/           # Nemo knowledge base
+.slate_errors/         # Error logs
+.slate_index/          # ChromaDB index
+```
+
+### Key Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `.github/slate.config.yaml` | SLATE system configuration |
+| `.github/workflows/*.yml` | CI/CD pipelines |
+| `current_tasks.json` | Active task queue |
+| `.slate_tech_tree/tech_tree.json` | Development roadmap |
+| `pyproject.toml` | Package configuration |
+
+## Fork Contribution System
+
+External contributors use a secure fork validation system:
+
+### Getting Started
+
+```bash
+# 1. Fork the repository on GitHub
+# 2. Clone your fork
+git clone https://github.com/YOUR-USERNAME/S.L.A.T.E..git
+
+# 3. Initialize SLATE workspace
+python slate/slate_fork_manager.py --init --name "Your Name" --email "you@example.com"
+
+# 4. Validate before PR
+python slate/slate_fork_manager.py --validate
+```
+
+### Security Checks
+
+Fork PRs must pass:
+- **Security Gate**: No workflow modifications
+- **SDK Source Guard**: Trusted publishers only
+- **SLATE Prerequisites**: Core modules valid
+- **ActionGuard Audit**: No security bypasses
+- **Malicious Code Scan**: No obfuscated code
+
+### Protected Files
+
+These cannot be modified by forks:
+- `.github/workflows/*`
+- `.github/CODEOWNERS`
+- `slate/action_guard.py`
+- `slate/sdk_source_guard.py`
 
 ## License
 

@@ -44,7 +44,7 @@
 # Component
 - name: 'component: sdk'
   color: '5319e7'
-  description: 'aurora_core SDK'
+  description: 'slate SDK'
 - name: 'component: dashboard'
   color: '006b75'
   description: 'Dashboard server'

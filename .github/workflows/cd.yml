@@ -67,9 +67,9 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
       - name: Run smoke tests
-        run: python aurora_core/build_smoke_tests.py
+        run: python slate/build_smoke_tests.py
       - name: Build EXE
-        run: pyinstaller Aurora.spec --noconfirm
+        run: pyinstaller slate.spec --noconfirm
       - name: Verify EXE
         run: |
           if (Test-Path "dist_v2/SLATEPI/SLATEPI.exe") {

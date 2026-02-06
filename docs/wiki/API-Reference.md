@@ -2,22 +2,22 @@
 
 Complete API documentation for SLATE modules.
 
-## Core Package (aurora_core)
+## Core Package (slate)
 
 ### Package Initialization
 
 ```python
-import aurora_core
+import slate
 
 # Package info
-print(aurora_core.__version__)  # "2.4.0"
-print(aurora_core.__author__)   # "SLATE Team"
+print(slate.__version__)  # "2.4.0"
+print(slate.__author__)   # "SLATE Team"
 ```
 
 ### Available Exports
 
 ```python
-from aurora_core import (
+from slate import (
     # Status functions
     get_status,
     get_quick_status,
@@ -45,7 +45,7 @@ from aurora_core import (
 Get comprehensive system status.
 
 ```python
-from aurora_core import get_status
+from slate import get_status
 
 status = get_status()
 print(status)
@@ -81,7 +81,7 @@ print(status)
 Get minimal status check.
 
 ```python
-from aurora_core import get_quick_status
+from slate import get_quick_status
 
 status = get_quick_status()
 # Returns: {"status": "ready", "version": "2.4.0"}
@@ -117,7 +117,7 @@ class Task:
 Retrieve all tasks from the queue.
 
 ```python
-from aurora_core import get_tasks
+from slate import get_tasks
 
 tasks = get_tasks()
 for task in tasks:
@@ -135,7 +135,7 @@ for task in tasks:
 Create a new task.
 
 ```python
-from aurora_core import create_task
+from slate import create_task
 
 task = create_task(
     title="Implement login feature",
@@ -161,7 +161,7 @@ print(f"Created task: {task['task_id']}")
 Mark a task as completed.
 
 ```python
-from aurora_core import complete_task
+from slate import complete_task
 
 result = complete_task(
     task_id="task_001",
@@ -184,7 +184,7 @@ result = complete_task(
 Generate text using the unified AI backend.
 
 ```python
-from aurora_core import generate
+from slate import generate
 
 response = generate(
     prompt="Write a Python function to calculate factorial",
@@ -224,7 +224,7 @@ print(response)
 Direct interface to Ollama.
 
 ```python
-from aurora_core.ollama_client import OllamaClient
+from slate.ollama_client import OllamaClient
 
 client = OllamaClient(
     host="127.0.0.1",
@@ -266,7 +266,7 @@ print(response)
 Interface to Foundry Local.
 
 ```python
-from aurora_core.foundry_local import FoundryClient
+from slate.foundry_local import FoundryClient
 
 client = FoundryClient(port=5272)
 
@@ -293,7 +293,7 @@ response = client.generate(
 Automatic routing across backends.
 
 ```python
-from aurora_core.unified_ai_backend import UnifiedBackend
+from slate.unified_ai_backend import UnifiedBackend
 
 backend = UnifiedBackend()
 
@@ -326,7 +326,7 @@ response = backend.generate(
 GPU detection and optimization.
 
 ```python
-from aurora_core.slatepi_hardware_optimizer import HardwareOptimizer
+from slate.slate_hardware_optimizer import HardwareOptimizer
 
 optimizer = HardwareOptimizer()
 
@@ -372,7 +372,7 @@ optimizer.apply_optimizations()
 Simple greeting function.
 
 ```python
-from aurora_core import greet
+from slate import greet
 
 message = greet("SLATE")
 print(message)  # "Hello, SLATE!"
@@ -383,7 +383,7 @@ print(message)  # "Hello, SLATE!"
 Calculate Fibonacci number.
 
 ```python
-from aurora_core import fibonacci
+from slate import fibonacci
 
 result = fibonacci(10)
 print(result)  # 55
@@ -431,7 +431,7 @@ curl -X POST http://127.0.0.1:8080/api/generate \
 ### Common Exceptions
 
 ```python
-from aurora_core.exceptions import (
+from slate.exceptions import (
     SlateError,           # Base exception
     BackendError,         # AI backend issues
     TaskError,            # Task queue issues

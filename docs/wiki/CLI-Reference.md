@@ -20,16 +20,16 @@ Check overall system status.
 
 ```bash
 # Quick status
-python aurora_core/slatepi_status.py --quick
+python slate/slate_status.py --quick
 
 # Full status with details
-python aurora_core/slatepi_status.py
+python slate/slate_status.py
 
 # Task summary
-python aurora_core/slatepi_status.py --tasks
+python slate/slate_status.py --tasks
 
 # JSON output
-python aurora_core/slatepi_status.py --json
+python slate/slate_status.py --json
 ```
 
 **Output Example:**
@@ -63,15 +63,15 @@ Verify all integrations.
 
 ```bash
 # Check all integrations
-python aurora_core/slatepi_runtime.py --check-all
+python slate/slate_runtime.py --check-all
 
 # Check specific integration
-python aurora_core/slatepi_runtime.py --check ollama
-python aurora_core/slatepi_runtime.py --check gpu
-python aurora_core/slatepi_runtime.py --check chromadb
+python slate/slate_runtime.py --check ollama
+python slate/slate_runtime.py --check gpu
+python slate/slate_runtime.py --check chromadb
 
 # JSON output
-python aurora_core/slatepi_runtime.py --check-all --json
+python slate/slate_runtime.py --check-all --json
 ```
 
 **Integrations Checked:**
@@ -94,16 +94,16 @@ Detect and optimize for your hardware.
 
 ```bash
 # Detect hardware
-python aurora_core/slatepi_hardware_optimizer.py
+python slate/slate_hardware_optimizer.py
 
 # Install optimal PyTorch
-python aurora_core/slatepi_hardware_optimizer.py --install-pytorch
+python slate/slate_hardware_optimizer.py --install-pytorch
 
 # Apply runtime optimizations
-python aurora_core/slatepi_hardware_optimizer.py --optimize
+python slate/slate_hardware_optimizer.py --optimize
 
 # Detailed hardware report
-python aurora_core/slatepi_hardware_optimizer.py --verbose
+python slate/slate_hardware_optimizer.py --verbose
 ```
 
 **Detection Output:**
@@ -133,19 +133,19 @@ Run performance benchmarks.
 
 ```bash
 # Full benchmark suite
-python aurora_core/slatepi_benchmark.py
+python slate/slate_benchmark.py
 
 # Quick benchmark
-python aurora_core/slatepi_benchmark.py --quick
+python slate/slate_benchmark.py --quick
 
 # CPU only
-python aurora_core/slatepi_benchmark.py --cpu-only
+python slate/slate_benchmark.py --cpu-only
 
 # GPU only
-python aurora_core/slatepi_benchmark.py --gpu-only
+python slate/slate_benchmark.py --gpu-only
 
 # Save results
-python aurora_core/slatepi_benchmark.py --output results.json
+python slate/slate_benchmark.py --output results.json
 ```
 
 **Benchmark Output:**
@@ -178,17 +178,17 @@ Manage AI backends.
 
 ```bash
 # Check all backend status
-python aurora_core/unified_ai_backend.py --status
+python slate/unified_ai_backend.py --status
 
 # Test specific backend
-python aurora_core/unified_ai_backend.py --test ollama
-python aurora_core/unified_ai_backend.py --test foundry
+python slate/unified_ai_backend.py --test ollama
+python slate/unified_ai_backend.py --test foundry
 
 # Generate with auto-routing
-python aurora_core/unified_ai_backend.py --generate "Write hello world in Python"
+python slate/unified_ai_backend.py --generate "Write hello world in Python"
 
 # Force specific backend
-python aurora_core/unified_ai_backend.py --generate "..." --backend ollama
+python slate/unified_ai_backend.py --generate "..." --backend ollama
 ```
 
 ### foundry_local.py
@@ -197,16 +197,16 @@ Foundry Local specific commands.
 
 ```bash
 # Check Foundry status
-python aurora_core/foundry_local.py --check
+python slate/foundry_local.py --check
 
 # List available models
-python aurora_core/foundry_local.py --models
+python slate/foundry_local.py --models
 
 # Generate text
-python aurora_core/foundry_local.py --generate "Explain REST APIs"
+python slate/foundry_local.py --generate "Explain REST APIs"
 
 # Use specific model
-python aurora_core/foundry_local.py --generate "..." --model phi-3.5-mini
+python slate/foundry_local.py --generate "..." --model phi-3.5-mini
 ```
 
 ### ollama_client.py
@@ -215,13 +215,13 @@ Ollama specific commands.
 
 ```bash
 # Check connection
-python aurora_core/ollama_client.py --check
+python slate/ollama_client.py --check
 
 # List loaded models
-python aurora_core/ollama_client.py --list
+python slate/ollama_client.py --list
 
 # Generate
-python aurora_core/ollama_client.py --generate "Write a function"
+python slate/ollama_client.py --generate "Write a function"
 ```
 
 ## Task Commands
@@ -230,11 +230,11 @@ python aurora_core/ollama_client.py --generate "Write a function"
 
 ```bash
 # View pending tasks
-python -c "from aurora_core import get_tasks; print(get_tasks())"
+python -c "from slate import get_tasks; print(get_tasks())"
 
 # Create task via CLI
 python -c "
-from aurora_core import create_task
+from slate import create_task
 task = create_task(
     title='Fix bug',
     description='Login not working',
@@ -250,13 +250,13 @@ print(f'Created: {task.id}')
 
 ```bash
 # Start on default port (8080)
-python agents/aurora_dashboard_server.py
+python agents/slate_dashboard_server.py
 
 # Custom port
-python agents/aurora_dashboard_server.py --port 9000
+python agents/slate_dashboard_server.py --port 9000
 
 # Debug mode
-python agents/aurora_dashboard_server.py --debug
+python agents/slate_dashboard_server.py --debug
 ```
 
 ## Environment Variables
@@ -280,10 +280,10 @@ python agents/aurora_dashboard_server.py --debug
 echo "Checking SLATE health..."
 
 # Quick status
-python aurora_core/slatepi_status.py --quick
+python slate/slate_status.py --quick
 
 # Check integrations
-python aurora_core/slatepi_runtime.py --check-all
+python slate/slate_runtime.py --check-all
 
 # Test Ollama
 curl -s http://127.0.0.1:11434/api/tags > /dev/null && echo "Ollama: OK" || echo "Ollama: FAIL"
@@ -295,14 +295,14 @@ echo "Health check complete"
 
 ```bash
 # Start development environment
-python aurora_core/slatepi_hardware_optimizer.py --optimize
-python agents/aurora_dashboard_server.py &
-python aurora_core/slatepi_status.py --quick
+python slate/slate_hardware_optimizer.py --optimize
+python agents/slate_dashboard_server.py &
+python slate/slate_status.py --quick
 
 # Work...
 
 # Clean up
-pkill -f aurora_dashboard_server
+pkill -f slate_dashboard_server
 ```
 
 ## Exit Codes

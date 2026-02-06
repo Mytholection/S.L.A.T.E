@@ -29,7 +29,7 @@
 - [ ] No breaking changes to existing APIs (or documented if intentional)
 
 ### SLATE Prerequisites
-- [ ] `aurora_core/` modules still import correctly
+- [ ] `slate/` modules still import correctly
 - [ ] `current_tasks.json` format maintained
 - [ ] `pyproject.toml` version updated (if applicable)
 - [ ] ActionGuard compliance verified
@@ -39,7 +39,7 @@
 - [ ] I have NOT modified `.github/workflows/` files
 - [ ] My fork passes all SLATE prerequisite checks locally:
   ```bash
-  python aurora_core/slate_status.py --quick
+  python slate/slate_status.py --quick
   pytest tests/ -v --tb=short
   ```
 

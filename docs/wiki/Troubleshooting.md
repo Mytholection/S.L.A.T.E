@@ -8,10 +8,10 @@ Run these commands to identify issues:
 
 ```bash
 # System status
-python aurora_core/slatepi_status.py --quick
+python slate/slate_status.py --quick
 
 # Check all integrations
-python aurora_core/slatepi_runtime.py --check-all
+python slate/slate_runtime.py --check-all
 
 # Test Ollama connection
 curl http://127.0.0.1:11434/api/tags
@@ -106,7 +106,7 @@ python -c "import torch; print(torch.cuda.is_available())"
 
 ```bash
 # Check versions
-python aurora_core/slatepi_hardware_optimizer.py --verbose
+python slate/slate_hardware_optimizer.py --verbose
 
 # Reinstall PyTorch with correct CUDA
 pip uninstall torch
@@ -136,7 +136,7 @@ torch.cuda.empty_cache()
 ### Module Not Found
 
 **Symptoms:**
-- `ModuleNotFoundError: No module named 'aurora_core'`
+- `ModuleNotFoundError: No module named 'slate'`
 
 **Solutions:**
 
@@ -162,13 +162,13 @@ export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 ```python
 # Move import inside function
 def my_function():
-    from aurora_core.other_module import something
+    from slate.other_module import something
     ...
 
 # Or use TYPE_CHECKING
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from aurora_core.other_module import SomeClass
+    from slate.other_module import SomeClass
 ```
 
 ## Dashboard Issues
@@ -191,7 +191,7 @@ taskkill /F /PID <pid>      # Windows
 kill -9 <pid>               # Linux/macOS
 
 # Use different port
-python agents/aurora_dashboard_server.py --port 9000
+python agents/slate_dashboard_server.py --port 9000
 ```
 
 ### Dashboard Not Loading
@@ -223,10 +223,10 @@ curl http://127.0.0.1:8080/api/status
 
 ```bash
 # Check task queue
-python aurora_core/slatepi_status.py --tasks
+python slate/slate_status.py --tasks
 
 # Verify agents are running
-python aurora_core/slatepi_status.py
+python slate/slate_status.py
 
 # Check for file lock issues
 # Delete stale lock files if present
@@ -340,7 +340,7 @@ pip install -e ".[dev]"
 ```bash
 # Backup and reset
 mv .slate_index .slate_index.bak
-python -c "from aurora_core import init_chroma; init_chroma()"
+python -c "from slate import init_chroma; init_chroma()"
 ```
 
 ### Embedding Dimension Mismatch
@@ -403,9 +403,9 @@ taskmgr  # Windows
 
 ```bash
 # Full system report
-python aurora_core/slatepi_status.py > status.txt
-python aurora_core/slatepi_runtime.py --check-all >> status.txt
-python aurora_core/slatepi_hardware_optimizer.py --verbose >> status.txt
+python slate/slate_status.py > status.txt
+python slate/slate_runtime.py --check-all >> status.txt
+python slate/slate_hardware_optimizer.py --verbose >> status.txt
 ```
 
 ### Log Files
@@ -432,7 +432,7 @@ rm -rf .slate_errors/
 pip install -e ".[dev]" --force-reinstall
 
 # Verify
-python aurora_core/slatepi_status.py --quick
+python slate/slate_status.py --quick
 ```
 
 ## Next Steps

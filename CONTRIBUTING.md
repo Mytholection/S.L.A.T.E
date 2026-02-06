@@ -8,11 +8,11 @@ Thank you for your interest in contributing to S.L.A.T.E. (Synchronized Living A
 2. **Clone** your fork locally
 3. **Initialize** your SLATE workspace:
    ```bash
-   python aurora_core/slate_fork_manager.py --init --name "Your Name" --email "you@example.com"
+   python slate/slate_fork_manager.py --init --name "Your Name" --email "you@example.com"
    ```
 4. **Validate** your changes before submitting:
    ```bash
-   python aurora_core/slate_fork_manager.py --validate
+   python slate/slate_fork_manager.py --validate
    ```
 
 ## Contribution Workflow
@@ -40,7 +40,7 @@ git checkout -b feature/your-feature-name
 python -m pytest tests/ -v
 
 # Validate SLATE prerequisites
-python aurora_core/slate_fork_manager.py --validate
+python slate/slate_fork_manager.py --validate
 ```
 
 ### 4. Submit PR
@@ -63,8 +63,8 @@ These files cannot be modified by external contributors:
 
 - `.github/workflows/*` - CI/CD automation
 - `.github/CODEOWNERS` - Access control
-- `aurora_core/action_guard.py` - Security enforcement
-- `aurora_core/sdk_source_guard.py` - Package validation
+- `slate/action_guard.py` - Security enforcement
+- `slate/sdk_source_guard.py` - Package validation
 
 ## Code Style
 
@@ -75,10 +75,10 @@ These files cannot be modified by external contributors:
 
 ```bash
 # Lint
-ruff check aurora_core/ agents/
+ruff check slate/ agents/
 
 # Format
-ruff format aurora_core/ agents/
+ruff format slate/ agents/
 ```
 
 ## Security
