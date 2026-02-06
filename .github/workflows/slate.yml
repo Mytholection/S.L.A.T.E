@@ -1,19 +1,15 @@
-﻿# 
-# SLATE System Integration Workflow
-# Author: COPILOT | Created: 2026-02-02T00:00:00Z | Modified: 2026-02-06T14:00:00Z
-# Validates SLATE-specific subsystems: tech tree, nemo, dashboard, agents, tasks
-# 
+﻿# Modified: 2026-02-06T23:00:00Z | Author: COPILOT | Change: Target self-hosted runner
+# SLATE System Integration — validates tech tree, agents, dashboard, tasks
 
 name: SLATE Integration
 
 on:
   push:
-    branches: [main, develop, '001-*', '002-*', '003-*', '004-*']
+    branches: [main, develop, 'feature/*']
     paths:
       - 'slate/**'
       - 'agents/**'
       - '.slate_tech_tree/**'
-      - '.slate_nemo/**'
       - 'current_tasks.json'
       - 'pyproject.toml'
   pull_request:
@@ -24,47 +20,26 @@ concurrency:
   group: slate-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  PYTHON_VERSION: '3.11'
-
 permissions:
   contents: read
 
 jobs:
   slate-status:
     name: SLATE Status Check
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    runs-on: [self-hosted, slate]
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-        continue-on-error: true
       - name: Run SLATE Status
         run: python slate/slate_status.py --quick
         continue-on-error: true
 
   sdk-validation:
     name: SDK Validation
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    runs-on: [self-hosted, slate]
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-        continue-on-error: true
       - name: Validate SDK version sync
         run: |
           python -c "
@@ -80,49 +55,31 @@ jobs:
           print('Version sync: OK')
           "
 
-  tech-tree-validation:
+  tech-tree:
     name: Tech Tree Validation
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, slate]
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
       - name: Validate Tech Tree JSON
         run: |
           python -c "
-          import json, sys
-          try:
-              with open('.slate_tech_tree/tech_tree.json', 'r') as f:
-                  tree = json.load(f)
-              nodes = tree.get('nodes', [])
-              completed = sum(1 for n in nodes if n.get('status') == 'complete')
-              total = len(nodes)
-              progress = (completed / total * 100) if total > 0 else 0
-              print(f'Tech Tree: {completed}/{total} nodes complete ({progress:.1f}%)')
-          except FileNotFoundError:
-              print('Tech tree file not found - skipping')
-          except Exception as e:
-              print(f'Tech tree validation error: {e}')
-              sys.exit(1)
+          import json
+          with open('.slate_tech_tree/tech_tree.json', 'r') as f:
+              tree = json.load(f)
+          nodes = tree.get('nodes', [])
+          completed = sum(1 for n in nodes if n.get('status') == 'complete')
+          total = len(nodes)
+          progress = (completed / total * 100) if total > 0 else 0
+          print(f'Tech Tree: {completed}/{total} nodes complete ({progress:.1f}%)')
           "
 
-  dashboard-smoke-test:
+  dashboard:
     name: Dashboard Smoke Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    runs-on: [self-hosted, slate]
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-        continue-on-error: true
       - name: Test Dashboard Import
         run: |
           python -c "
@@ -134,21 +91,12 @@ jobs:
               exit(1)
           "
 
-  agent-initialization:
-    name: Agent Initialization Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+  agents:
+    name: Agent Module Test
+    runs-on: [self-hosted, slate]
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-        continue-on-error: true
       - name: Test Agent Module Imports
         run: |
           python -c "
@@ -156,10 +104,9 @@ jobs:
           errors = []
           modules = [
               'slate.slate_status',
-              'slate.smart_task_router',
-              'slate.feature_flags',
-              'slate.action_guard',
-              'slate.build_versioning',
+              'slate.slate_runtime',
+              'slate.slate_hardware_optimizer',
+              'slate.slate_benchmark',
           ]
           for mod in modules:
               try:
@@ -175,9 +122,9 @@ jobs:
               print('All agent modules import successfully')
           "
 
-  task-queue-check:
+  task-queue:
     name: Task Queue Validation
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, slate]
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
@@ -200,8 +147,8 @@ jobs:
 
   summary:
     name: SLATE Summary
-    needs: [slate-status, sdk-validation, tech-tree-validation, dashboard-smoke-test, agent-initialization, task-queue-check]
-    runs-on: ubuntu-latest
+    needs: [slate-status, sdk-validation, tech-tree, dashboard, agents, task-queue]
+    runs-on: [self-hosted, slate]
     if: always()
     steps:
       - name: Summary
@@ -211,7 +158,7 @@ jobs:
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| SLATE Status | ${{ needs.slate-status.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| SDK Validation | ${{ needs.sdk-validation.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Tech Tree | ${{ needs.tech-tree-validation.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Dashboard | ${{ needs.dashboard-smoke-test.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Agents | ${{ needs.agent-initialization.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Task Queue | ${{ needs.task-queue-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tech Tree | ${{ needs.tech-tree.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dashboard | ${{ needs.dashboard.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Agents | ${{ needs.agents.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Task Queue | ${{ needs.task-queue.result }} |" >> $GITHUB_STEP_SUMMARY
