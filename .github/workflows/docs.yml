@@ -1,8 +1,5 @@
-﻿# 
+﻿# Modified: 2026-02-06T00:00:00Z | Author: COPILOT | Change: Switch to self-hosted runner
 # Documentation Validation
-# Author: COPILOT | Created: 2026-02-06T14:00:00Z
-# Validates documentation files, links, and spec consistency
-# 
 
 name: Docs Validation
 
@@ -29,16 +26,20 @@ concurrency:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: pwsh
+
 jobs:
   link-check:
     name: Link Check
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, slate]
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - name: Check internal links
         run: |
-          python3 -c "
+          python -c @"
           import os, re, sys
           broken = []
           checked = 0
@@ -68,17 +69,17 @@ jobs:
                   print(f'  - {b}')
           else:
               print('All internal links OK')
-          "
+          "@
 
   readme-check:
     name: README Check
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, slate]
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - name: Validate README
         run: |
-          python3 -c "
+          python -c @"
           import os
           if not os.path.exists('README.md'):
               print('::error::README.md not found')
@@ -91,18 +92,19 @@ jobs:
               print('::warning::README.md does not mention SLATE')
           else:
               print('README.md references SLATE: OK')
-          "
+          "@
 
   summary:
     name: Docs Summary
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, slate]
     needs: [link-check, readme-check]
     if: always()
+    timeout-minutes: 5
     steps:
       - name: Generate summary
         run: |
-          echo "## Docs Validation" >> $GITHUB_STEP_SUMMARY
-          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Link Check | ${{ needs.link-check.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| README Check | ${{ needs.readme-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          "## Docs Validation" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          "| Check | Status |" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          "|-------|--------|" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          "| Link Check | ${{ needs.link-check.result }} |" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          "| README Check | ${{ needs.readme-check.result }} |" | Out-File -Append $env:GITHUB_STEP_SUMMARY
