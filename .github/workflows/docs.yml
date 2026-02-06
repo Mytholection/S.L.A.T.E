@@ -37,6 +37,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Python
+        run: "E:\11132025\.venv\Scripts" | Out-File -Append $env:GITHUB_PATH
       - name: Check internal links
         run: |
           python -c @"
@@ -77,6 +79,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Python
+        run: "E:\11132025\.venv\Scripts" | Out-File -Append $env:GITHUB_PATH
       - name: Validate README
         run: |
           python -c @"

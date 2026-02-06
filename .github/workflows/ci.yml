@@ -27,6 +27,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Python
+        run: "E:\11132025\.venv\Scripts" | Out-File -Append $env:GITHUB_PATH
       - name: Ruff lint
         run: |
           pip install ruff --quiet 2>$null
@@ -42,6 +44,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Python
+        run: "E:\11132025\.venv\Scripts" | Out-File -Append $env:GITHUB_PATH
       - name: Install test deps
         run: pip install pytest pytest-cov pytest-asyncio --quiet 2>$null
         continue-on-error: true
@@ -55,6 +59,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Python
+        run: "E:\11132025\.venv\Scripts" | Out-File -Append $env:GITHUB_PATH
       - name: Verify SDK imports
         run: |
           python -c "import slate; print(f'SDK v{slate.__version__}')"
@@ -79,6 +85,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Python
+        run: "E:\11132025\.venv\Scripts" | Out-File -Append $env:GITHUB_PATH
       - name: Bandit scan
         run: |
           pip install bandit --quiet 2>$null
@@ -91,6 +99,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Python
+        run: "E:\11132025\.venv\Scripts" | Out-File -Append $env:GITHUB_PATH
       - name: Validate Tech Tree
         run: |
           python -c @"
