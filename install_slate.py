@@ -284,14 +284,14 @@ def step_gpu_detect(tracker, args):
 
 
 def step_sdk_validate(tracker, args):
-    """Step 5: Validate aurora_core SDK imports and version."""
+    """Step 5: Validate SLATE SDK imports and version."""
     tracker.start_step("sdk_validate")
-    tracker.update_progress("sdk_validate", 30, "Importing aurora_core SDK")
+    tracker.update_progress("sdk_validate", 30, "Importing SLATE SDK")
 
     try:
         result = _run_cmd([
             _get_python_exe(), "-c",
-            "import aurora_core; print(getattr(aurora_core, '__version__', 'unknown'))"
+            "import slate; print(getattr(slate, '__version__', 'unknown'))"
         ], timeout=15)
 
         if result.returncode == 0:
@@ -300,19 +300,19 @@ def step_sdk_validate(tracker, args):
             # Check critical modules
             check = _run_cmd([
                 _get_python_exe(), "-c",
-                "from aurora_core import slate_status; "
-                "from aurora_core import slate_runtime; "
+                "from slate import slate_status; "
+                "from slate import slate_runtime; "
                 "print('all_ok')"
             ], timeout=15)
             if check.returncode == 0 and "all_ok" in check.stdout:
                 tracker.complete_step("sdk_validate", success=True,
-                                      details=f"aurora_core v{version} — all modules OK")
+                                      details=f"slate v{version} — all modules OK")
             else:
                 tracker.complete_step("sdk_validate", success=True, warning=True,
-                                      details=f"aurora_core v{version} — some modules missing")
+                                      details=f"slate v{version} — some modules missing")
         else:
             tracker.complete_step("sdk_validate", success=True, warning=True,
-                                  details="aurora_core not importable (first install)")
+                                  details="slate SDK not importable (first install)")
         return True
 
     except Exception as e:
@@ -326,9 +326,9 @@ def step_dirs_create(tracker, args):
     tracker.start_step("dirs_create")
 
     dirs = [
-        WORKSPACE_ROOT / "aurora_core",
+        WORKSPACE_ROOT / "slate",
         WORKSPACE_ROOT / "agents",
-        WORKSPACE_ROOT / "aurora_slate",
+        WORKSPACE_ROOT / "slate_web",
         WORKSPACE_ROOT / "tests",
         WORKSPACE_ROOT / ".github",
         WORKSPACE_ROOT / ".slate_install",
@@ -345,9 +345,8 @@ def step_dirs_create(tracker, args):
 
     # Ensure __init__.py files exist for Python packages
     init_files = [
-        WORKSPACE_ROOT / "aurora_core" / "__init__.py",
+        WORKSPACE_ROOT / "slate" / "__init__.py",
         WORKSPACE_ROOT / "agents" / "__init__.py",
-        WORKSPACE_ROOT / "aurora_slate" / "__init__.py",
         WORKSPACE_ROOT / "tests" / "__init__.py",
     ]
     for f in init_files:
@@ -385,7 +384,7 @@ def step_git_sync(tracker, args):
     if args.beta:
         tracker.update_progress("git_sync", 50, "Configuring beta fork remote")
         try:
-            from aurora_core.slate_fork_manager import SlateForkManager
+            from slate.slate_fork_manager import SlateForkManager
             manager = SlateForkManager(str(WORKSPACE_ROOT))
             manager.configure_beta_remote()
             tracker.complete_step("git_sync", success=True,
@@ -420,7 +419,7 @@ def step_benchmark(tracker, args):
     """Step 8: Run system benchmarks."""
     tracker.start_step("benchmark")
 
-    benchmark_script = WORKSPACE_ROOT / "aurora_core" / "slate_benchmark.py"
+    benchmark_script = WORKSPACE_ROOT / "slate" / "slate_benchmark.py"
     if not benchmark_script.exists():
         tracker.skip_step("benchmark", "Benchmark script not found")
         return True
@@ -467,7 +466,7 @@ def step_runtime_check(tracker, args):
 
     # Check 1: slate_status.py exists and runs
     checks_total += 1
-    status_script = WORKSPACE_ROOT / "aurora_core" / "slate_status.py"
+    status_script = WORKSPACE_ROOT / "slate" / "slate_status.py"
     if status_script.exists():
         result = _run_cmd([_get_python_exe(), str(status_script), "--quick"], timeout=30)
         if result.returncode == 0:
@@ -481,7 +480,7 @@ def step_runtime_check(tracker, args):
 
     # Check 2: slate_runtime.py exists and runs
     checks_total += 1
-    runtime_script = WORKSPACE_ROOT / "aurora_core" / "slate_runtime.py"
+    runtime_script = WORKSPACE_ROOT / "slate" / "slate_runtime.py"
     if runtime_script.exists():
         result = _run_cmd([_get_python_exe(), str(runtime_script), "--check-all"], timeout=30)
         if result.returncode == 0:
@@ -495,7 +494,7 @@ def step_runtime_check(tracker, args):
     checks_total += 1
     result = _run_cmd([
         _get_python_exe(), "-c",
-        "from agents.aurora_dashboard_server import app; print('ok')"
+        "from agents.slate_dashboard_server import app; print('ok')"
     ], timeout=15)
     if result.returncode == 0:
         checks_passed += 1
@@ -551,13 +550,13 @@ def print_completion(success: bool, tracker=None):
             print("    1. Activate:  .\\.venv\\Scripts\\activate")
         else:
             print("    1. Activate:  source .venv/bin/activate")
-        print("    2. Status:    python aurora_core/slate_status.py --quick")
-        print("    3. Runtime:   python aurora_core/slate_runtime.py --check-all")
-        print("    4. Dashboard: python agents/aurora_dashboard_server.py")
-        print("    5. Hardware:  python aurora_core/slate_hardware_optimizer.py")
+        print("    2. Status:    python slate/slate_status.py --quick")
+        print("    3. Runtime:   python slate/slate_runtime.py --check-all")
+        print("    4. Dashboard: python agents/slate_dashboard_server.py")
+        print("    5. Hardware:  python slate/slate_hardware_optimizer.py")
         print()
         print("  For GPU support (optional):")
-        print("    python aurora_core/slate_hardware_optimizer.py --install-pytorch")
+        print("    python slate/slate_hardware_optimizer.py --install-pytorch")
         print()
     else:
         print("  Troubleshooting:")
@@ -609,7 +608,7 @@ def main():
     # Initialize the install tracker
     sys.path.insert(0, str(WORKSPACE_ROOT))
     try:
-        from aurora_core.install_tracker import InstallTracker
+        from slate.install_tracker import InstallTracker
         tracker = InstallTracker()
     except ImportError:
         # InstallTracker not available yet — create a minimal shim
@@ -636,7 +635,7 @@ def main():
     resume_completed = set()
     if args.resume:
         try:
-            from aurora_core.install_tracker import InstallTracker as IT
+            from slate.install_tracker import InstallTracker as IT
             state = IT.load_state()
             if state and state.get("steps"):
                 resume_completed = {

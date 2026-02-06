@@ -52,7 +52,7 @@ def _sse_callback(event_type: str, data: dict):
 def _register_tracker_sse():
     """Wire install_tracker SSE to our queue broadcaster."""
     try:
-        from aurora_core.install_tracker import register_sse_listener
+        from slate.install_tracker import register_sse_listener
         register_sse_listener(_sse_callback)
     except ImportError:
         pass
@@ -67,7 +67,7 @@ _register_tracker_sse()
 def add_install_endpoints(app):
     """Register install API endpoints on a FastAPI app instance.
 
-    Called by aurora_dashboard_server.py to mount install tracking
+    Called by slate_dashboard_server.py to mount install tracking
     into the main dashboard.
     """
     from fastapi import Request
@@ -76,7 +76,7 @@ def add_install_endpoints(app):
     @app.get("/api/install/status")
     async def install_status():
         """Return current installation state."""
-        from aurora_core.install_tracker import InstallTracker
+        from slate.install_tracker import InstallTracker
         state = InstallTracker.load_state()
         if state:
             return JSONResponse(content=state)
@@ -89,14 +89,14 @@ def add_install_endpoints(app):
     @app.get("/api/install/log")
     async def install_log():
         """Return install log lines."""
-        from aurora_core.install_tracker import InstallTracker
+        from slate.install_tracker import InstallTracker
         lines = InstallTracker.get_install_log()
         return JSONResponse(content={"lines": lines, "count": len(lines)})
 
     @app.get("/api/install/steps")
     async def install_steps():
         """Return step definitions with metadata."""
-        from aurora_core.install_tracker import InstallTracker
+        from slate.install_tracker import InstallTracker
         steps = []
         for s in InstallTracker.INSTALL_STEPS:
             steps.append({
@@ -117,7 +117,7 @@ def add_install_endpoints(app):
         async def event_generator():
             try:
                 # Send initial state
-                from aurora_core.install_tracker import InstallTracker
+                from slate.install_tracker import InstallTracker
                 state = InstallTracker.load_state()
                 if state:
                     yield f"event: init\ndata: {json.dumps(state)}\n\n"
@@ -150,7 +150,7 @@ def add_install_endpoints(app):
     @app.get("/install")
     async def install_page():
         """Serve the install progress dashboard page."""
-        install_html = os.path.join(WORKSPACE_ROOT, "aurora_slate", "install.html")
+        install_html = os.path.join(WORKSPACE_ROOT, "slate_web", "install.html")
         if os.path.exists(install_html):
             return FileResponse(install_html, media_type="text/html", headers={
                 "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -181,7 +181,7 @@ def create_standalone_app():
     # Root serves install page directly
     @standalone.get("/")
     async def root():
-        install_html = os.path.join(WORKSPACE_ROOT, "aurora_slate", "install.html")
+        install_html = os.path.join(WORKSPACE_ROOT, "slate_web", "install.html")
         if os.path.exists(install_html):
             from fastapi.responses import FileResponse
             return FileResponse(install_html, media_type="text/html")

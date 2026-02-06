@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Test aurora_core import to find blocking issue."""
+# Modified: 2026-02-06T12:00:00Z | Author: COPILOT | Change: Migrate test from aurora_core to slate
+"""Test slate SDK imports to verify installation."""
 import sys
 sys.path.insert(0, '.')
 
@@ -9,25 +10,21 @@ import json
 import logging
 print("Step 1: OK")
 
-# Test each aurora_core submodule individually
+# Test each slate submodule individually
 submodules = [
-    'torch_config',
-    'message_broker', 
-    'rag_memory',
-    'gpu_scheduler',
-    'aurora_agent_v2',
-    'file_lock',
-    'aurora_orchestrator',
-    'llm_cache',
-    'shared_knowledge',
-    'proactive_tasks',
-    'dual_gpu_training',
+    'slate_status',
+    'slate_runtime',
+    'slate_benchmark',
+    'slate_fork_manager',
+    'slate_hardware_optimizer',
+    'slate_terminal_monitor',
+    'install_tracker',
 ]
 
 for mod in submodules:
-    print(f"Testing aurora_core.{mod}...", flush=True)
+    print(f"Testing slate.{mod}...", flush=True)
     try:
-        __import__(f'aurora_core.{mod}')
+        __import__(f'slate.{mod}')
         print(f"  {mod}: OK")
     except Exception as e:
         print(f"  {mod}: FAIL - {e}")

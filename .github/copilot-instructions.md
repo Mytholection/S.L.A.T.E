@@ -4,9 +4,9 @@ format_rules:
   timestamp_format: ISO8601
 
 commands:
-  status: python aurora_core/slate_status.py --quick
-  runtime: python aurora_core/slate_runtime.py --check-all
-  hardware: python aurora_core/slate_hardware_optimizer.py
+  status: python slate/slate_status.py --quick
+  runtime: python slate/slate_runtime.py --check-all
+  hardware: python slate/slate_hardware_optimizer.py
 
 rules:
   do:

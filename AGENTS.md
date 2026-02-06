@@ -11,9 +11,9 @@ All code edits require timestamp + author:
 
 ## Commands
 ```bash
-python aurora_core/slate_status.py --quick
-python aurora_core/slate_runtime.py --check-all
-python aurora_core/slate_hardware_optimizer.py
+python slate/slate_status.py --quick
+python slate/slate_runtime.py --check-all
+python slate/slate_hardware_optimizer.py
 ```
 
 ## Security
