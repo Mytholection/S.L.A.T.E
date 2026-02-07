@@ -122,12 +122,14 @@ class OllamaClient:
 
     def generate(self, model: str, prompt: str, system: str = "",
                  temperature: float = 0.7, max_tokens: int = 2048,
-                 stream: bool = False) -> dict:
+                 stream: bool = False, keep_alive: str = "24h") -> dict:
         """Generate text with a model."""
+        # Modified: 2026-02-07T08:00:00Z | Author: COPILOT | Change: Added keep_alive for GPU persistence
         data = {
             "model": model,
             "prompt": prompt,
             "stream": stream,
+            "keep_alive": keep_alive,
             "options": {
                 "temperature": temperature,
                 "num_predict": max_tokens,
@@ -139,7 +141,8 @@ class OllamaClient:
 
     def embed(self, model: str, text: str) -> list[float]:
         """Generate embeddings for text."""
-        data = {"model": model, "input": text}
+        # Modified: 2026-02-07T08:00:00Z | Author: COPILOT | Change: Added keep_alive
+        data = {"model": model, "input": text, "keep_alive": "24h"}
         result = self._request("/api/embed", data, timeout=60)
         embeddings = result.get("embeddings", [[]])
         return embeddings[0] if embeddings else []
@@ -328,7 +331,22 @@ Categories: implement, test, analyze, integrate, complex"""
 
     def index_codebase(self, extensions: list[str] | None = None,
                        dirs: list[str] | None = None) -> dict:
-        """Build embedding index of the codebase."""
+        # Modified: 2026-02-06T22:30:00Z | Author: COPILOT | Change: Use ChromaDB for persistent vector storage
+        """Build embedding index of the codebase using ChromaDB."""
+        try:
+            from slate.slate_chromadb import SlateChromaDB
+            chromadb_store = SlateChromaDB()
+            print("  Using ChromaDB persistent vector store")
+            result = chromadb_store.index_all(incremental=True)
+            self.state["last_index"] = datetime.now(timezone.utc).isoformat()
+            self._save_state()
+            return result
+        except ImportError:
+            print("  ChromaDB not available, falling back to flat-file index")
+        except Exception as e:
+            print(f"  ChromaDB error ({e}), falling back to flat-file index")
+
+        # Fallback: flat-file JSON index
         if not extensions:
             extensions = [".py", ".ts", ".yml", ".yaml", ".md"]
         if not dirs:
@@ -347,12 +365,11 @@ Categories: implement, test, analyze, integrate, complex"""
                 for file_path in dir_path.rglob(f"*{ext}"):
                     try:
                         content = file_path.read_text(encoding="utf-8", errors="replace")
-                        # Chunk into ~500 char segments
                         chunks = self._chunk_text(content, max_chars=500)
                         embeddings = []
                         for chunk in chunks:
                             emb = self.embed_text(chunk)
-                            embeddings.append({"text": chunk[:200], "embedding": emb[:10]})  # Store preview
+                            embeddings.append({"text": chunk[:200], "embedding": emb[:10]})
                             total_chunks += 1
 
                         rel_path = str(file_path.relative_to(self.workspace))
@@ -368,7 +385,6 @@ Categories: implement, test, analyze, integrate, complex"""
         index["total_files"] = total_files
         index["total_chunks"] = total_chunks
 
-        # Save index metadata
         index_path = EMBEDDINGS_DIR / "index.json"
         index_path.write_text(json.dumps(index, indent=2), encoding="utf-8")
 
@@ -581,6 +597,7 @@ def main():
     """CLI entry point."""
     parser = argparse.ArgumentParser(description="SLATE ML Orchestrator")
     parser.add_argument("--start", action="store_true", help="Start ML services (preload models)")
+    parser.add_argument("--warmup", action="store_true", help="Full system warmup (configure + preload + index)")
     parser.add_argument("--status", action="store_true", help="Show ML status")
     parser.add_argument("--json", action="store_true", help="JSON output")
     parser.add_argument("--train-now", action="store_true", help="Trigger training/fine-tune")
@@ -600,6 +617,12 @@ def main():
         orch.preload_models()
         print("\nML Orchestrator ready.")
         orch.print_status()
+    elif args.warmup:
+        # Modified: 2026-02-07T08:00:00Z | Author: COPILOT | Change: warmup integration
+        print("Running full SLATE warmup...")
+        from slate.slate_warmup import SlateWarmup
+        warmup = SlateWarmup()
+        warmup.warmup()
     elif args.index_now:
         print("Building codebase embedding index...")
         orch.index_codebase()

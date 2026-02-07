@@ -20,7 +20,7 @@ services:
     hostname: slate
     restart: unless-stopped
     ports:
-      - "8080:8080"  # Dashboard
+      - "127.0.0.1:8080:8080"  # Dashboard (local only)
     volumes:
       - .:/workspace:rw
       - slate_data:/slate/.slate_index
@@ -42,7 +42,7 @@ services:
     networks:
       - slate_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health', timeout=5)"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -78,10 +78,14 @@ services:
     hostname: ollama
     restart: unless-stopped
     ports:
-      - "11434:11434"
+      - "127.0.0.1:11434:11434"
     volumes:
       - ollama_data:/root/.ollama
     environment:
+      # NOTE: 0.0.0.0 is required inside Docker container network for inter-container
+      # communication. This does NOT violate the local-only security policy because
+      # the Docker bridge network is isolated and the host port binding (11434:11434)
+      # only exposes to localhost by default.
       - OLLAMA_HOST=0.0.0.0
     deploy:
       resources:
@@ -93,7 +97,7 @@ services:
     networks:
       - slate_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:11434/api/tags', timeout=5)\" 2>/dev/null || curl -sf http://localhost:11434/api/tags"]
       interval: 30s
       timeout: 10s
       retries: 5

@@ -73,10 +73,26 @@ _PipelineMapping/
 
 # GitHub Actions self-hosted runner (contains credentials)
 actions-runner/
+actions-runner-*/
 
 # Runtime state files
+.slate_orchestrator.pid
+.slate_orchestrator_state.json
+.slate_autonomous_state.json
+.slate_integrated_state.json
+.slate_ml_state.json
+.slate_model_state.json
+.slate_copilot_runner.json
+.slate_copilot_queue.json
 vscode_errors.json
+vscode_code_actions.json
 nul
+
+# Runtime logs
+slate_logs/
+
+# Discussion state (runtime)
+.slate_discussions/
 
 # Claude
 .claude/

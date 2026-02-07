@@ -5,6 +5,24 @@
 SLATE (Synchronized Living Architecture for Transformation and Evolution) is a local-first
 AI agent orchestration framework. Version 2.4.0. All operations LOCAL ONLY (127.0.0.1).
 
+## MANDATORY PROTOCOL — All Agents Must Follow
+
+**Every agent session MUST begin by running SLATE protocols before performing work.**
+This ensures system consistency and prevents regressions.
+
+### Session Start Protocol (REQUIRED)
+```bash
+python slate/slate_status.py --quick          # 1. System health
+python slate/slate_runtime.py --check-all     # 2. Verify all 7 integrations
+python slate/slate_workflow_manager.py --status # 3. Check task queue
+```
+
+### Pre-Commit Protocol (REQUIRED)
+```bash
+python slate/slate_workflow_manager.py --enforce  # Block if tasks are stale
+python slate/slate_workflow_manager.py --cleanup  # Archive deprecated tasks
+```
+
 ## Agent System
 
 ### Agent Routing
@@ -30,6 +48,7 @@ It has access to all SLATE protocol commands and manages runner, workflows, and 
 - **slate-orchestrator**: Service lifecycle (`python slate/slate_orchestrator.py status`)
 - **slate-workflow**: Task management (`python slate/slate_workflow_manager.py --status`)
 - **slate-benchmark**: Performance benchmarks (`python slate/slate_benchmark.py`)
+- **slate-chromadb**: Vector store operations (`python slate/slate_chromadb.py --status`)
 - **slate-ci**: CI/CD workflow dispatch and monitoring via GitHub API
 
 ## Format Rules
@@ -45,7 +64,7 @@ python slate/slate_status.py --quick          # Quick health check
 python slate/slate_status.py --json           # Machine-readable status
 
 # Runtime integration check
-python slate/slate_runtime.py --check-all     # All integrations
+python slate/slate_runtime.py --check-all     # All 7 integrations (Python, GPU, PyTorch, Transformers, Ollama, ChromaDB, venv)
 python slate/slate_runtime.py --json          # JSON output
 
 # Hardware & GPU optimization
@@ -68,29 +87,56 @@ python slate/slate_workflow_manager.py --status   # Task status
 python slate/slate_workflow_manager.py --cleanup   # Clean stale tasks
 python slate/slate_workflow_manager.py --enforce   # Enforce completion
 
+# ChromaDB vector store
+python slate/slate_chromadb.py --status        # ChromaDB status & collections
+python slate/slate_chromadb.py --index         # Index codebase into ChromaDB
+python slate/slate_chromadb.py --search "query" # Semantic search
+python slate/slate_chromadb.py --reset         # Reset all collections
+
 # Benchmarks
 python slate/slate_benchmark.py                # Run benchmarks
 ```
 
 ## Project Structure
 ```
-slate/              # Core SDK modules
+slate/              # Core SDK modules (30+ Python files)
   slate_status.py           # System health checker
-  slate_runtime.py          # Integration & dependency checker
+  slate_runtime.py          # Integration & dependency checker (7 integrations)
   slate_hardware_optimizer.py  # GPU detection & PyTorch optimization
+  slate_gpu_manager.py      # Dual-GPU load balancing for Ollama
   slate_runner_manager.py   # GitHub Actions runner management
   slate_orchestrator.py     # Unified service orchestrator
   slate_workflow_manager.py # Task lifecycle & PR workflows
+  slate_workflow_analyzer.py # Meta-workflow analysis & deprecation detection
   slate_benchmark.py        # Performance benchmarks
   slate_fork_manager.py     # Fork contribution workflow
+  slate_chromadb.py         # ChromaDB vector store integration
+  ml_orchestrator.py        # ML inference orchestrator (Ollama + PyTorch)
+  slate_model_trainer.py    # Custom SLATE model builder
+  slate_unified_autonomous.py   # Unified autonomous task loop
+  integrated_autonomous_loop.py # Self-healing autonomous brain
+  copilot_slate_runner.py   # Copilot ↔ autonomous bridge
+  slate_project_board.py    # GitHub Projects V2 integration
   mcp_server.py             # MCP server for Claude Code
+  action_guard.py           # Security enforcement (ActionGuard)
+  sdk_source_guard.py       # SDK source validation
+  pii_scanner.py            # PII detection
   slate_terminal_monitor.py # Terminal activity tracking
   install_tracker.py        # Installation tracking
 
 agents/             # API servers & agent modules
   runner_api.py             # RunnerAPI class for CI integration
-  slate_dashboard_server.py # FastAPI dashboard (port 8080)
+  slate_dashboard_server.py # FastAPI dashboard (127.0.0.1:8080)
   install_api.py            # Installation API
+
+models/             # Ollama Modelfiles for SLATE custom models
+  Modelfile.slate-coder     # 12B code generation (mistral-nemo base)
+  Modelfile.slate-fast      # 3B classification/summary (llama3.2 base)
+  Modelfile.slate-planner   # 7B planning/analysis (mistral base)
+
+plugins/            # VS Code & Claude extensions
+  slate-copilot/            # @slate chat participant (TypeScript)
+  slate-sdk/                # Claude Code plugin
 
 skills/             # Copilot Chat skill definitions
   slate-status/             # Status checking skill
@@ -104,29 +150,31 @@ skills/             # Copilot Chat skill definitions
 - **Name**: slate-runner
 - **Labels**: `[self-hosted, Windows, X64, slate, gpu, cuda, gpu-2, blackwell]`
 - **Work folder**: `slate_work`
-- **GPUs**: 2x NVIDIA GeForce RTX 5070 Ti (Blackwell, compute 12.0)
+- **GPUs**: 2x NVIDIA GeForce RTX 5070 Ti (Blackwell, compute 12.0, 16GB each)
 - **Pre-job hook**: Sets `CUDA_VISIBLE_DEVICES=0,1`, SLATE env vars, Python PATH
 - **Python**: `E:\11132025\.venv\Scripts\python.exe` (3.11.9)
 - **No `actions/setup-python`**: All jobs use `GITHUB_PATH` to prepend venv
+- **SLATE Custom Models**: slate-coder (12B), slate-fast (3B), slate-planner (7B)
 
 ## Workflow Conventions
 - All jobs: `runs-on: [self-hosted, slate]`
 - Default shell: `powershell`
 - Python setup step: `'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH`
 - YAML paths: Always single-quoted (avoid backslash escape issues)
-- Workflows: ci.yml, slate.yml, pr.yml, nightly.yml, cd.yml, docs.yml, fork-validation.yml, contributor-pr.yml
+- Workflows: ci.yml, slate.yml, pr.yml, nightly.yml, cd.yml, docs.yml, fork-validation.yml, contributor-pr.yml, agentic.yml, docker.yml, release.yml
 
 ## Security Rules
 - ALL network bindings: `127.0.0.1` ONLY — never `0.0.0.0`
-- No external telemetry
-- No `curl.exe` (freezes on this system)
+- No external telemetry (ChromaDB telemetry disabled)
+- No `curl.exe` (freezes on this system — use `urllib.request`)
 - Protected files in forks: `.github/workflows/*`, `CODEOWNERS`, action guards
 - Blocked patterns: `eval(`, `exec(os`, `rm -rf /`, `base64.b64decode`
 
 ## Terminal Rules
 - Use `isBackground=true` for long-running commands (servers, watchers, runner)
-- Never use `curl.exe` — use Python `urllib.request` instead
+- Never use `curl.exe` — use Python `urllib.request` or PowerShell `Invoke-RestMethod`
 - Python executable: `E:\11132025\.venv\Scripts\python.exe`
+- Always use `encoding='utf-8'` when opening files in Python on Windows
 - Git credential: `git credential fill` with `protocol=https` / `host=github.com`
 
 ## GitHub API Access

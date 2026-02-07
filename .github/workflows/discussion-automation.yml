@@ -1,0 +1,360 @@
+# GitHub Discussions automation
+# Manages community discussions via self-hosted runner
+# Security: PII scanning prevents personal data exposure
+name: Discussion Automation
+
+on:
+  discussion:
+    types: [created, edited, labeled, answered, unanswered, locked, unlocked, category_changed]
+  discussion_comment:
+    types: [created, edited, deleted]
+  schedule:
+    # Process discussions every hour
+    - cron: '0 * * * *'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        type: choice
+        options:
+          - status
+          - sync-to-tasks
+          - list-discussions
+          - list-categories
+          - check-unanswered
+          - process-all
+        default: status
+      category:
+        description: 'Filter by category (optional)'
+        type: string
+        default: ''
+
+env:
+  PROJECT_OWNER: SynchronizedLivingArchitecture
+  REPO_NAME: S.L.A.T.E
+
+defaults:
+  run:
+    shell: powershell
+
+permissions:
+  discussions: write
+  contents: read
+
+jobs:
+  # ============================================
+  # PII SCAN - Block sensitive content
+  # ============================================
+  pii-scan:
+    name: PII Security Scan
+    runs-on: [self-hosted, slate]
+    if: github.event_name == 'discussion' || github.event_name == 'discussion_comment'
+    outputs:
+      blocked: ${{ steps.scan.outputs.blocked }}
+      has_pii: ${{ steps.scan.outputs.has_pii }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        run: |
+          'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH
+
+      - name: Scan for PII
+        id: scan
+        run: |
+          # Get content from discussion event
+          if ('${{ github.event_name }}' -eq 'discussion') {
+            $Title = '${{ github.event.discussion.title }}'
+            $Body = '${{ github.event.discussion.body }}'
+          } else {
+            $Title = 'Comment'
+            $Body = '${{ github.event.comment.body }}'
+          }
+
+          # Escape quotes for command line
+          $Title = $Title -replace '"', '\"'
+          $Body = $Body -replace '"', '\"'
+
+          # Run PII scanner
+          try {
+            $Result = python slate/pii_scanner.py --title "$Title" --body "$Body" --json 2>$null | ConvertFrom-Json
+            $HasPII = $Result.has_pii
+            $Blocked = $Result.blocked
+          } catch {
+            $HasPII = $false
+            $Blocked = $false
+          }
+
+          "has_pii=$HasPII" | Out-File -Append $env:GITHUB_OUTPUT
+          "blocked=$Blocked" | Out-File -Append $env:GITHUB_OUTPUT
+
+          if ($Blocked -eq $true) {
+            Write-Host "::error::BLOCKED - Critical PII detected in discussion."
+            "## PII Security Block" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+            "Critical PII was detected. This discussion has been flagged." | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          }
+
+  # ============================================
+  # AUTO-PROCESS DISCUSSIONS
+  # ============================================
+  process-discussion:
+    name: Process Discussion
+    runs-on: [self-hosted, slate]
+    needs: pii-scan
+    if: |
+      always() &&
+      needs.pii-scan.outputs.blocked != 'true' &&
+      (github.event_name == 'discussion' || github.event_name == 'discussion_comment')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        run: |
+          'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH
+
+      - name: Process Discussion Event
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: |
+          $EventType = '${{ github.event_name }}'
+          $Action = '${{ github.event.action }}'
+
+          if ($EventType -eq 'discussion') {
+            $DiscussionId = '${{ github.event.discussion.node_id }}'
+            $Title = '${{ github.event.discussion.title }}'
+            $Category = '${{ github.event.discussion.category.name }}'
+            $Author = '${{ github.event.discussion.user.login }}'
+            $Number = '${{ github.event.discussion.number }}'
+            $Url = '${{ github.event.discussion.html_url }}'
+
+            Write-Host "=== Discussion Event ==="
+            Write-Host "Action: $Action"
+            Write-Host "Number: #$Number"
+            Write-Host "Title: $Title"
+            Write-Host "Category: $Category"
+            Write-Host "Author: $Author"
+            Write-Host ""
+
+            # Log to discussion manager
+            python slate/slate_discussion_manager.py --log --event "$Action" --discussion "$Number" --title "$Title" --category "$Category"
+
+            # Route based on category
+            switch -Regex ($Category) {
+              'Announcements' {
+                Write-Host "Announcement detected - no action needed"
+              }
+              'Ideas|Feature' {
+                Write-Host "Feature idea - adding to ROADMAP board (10)"
+                # Create issue for tracking if new
+                if ($Action -eq 'created') {
+                  gh issue create --title "[Discussion #$Number] $Title" --body "From discussion: $Url`n`nCategory: $Category`nAuthor: @$Author" --label "discussion,enhancement" 2>$null
+                }
+              }
+              'Q&A|Help' {
+                Write-Host "Q&A discussion - tracking for response metrics"
+                python slate/slate_discussion_manager.py --track-qa --discussion "$Number"
+              }
+              'Show.*Tell|General' {
+                Write-Host "Community discussion - logged for engagement"
+              }
+              'Bugs|Issues' {
+                Write-Host "Bug report via discussion - creating issue"
+                if ($Action -eq 'created') {
+                  gh issue create --title "[Discussion #$Number] $Title" --body "From discussion: $Url`n`nCategory: $Category`nAuthor: @$Author" --label "discussion,bug" 2>$null
+                }
+              }
+              default {
+                Write-Host "Category: $Category - no special handling"
+              }
+            }
+
+            # Summary output
+            "## Discussion Processed" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+            "| Field | Value |" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+            "|-------|-------|" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+            "| Number | #$Number |" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+            "| Action | $Action |" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+            "| Category | $Category |" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+            "| Author | @$Author |" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+
+          } elseif ($EventType -eq 'discussion_comment') {
+            $CommentId = '${{ github.event.comment.node_id }}'
+            $Author = '${{ github.event.comment.user.login }}'
+            $DiscussionNumber = '${{ github.event.discussion.number }}'
+
+            Write-Host "=== Discussion Comment Event ==="
+            Write-Host "Action: $Action"
+            Write-Host "Discussion: #$DiscussionNumber"
+            Write-Host "Author: $Author"
+
+            # Track engagement
+            python slate/slate_discussion_manager.py --log --event "comment_$Action" --discussion "$DiscussionNumber" --author "$Author"
+
+            "## Comment Processed" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+            "Comment $Action on discussion #$DiscussionNumber by @$Author" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          }
+
+  # ============================================
+  # MANUAL ACTIONS
+  # ============================================
+  manual-actions:
+    name: Manual Discussion Actions
+    runs-on: [self-hosted, slate]
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        run: |
+          'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH
+
+      - name: Discussion Status
+        if: inputs.action == 'status'
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: |
+          "## Discussion System Status" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          '```' | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          python slate/slate_discussion_manager.py --status 2>&1 | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          '```' | Out-File -Append $env:GITHUB_STEP_SUMMARY
+
+      - name: List Discussions
+        if: inputs.action == 'list-discussions'
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: |
+          "## All Discussions" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          '```' | Out-File -Append $env:GITHUB_STEP_SUMMARY
+
+          $Category = '${{ inputs.category }}'
+          if ($Category) {
+            gh api graphql -f query='
+              query($owner: String!, $repo: String!, $category: String!) {
+                repository(owner: $owner, name: $repo) {
+                  discussions(first: 50, categoryId: $category) {
+                    nodes {
+                      number
+                      title
+                      category { name }
+                      author { login }
+                      createdAt
+                      answered
+                    }
+                  }
+                }
+              }
+            ' -f owner="$env:PROJECT_OWNER" -f repo="$env:REPO_NAME" -f category="$Category" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          } else {
+            gh api graphql -f query='
+              query($owner: String!, $repo: String!) {
+                repository(owner: $owner, name: $repo) {
+                  discussions(first: 50) {
+                    nodes {
+                      number
+                      title
+                      category { name }
+                      author { login }
+                      createdAt
+                      answered
+                    }
+                  }
+                }
+              }
+            ' -f owner="$env:PROJECT_OWNER" -f repo="$env:REPO_NAME" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          }
+
+          '```' | Out-File -Append $env:GITHUB_STEP_SUMMARY
+
+      - name: List Categories
+        if: inputs.action == 'list-categories'
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: |
+          "## Discussion Categories" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          '```' | Out-File -Append $env:GITHUB_STEP_SUMMARY
+
+          gh api graphql -f query='
+            query($owner: String!, $repo: String!) {
+              repository(owner: $owner, name: $repo) {
+                discussionCategories(first: 20) {
+                  nodes {
+                    id
+                    name
+                    emoji
+                    description
+                  }
+                }
+              }
+            }
+          ' -f owner="$env:PROJECT_OWNER" -f repo="$env:REPO_NAME" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+
+          '```' | Out-File -Append $env:GITHUB_STEP_SUMMARY
+
+      - name: Check Unanswered
+        if: inputs.action == 'check-unanswered'
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: |
+          "## Unanswered Q&A Discussions" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          '```' | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          python slate/slate_discussion_manager.py --unanswered 2>&1 | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          '```' | Out-File -Append $env:GITHUB_STEP_SUMMARY
+
+      - name: Sync to Tasks
+        if: inputs.action == 'sync-to-tasks'
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: |
+          "## Syncing Discussions to Tasks" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          '```' | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          python slate/slate_discussion_manager.py --sync-tasks 2>&1 | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          '```' | Out-File -Append $env:GITHUB_STEP_SUMMARY
+
+      - name: Process All
+        if: inputs.action == 'process-all'
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: |
+          "## Processing All Discussions" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          '```' | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          python slate/slate_discussion_manager.py --process-all 2>&1 | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          '```' | Out-File -Append $env:GITHUB_STEP_SUMMARY
+
+  # ============================================
+  # SCHEDULED PROCESSING
+  # ============================================
+  scheduled-processing:
+    name: Scheduled Discussion Processing
+    runs-on: [self-hosted, slate]
+    if: github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        run: |
+          'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH
+
+      - name: Process Discussions
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: |
+          Write-Host "=== SLATE Scheduled Discussion Processing ==="
+          Write-Host "Time: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+          Write-Host ""
+
+          # Check for stale unanswered discussions
+          Write-Host "--- Checking Unanswered Q&A ---"
+          python slate/slate_discussion_manager.py --check-stale
+
+          # Generate engagement metrics
+          Write-Host ""
+          Write-Host "--- Engagement Metrics ---"
+          python slate/slate_discussion_manager.py --metrics
+
+          # Sync actionable discussions to task queue
+          Write-Host ""
+          Write-Host "--- Syncing to Task Queue ---"
+          python slate/slate_discussion_manager.py --sync-tasks
+
+          "## Scheduled Discussion Processing Complete" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          "Processed at: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" | Out-File -Append $env:GITHUB_STEP_SUMMARY

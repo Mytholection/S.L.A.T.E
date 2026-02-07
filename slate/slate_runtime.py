@@ -27,27 +27,73 @@ def check_integration(name, check_fn, details_fn=None):
     except Exception as e:
         return {"name": name, "status": "error", "error": str(e)}
 
-def check_python(): return sys.version_info >= (3, 11)
-def python_details(): return f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+def check_python():
+    return sys.version_info >= (3, 11)
+
+
+def python_details():
+    return f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+
+
 def check_pytorch():
-    try: import torch; return True
-    except: return False
+    # Modified: 2026-02-06T22:00:00Z | Author: COPILOT | Change: Actually verify PyTorch import
+    try:
+        import torch  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
 def pytorch_details():
     import torch
     cuda = f", CUDA {torch.version.cuda}" if torch.cuda.is_available() else ", CPU"
     return f"{torch.__version__}{cuda}"
+
+
 def check_ollama():
-    try: return subprocess.run(["ollama", "--version"], capture_output=True, timeout=5).returncode == 0
-    except: return False
+    try:
+        return subprocess.run(["ollama", "--version"], capture_output=True, timeout=5).returncode == 0
+    except Exception:
+        return False
+
+
 def check_gpu():
     try:
-        r = subprocess.run(["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"], capture_output=True, text=True, timeout=5)
-        return r.returncode == 0 and r.stdout.strip()
-    except: return False
+        result = subprocess.run(
+            ["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"],
+            capture_output=True, text=True, timeout=5
+        )
+        return result.returncode == 0 and result.stdout.strip()
+    except Exception:
+        return False
+
+
 def check_transformers():
-    try: import transformers; return True
-    except: return False
-def check_venv(): return (Path.cwd() / ".venv").exists()
+    # Modified: 2026-02-06T22:00:00Z | Author: COPILOT | Change: Actually verify transformers import
+    try:
+        import transformers  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
+def check_venv():
+    return (Path.cwd() / ".venv").exists()
+
+
+# Modified: 2026-02-06T22:30:00Z | Author: COPILOT | Change: Add ChromaDB integration check
+def check_chromadb():
+    try:
+        import chromadb  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
+def chromadb_details():
+    import chromadb
+    return chromadb.__version__
+
 
 INTEGRATIONS = [
     ("Python 3.11+", check_python, python_details),
@@ -56,6 +102,7 @@ INTEGRATIONS = [
     ("PyTorch", check_pytorch, pytorch_details),
     ("Transformers", check_transformers, None),
     ("Ollama", check_ollama, None),
+    ("ChromaDB", check_chromadb, chromadb_details),
 ]
 
 def check_all():
