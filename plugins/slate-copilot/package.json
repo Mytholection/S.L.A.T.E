@@ -14,6 +14,25 @@
 	"activationEvents": [],
 	"main": "./out/extension.js",
 	"contributes": {
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "slate-athena",
+					"title": "SLATE Athena",
+					"icon": "$(pulse)"
+				}
+			]
+		},
+		"views": {
+			"slate-athena": [
+				{
+					"type": "webview",
+					"id": "slate.dashboard",
+					"name": "Dashboard",
+					"contextualTitle": "SLATE Athena Dashboard"
+				}
+			]
+		},
 		"chatParticipants": [
 			{
 				"id": "slate-copilot.slate",
@@ -257,8 +276,31 @@
 			{
 				"command": "slate.showStatus",
 				"title": "SLATE: Show System Status"
+			},
+			{
+				"command": "slate.openDashboard",
+				"title": "SLATE: Open Dashboard",
+				"icon": "$(pulse)"
+			},
+			{
+				"command": "slate.refreshDashboard",
+				"title": "SLATE: Refresh Dashboard",
+				"icon": "$(refresh)"
+			},
+			{
+				"command": "slate.startDashboardServer",
+				"title": "SLATE: Start Dashboard Server"
 			}
-		]
+		],
+		"menus": {
+			"view/title": [
+				{
+					"command": "slate.refreshDashboard",
+					"when": "view == slate.dashboard",
+					"group": "navigation"
+				}
+			]
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",

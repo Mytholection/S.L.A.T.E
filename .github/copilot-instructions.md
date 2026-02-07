@@ -1,5 +1,5 @@
 # S.L.A.T.E. Copilot Instructions
-# Modified: 2026-02-06T22:30:00Z | Author: COPILOT | Change: Enforce SLATE protocol execution in all operations
+# Modified: 2026-02-07T02:45:00Z | Author: COPILOT | Change: Add Athena Dashboard webview documentation
 
 ## MANDATORY PROTOCOL — Read Before Any Operation
 
@@ -35,6 +35,40 @@ AI agent orchestration framework. All operations are LOCAL ONLY (127.0.0.1). Ver
 Repository: `SynchronizedLivingArchitecture/S.L.A.T.E`
 Python: 3.11+ via `.venv` at `E:\11132025\.venv\Scripts\python.exe`
 Runner: Self-hosted GitHub Actions runner `slate-runner` at `E:\11132025\actions-runner`
+
+## SLATE Athena Dashboard (NEW — v2.4.0)
+
+**VS Code Sidebar Webview** — Blue/cyan glassmorphism theme with real-time monitoring.
+
+### Access the Dashboard:
+1. Click the **⚡ SLATE Athena** icon in the VS Code Activity Bar (sidebar)
+2. Or run: Command Palette → "SLATE: Open Dashboard"
+3. Or use `@slate` chat participant
+
+### Features:
+- **System Health**: Python, GPU, PyTorch, Ollama, Virtual Env status
+- **Live Metrics**: CPU cores & usage, RAM free, disk space
+- **GPU Info**: Detected GPUs with memory info (auto-refreshes every 10s)
+- **Quick Actions**:
+  - 🚀 Start Dashboard Server (port 8080)
+  - 🌐 Open in Browser
+  - 🔄 Refresh Status
+
+### Commands:
+```bash
+# VS Code Command Palette
+SLATE: Open Dashboard          # Show Athena sidebar
+SLATE: Refresh Dashboard       # Manual refresh
+SLATE: Start Dashboard Server  # Launch FastAPI server on 127.0.0.1:8080
+SLATE: Show System Status      # Terminal status output
+```
+
+### Theme Customization (Athena):
+Located in `plugins/slate-copilot/src/dashboardViewProvider.ts` CSS `:root` section:
+- `--accent`: #3b82f6 (blue)
+- `--accent2`: #06b6d4 (cyan)
+- `--bg-root`: #0a0f1c (dark blue-black)
+- Glassmorphism: `backdrop-filter: blur(12px)` with 75% opacity
 
 ## SLATE Protocol Commands — Use These, Not Ad-Hoc Commands
 
