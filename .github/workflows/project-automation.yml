@@ -1,11 +1,12 @@
 # GitHub Projects automation using gh CLI
+# Security: PII scanning prevents personal data from reaching public project boards
 name: Project Automation
 
 on:
   issues:
-    types: [opened, labeled, closed, reopened]
+    types: [opened, edited, labeled, closed, reopened]
   pull_request:
-    types: [opened, labeled, closed, reopened, ready_for_review]
+    types: [opened, edited, labeled, closed, reopened, ready_for_review]
   workflow_dispatch:
     inputs:
       action:
@@ -15,6 +16,7 @@ on:
           - list-projects
           - list-items
           - sync-tasks
+          - scan-pii
         default: list-projects
       project_number:
         description: 'Project number (default: 11)'
@@ -23,13 +25,70 @@ on:
 
 env:
   PROJECT_OWNER: SynchronizedLivingArchitecture
-  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
+  pii-scan:
+    name: PII Security Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues' || github.event_name == 'pull_request'
+    outputs:
+      blocked: ${{ steps.scan.outputs.blocked }}
+      has_pii: ${{ steps.scan.outputs.has_pii }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Scan for PII
+        id: scan
+        run: |
+          # Get title and body from event
+          if [ "${{ github.event_name }}" == "issues" ]; then
+            TITLE="${{ github.event.issue.title }}"
+            BODY="${{ github.event.issue.body }}"
+          else
+            TITLE="${{ github.event.pull_request.title }}"
+            BODY="${{ github.event.pull_request.body }}"
+          fi
+
+          # Run PII scanner
+          RESULT=$(python slate/pii_scanner.py --title "$TITLE" --body "$BODY" --json 2>/dev/null || echo '{"has_pii":false,"blocked":false}')
+
+          HAS_PII=$(echo "$RESULT" | jq -r '.has_pii')
+          BLOCKED=$(echo "$RESULT" | jq -r '.blocked')
+          MESSAGE=$(echo "$RESULT" | jq -r '.message // empty')
+
+          echo "has_pii=$HAS_PII" >> $GITHUB_OUTPUT
+          echo "blocked=$BLOCKED" >> $GITHUB_OUTPUT
+
+          if [ "$BLOCKED" == "true" ]; then
+            echo "::error::BLOCKED - Critical PII detected. This item will NOT be added to public project boards."
+            echo "## PII Security Block" >> $GITHUB_STEP_SUMMARY
+            echo "Critical PII was detected in this issue/PR. It has been blocked from public project boards." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please remove sensitive information and try again." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          elif [ "$HAS_PII" == "true" ]; then
+            echo "::warning::PII detected - $MESSAGE"
+            echo "## PII Warning" >> $GITHUB_STEP_SUMMARY
+            echo "PII was detected but is not critical. Content may be redacted." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No PII detected"
+            echo "## PII Scan Passed" >> $GITHUB_STEP_SUMMARY
+            echo "No personal identifiable information detected." >> $GITHUB_STEP_SUMMARY
+          fi
+
   auto-add-to-project:
     name: Auto-add to Project
     runs-on: ubuntu-latest
-    if: github.event_name == 'issues' || github.event_name == 'pull_request'
+    needs: pii-scan
+    if: |
+      always() &&
+      needs.pii-scan.outputs.blocked != 'true' &&
+      (github.event_name == 'issues' || github.event_name == 'pull_request')
     permissions:
       issues: write
       pull-requests: write
@@ -40,7 +99,7 @@ jobs:
           (github.event_name == 'issues' && contains(toJSON(github.event.issue.labels.*.name), 'bug')) ||
           (github.event_name == 'pull_request' && contains(toJSON(github.event.pull_request.labels.*.name), 'bug'))
         env:
-          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}  # Create this secret with project scope
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
         run: |
           ITEM_URL="${{ github.event.issue.html_url || github.event.pull_request.html_url }}"
           echo "Adding $ITEM_URL to project 7 (BUG TRACKING)"
@@ -51,7 +110,7 @@ jobs:
           (github.event_name == 'issues' && contains(toJSON(github.event.issue.labels.*.name), 'enhancement')) ||
           (github.event_name == 'pull_request' && contains(toJSON(github.event.pull_request.labels.*.name), 'enhancement'))
         env:
-          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}  # Create this secret with project scope
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
         run: |
           ITEM_URL="${{ github.event.issue.html_url || github.event.pull_request.html_url }}"
           echo "Adding $ITEM_URL to project 10 (ROADMAP)"
@@ -60,7 +119,7 @@ jobs:
       - name: Add to SLATE ITERATIVE DEV (PRs)
         if: github.event_name == 'pull_request'
         env:
-          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}  # Create this secret with project scope
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
         run: |
           ITEM_URL="${{ github.event.pull_request.html_url }}"
           echo "Adding $ITEM_URL to project 8 (ITERATIVE DEVELOPMENT)"
@@ -71,10 +130,19 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch'
     steps:
+      - uses: actions/checkout@v4
+        if: inputs.action == 'sync-tasks' || inputs.action == 'scan-pii'
+
+      - name: Setup Python
+        if: inputs.action == 'scan-pii'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: List Projects
         if: inputs.action == 'list-projects'
         env:
-          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}  # PAT with project scope
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
         run: |
           echo "## All Projects" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
@@ -84,24 +152,20 @@ jobs:
       - name: List Items
         if: inputs.action == 'list-items'
         env:
-          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}  # PAT with project scope
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
         run: |
           echo "## Project ${{ inputs.project_number }} Items" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           gh project item-list ${{ inputs.project_number }} --owner $PROJECT_OWNER --limit 50 >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
-      - uses: actions/checkout@v4
-        if: inputs.action == 'sync-tasks'
-
       - name: Sync Tasks to Project
         if: inputs.action == 'sync-tasks'
         env:
-          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}  # PAT with project scope
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
         run: |
           echo "## Syncing current_tasks.json to Project ${{ inputs.project_number }}" >> $GITHUB_STEP_SUMMARY
 
-          # Read tasks and create draft items
           if [ -f current_tasks.json ]; then
             jq -r '.tasks[]? // .[]? | select(.status == "pending") | .title // .name' current_tasks.json | while read -r title; do
               if [ -n "$title" ]; then
@@ -113,3 +177,11 @@ jobs:
           else
             echo "No current_tasks.json found" >> $GITHUB_STEP_SUMMARY
           fi
+
+      - name: Run PII Scanner Test
+        if: inputs.action == 'scan-pii'
+        run: |
+          echo "## PII Scanner Self-Test" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          python slate/pii_scanner.py --test >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

@@ -82,6 +82,13 @@ All checks must pass before review.
 - Blocks typosquatting packages
 - Enforces trusted sources only
 
+### PII Scanner (`slate/pii_scanner.py`)
+- Scans all issue/PR content before adding to public project boards
+- Detects: emails, phone numbers, SSNs, credit cards, API keys, tokens, addresses
+- **Critical PII** (SSN, credit cards, private keys): Item BLOCKED from projects
+- **Other PII** (emails, phones, IPs): Automatically REDACTED
+- Allowlist for safe patterns (localhost, example.com, private IPs)
+
 ### Content Security Policy
 - No external CDN resources
 - No external fonts
