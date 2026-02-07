@@ -201,6 +201,18 @@ DEPENDENCY_FORKS = {
         "track": ["releases"],
         "paths_of_interest": [],
     },
+
+    # ── Development Tools ──────────────────────────────────────────────────
+    "github/spec-kit": {
+        "purpose": "Spec-Driven Development toolkit — specification format",
+        "category": "dev",
+        "priority": "medium",
+        "track": ["releases", "tags"],
+        "paths_of_interest": [
+            "src/",
+            "lib/",
+        ],
+    },
 }
 
 
@@ -447,7 +459,7 @@ def cmd_status(token: str, as_json: bool = False) -> int:
     print("═" * 90)
     print()
 
-    for cat in ["core", "web", "ai", "observability", "ci"]:
+    for cat in ["core", "web", "ai", "observability", "ci", "claude", "github", "dev"]:
         cat_items = [r for r in results if r["category"] == cat]
         if not cat_items:
             continue
