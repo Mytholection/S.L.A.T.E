@@ -2,7 +2,7 @@
 """
 SLATE ML Orchestrator - Local GPU Inference Management
 ======================================================
-# Modified: 2026-02-07T04:30:00Z | Author: COPILOT | Change: Initial implementation
+# Modified: 2026-07-12T02:55:00Z | Author: COPILOT | Change: Wire AI tracing into inference pipeline
 
 Manages local ML inference using Ollama and PyTorch on dual GPUs.
 Provides model routing, embedding indexing, and inference APIs for
@@ -33,11 +33,26 @@ import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Modified: 2026-02-07T04:30:00Z | Author: COPILOT | Change: workspace setup
+# Modified: 2026-07-12T02:55:00Z | Author: COPILOT | Change: workspace setup + lazy tracing import
 WORKSPACE_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(WORKSPACE_ROOT))
 
 OLLAMA_BASE = "http://127.0.0.1:11434"
+
+# Lazy tracer import to avoid circular dependencies
+_tracer = None
+
+
+def _get_inference_tracer():
+    """Lazy-load the AI tracer to avoid import cycles."""
+    global _tracer
+    if _tracer is None:
+        try:
+            from slate.slate_ai_tracing import get_tracer
+            _tracer = get_tracer()
+        except Exception:
+            _tracer = False  # Mark as unavailable
+    return _tracer if _tracer is not False else None
 STATE_FILE = WORKSPACE_ROOT / ".slate_ml_state.json"
 EMBEDDINGS_DIR = WORKSPACE_ROOT / "slate_memory" / "embeddings"
 
@@ -252,12 +267,18 @@ class MLOrchestrator:
     def infer(self, prompt: str, task_type: str = "general",
               system: str = "", temperature: float = 0.7,
               max_tokens: int = 2048) -> dict:
-        """Run inference with automatic model routing."""
+        """Run inference with automatic model routing and tracing."""
+        # Modified: 2026-07-12T02:55:00Z | Author: COPILOT | Change: Add AI tracing to inference
         model = self.get_model_for_task(task_type)
         start = time.time()
-        result = self.ollama.generate(model, prompt, system=system,
-                                       temperature=temperature,
-                                       max_tokens=max_tokens)
+        error_msg = None
+        try:
+            result = self.ollama.generate(model, prompt, system=system,
+                                           temperature=temperature,
+                                           max_tokens=max_tokens)
+        except Exception as e:
+            error_msg = str(e)
+            result = {"response": "", "eval_count": 0, "eval_duration": 0}
         elapsed = time.time() - start
 
         # Track stats
@@ -269,6 +290,29 @@ class MLOrchestrator:
         stats["tokens"] += result.get("eval_count", 0)
         stats["time"] += elapsed
         self._save_state()
+
+        # Trace inference (non-blocking — failures here don't affect inference)
+        tracer = _get_inference_tracer()
+        if tracer:
+            try:
+                routing_reason = f"task_type={task_type} -> model={model}"
+                tracer.trace_inference(
+                    model=model,
+                    task_type=task_type,
+                    prompt=prompt,
+                    result=result,
+                    elapsed=elapsed,
+                    gpu_index=0,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    routing_reason=routing_reason,
+                    error=error_msg,
+                )
+            except Exception:
+                pass  # Tracing must never break inference
+
+        if error_msg:
+            raise RuntimeError(error_msg)
 
         return {
             "response": result.get("response", ""),
