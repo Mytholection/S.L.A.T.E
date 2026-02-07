@@ -151,14 +151,31 @@ except ImportError as e:
     _feedback_layer = None
 
 # ─── Schematic Diagram API Router ────────────────────────────────────────────
-# Modified: 2026-02-08T03:00:00Z | Author: Claude Opus 4.5 | Change: Add schematic visualization API
+# Modified: 2026-02-08T04:00:00Z | Author: Claude Opus 4.5 | Change: Improve schematic API exception handling
+
+SCHEMATIC_API_AVAILABLE = False
+SCHEMATIC_API_ERROR = None
 
 try:
     from slate.schematic_api import router as schematic_router
     app.include_router(schematic_router)
+    SCHEMATIC_API_AVAILABLE = True
     print("[+] Schematic Diagram API mounted at /api/schematic")
-except ImportError as e:
+except Exception as e:
+    SCHEMATIC_API_ERROR = str(e)
     print(f"[-] Schematic API not available: {e}")
+    import traceback
+    traceback.print_exc()
+
+
+@app.get("/api/debug/schematic-status")
+async def debug_schematic_status():
+    """Debug endpoint to check schematic API status."""
+    return {
+        "available": SCHEMATIC_API_AVAILABLE,
+        "error": SCHEMATIC_API_ERROR,
+        "routes": [r.path for r in app.routes if "schematic" in getattr(r, "path", "")],
+    }
 
 # WebSocket connection manager
 class ConnectionManager:

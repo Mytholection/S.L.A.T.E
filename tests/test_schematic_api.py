@@ -378,5 +378,398 @@ class TestSchematicAPIRouter:
         assert any("ws" in r for r in routes)
 
 
+# ── Phase 3: Watchmaker 3D Dashboard Tests ────────────────────────────────────
+# Modified: 2026-02-08T06:00:00Z | Author: COPILOT | Change: Add watchmaker Phase 3 dashboard view tests
+
+class TestWatchmaker3DPerspective:
+    """Test 3D perspective container and z-layer CSS."""
+
+    @pytest.fixture
+    def template(self):
+        from slate_web.dashboard_template import build_template
+        return build_template()
+
+    def test_dashboard_3d_class(self, template):
+        assert "dashboard-3d" in template
+
+    def test_perspective_css(self, template):
+        assert "perspective: 1200px" in template
+
+    def test_z_layer_background(self, template):
+        assert ".z-background" in template
+
+    def test_z_layer_grid(self, template):
+        assert ".z-grid" in template
+
+    def test_z_layer_connections(self, template):
+        assert ".z-connections" in template
+
+    def test_z_layer_components(self, template):
+        assert ".z-components" in template
+
+    def test_z_layer_floating(self, template):
+        assert ".z-floating" in template
+
+    def test_z_layer_overlay(self, template):
+        assert ".z-overlay" in template
+
+    def test_preserve_3d_transform(self, template):
+        assert "preserve-3d" in template
+
+
+class TestWatchmakerCard:
+    """Test watchmaker card component CSS and HTML."""
+
+    @pytest.fixture
+    def template(self):
+        from slate_web.dashboard_template import build_template
+        return build_template()
+
+    def test_watchmaker_card_class(self, template):
+        assert ".watchmaker-card" in template
+
+    def test_watchmaker_card_hover(self, template):
+        assert ".watchmaker-card:hover" in template
+
+    def test_watchmaker_card_header(self, template):
+        assert ".watchmaker-card-header" in template
+
+    def test_gear_icon_class(self, template):
+        assert ".gear-icon" in template
+
+    def test_gear_spin_animation(self, template):
+        assert "gear-spin" in template
+
+    def test_watchmaker_card_html(self, template):
+        assert 'class="watchmaker-card' in template
+
+    def test_watchmaker_card_active(self, template):
+        assert 'watchmaker-card active' in template
+
+
+class TestStatusJewel:
+    """Test status jewel indicator CSS."""
+
+    @pytest.fixture
+    def template(self):
+        from slate_web.dashboard_template import build_template
+        return build_template()
+
+    def test_jewel_class(self, template):
+        assert ".status-jewel" in template
+
+    def test_jewel_active(self, template):
+        assert ".status-jewel.active" in template
+
+    def test_jewel_pending(self, template):
+        assert ".status-jewel.pending" in template
+
+    def test_jewel_error(self, template):
+        assert ".status-jewel.error" in template
+
+    def test_jewel_inactive(self, template):
+        assert ".status-jewel.inactive" in template
+
+    def test_jewel_pulse_animation(self, template):
+        assert "jewel-pulse" in template
+
+    def test_jewel_html_elements(self, template):
+        assert 'class="status-jewel' in template
+
+
+class TestCommandCenterView:
+    """Test Command Center (home) watchmaker view."""
+
+    @pytest.fixture
+    def template(self):
+        from slate_web.dashboard_template import build_template
+        return build_template()
+
+    def test_section_exists(self, template):
+        assert 'id="sec-command-center"' in template
+
+    def test_health_ring(self, template):
+        assert 'class="health-ring"' in template
+
+    def test_health_ring_nodes(self, template):
+        for component in ['gpu', 'ai', 'tasks', 'runner', 'services']:
+            assert f'data-component="{component}"' in template
+
+    def test_health_ring_connectors(self, template):
+        assert "health-ring-connector" in template
+
+    def test_summary_cards(self, template):
+        assert 'id="cc-svc-count"' in template
+        assert 'id="cc-gpu-count"' in template
+        assert 'id="cc-task-count"' in template
+        assert 'id="cc-model-count"' in template
+
+    def test_system_health_ring_css(self, template):
+        assert ".health-ring-node" in template
+        assert ".health-ring-connector" in template
+
+    def test_connector_pulse_animation(self, template):
+        assert "connector-pulse" in template
+
+
+class TestConstellationView:
+    """Test Service Constellation watchmaker view."""
+
+    @pytest.fixture
+    def template(self):
+        from slate_web.dashboard_template import build_template
+        return build_template()
+
+    def test_section_exists(self, template):
+        assert 'id="sec-constellation"' in template
+
+    def test_constellation_svg(self, template):
+        assert 'class="constellation-view"' in template
+
+    def test_service_nodes(self, template):
+        for svc in ['Dashboard', 'Ollama', 'ChromaDB', 'MCP Server', 'Foundry', 'GPU Farm', 'Runner']:
+            assert svc in template
+
+    def test_constellation_legend(self, template):
+        assert "constellation-legend" in template
+
+    def test_data_flow_lines(self, template):
+        assert "data-flow-line" in template
+
+    def test_constellation_jewels(self, template):
+        assert 'id="cst-dash-jewel"' in template
+        assert 'id="cst-ollama-jewel"' in template
+
+    def test_port_labels(self, template):
+        assert ":8080" in template
+        assert ":11434" in template
+        assert ":8000" in template
+
+
+class TestGPUWorkbenchView:
+    """Test GPU Workbench watchmaker view."""
+
+    @pytest.fixture
+    def template(self):
+        from slate_web.dashboard_template import build_template
+        return build_template()
+
+    def test_section_exists(self, template):
+        assert 'id="sec-gpu-workbench"' in template
+
+    def test_gpu_units(self, template):
+        assert 'id="gpu-unit-0"' in template
+        assert 'id="gpu-unit-1"' in template
+
+    def test_gpu_meters(self, template):
+        assert "gpu-meter-bar" in template
+        assert 'id="wb-gpu0-compute"' in template
+        assert 'id="wb-gpu1-memory"' in template
+
+    def test_gpu_power_meters(self, template):
+        assert 'id="wb-gpu0-power"' in template
+        assert 'id="wb-gpu1-power"' in template
+
+    def test_gpu_task_lists(self, template):
+        assert 'id="wb-gpu0-tasks"' in template
+        assert 'id="wb-gpu1-tasks"' in template
+
+    def test_gpu_temp_display(self, template):
+        assert 'id="wb-gpu0-temp"' in template
+        assert 'id="wb-gpu1-temp"' in template
+
+    def test_load_scheduler(self, template):
+        assert "gpu-load-scheduler" in template
+        assert 'id="wb-load-0"' in template
+        assert 'id="wb-load-1"' in template
+
+    def test_gpu_workbench_css(self, template):
+        assert ".gpu-workbench" in template
+        assert ".gpu-unit" in template
+        assert ".gpu-meter-fill" in template
+
+    def test_rtx_5070_label(self, template):
+        assert "RTX 5070 Ti" in template
+
+    def test_cuda_version(self, template):
+        assert "CUDA 12.8" in template
+
+    def test_blackwell_arch(self, template):
+        assert "Blackwell" in template
+
+
+class TestTaskOrchestrationView:
+    """Test Task Orchestration pipeline watchmaker view."""
+
+    @pytest.fixture
+    def template(self):
+        from slate_web.dashboard_template import build_template
+        return build_template()
+
+    def test_section_exists(self, template):
+        assert 'id="sec-task-orch"' in template
+
+    def test_pipeline_stages(self, template):
+        for stage in ['tp-pending', 'tp-running', 'tp-review', 'tp-completed']:
+            assert f'id="{stage}"' in template
+
+    def test_pipeline_arrows(self, template):
+        assert "task-pipeline-arrow" in template
+
+    def test_pipeline_css(self, template):
+        assert ".task-pipeline-viz" in template
+        assert ".task-pipeline-stage" in template
+
+    def test_current_stage_highlight(self, template):
+        assert ".task-pipeline-stage.current" in template
+
+    def test_workflow_runs_container(self, template):
+        assert 'id="task-orch-runs"' in template
+
+
+class TestWatchmakerNavigation:
+    """Test sidebar nav items for watchmaker views."""
+
+    @pytest.fixture
+    def full_template(self):
+        from slate_web.dashboard_template import get_full_template
+        return get_full_template()
+
+    def test_watchmaker_nav_section(self, full_template):
+        assert "Watchmaker" in full_template
+
+    def test_command_center_nav(self, full_template):
+        assert "showSection('command-center'" in full_template
+
+    def test_constellation_nav(self, full_template):
+        assert "showSection('constellation'" in full_template
+
+    def test_gpu_workbench_nav(self, full_template):
+        assert "showSection('gpu-workbench'" in full_template
+
+    def test_task_orch_nav(self, full_template):
+        assert "showSection('task-orch'" in full_template
+
+    def test_section_titles_js(self, full_template):
+        assert "'command-center'" in full_template
+        assert "'constellation'" in full_template
+        assert "'gpu-workbench'" in full_template
+        assert "'task-orch'" in full_template
+
+
+class TestWatchmakerJSFunctions:
+    """Test JavaScript functions for watchmaker views."""
+
+    @pytest.fixture
+    def full_template(self):
+        from slate_web.dashboard_template import get_full_template
+        return get_full_template()
+
+    def test_update_health_ring_fn(self, full_template):
+        assert "function updateHealthRing" in full_template or "async function updateHealthRing" in full_template
+
+    def test_update_constellation_fn(self, full_template):
+        assert "function updateConstellationJewels" in full_template or "async function updateConstellationJewels" in full_template
+
+    def test_update_gpu_workbench_fn(self, full_template):
+        assert "function updateGPUWorkbench" in full_template or "async function updateGPUWorkbench" in full_template
+
+    def test_refresh_task_orchestration_fn(self, full_template):
+        assert "function refreshTaskOrchestration" in full_template or "async function refreshTaskOrchestration" in full_template
+
+    def test_refresh_workflow_runs_fn(self, full_template):
+        assert "function refreshWorkflowRuns" in full_template or "async function refreshWorkflowRuns" in full_template
+
+    def test_init_watchmaker_views_fn(self, full_template):
+        assert "initWatchmakerViews" in full_template
+
+    def test_set_jewel_helper(self, full_template):
+        assert "function setJewel" in full_template
+
+    def test_periodic_intervals(self, full_template):
+        assert "setInterval(updateHealthRing" in full_template
+        assert "setInterval(updateGPUWorkbench" in full_template
+        assert "setInterval(updateConstellationJewels" in full_template
+        assert "setInterval(refreshTaskOrchestration" in full_template
+
+
+class TestWatchmakerDesignSystem:
+    """Test WatchmakerPatternGenerator in design_system.py."""
+
+    def test_import_watchmaker_pattern_generator(self):
+        from slate_web.design_system import WatchmakerPatternGenerator
+        assert WatchmakerPatternGenerator is not None
+
+    def test_gear_svg(self):
+        from slate_web.design_system import WatchmakerPatternGenerator
+        svg = WatchmakerPatternGenerator.gear_svg(100, 8)
+        assert "<svg" in svg
+        assert "polygon" in svg
+        assert "circle" in svg
+
+    def test_gear_mechanism_bg(self):
+        from slate_web.design_system import WatchmakerPatternGenerator
+        svg = WatchmakerPatternGenerator.gear_mechanism_bg(800, 600, 3)
+        assert "<svg" in svg
+        assert "animateTransform" in svg
+
+    def test_flow_line_pattern(self):
+        from slate_web.design_system import WatchmakerPatternGenerator
+        svg = WatchmakerPatternGenerator.flow_line_pattern(600, 50, 3)
+        assert "<svg" in svg
+        assert "animate" in svg
+        assert "circle" in svg
+
+    def test_status_jewel_svg(self):
+        from slate_web.design_system import WatchmakerPatternGenerator
+        for status in ["active", "pending", "error", "inactive"]:
+            svg = WatchmakerPatternGenerator.status_jewel_svg(16, status)
+            assert "<svg" in svg
+            assert "radialGradient" in svg
+
+    def test_gear_svg_size(self):
+        from slate_web.design_system import WatchmakerPatternGenerator
+        svg = WatchmakerPatternGenerator.gear_svg(200, 12)
+        assert 'viewBox="0 0 200 200"' in svg
+
+    def test_build_design_assets_includes_gears(self):
+        from slate_web.design_system import build_design_assets
+        import tempfile, os
+        with tempfile.TemporaryDirectory() as td:
+            assets = build_design_assets(td)
+            assert 'pattern_gears' in assets
+            assert 'pattern_flowline' in assets
+            assert os.path.exists(assets['pattern_gears'])
+
+    def test_build_design_assets_includes_jewels(self):
+        from slate_web.design_system import build_design_assets
+        import tempfile
+        with tempfile.TemporaryDirectory() as td:
+            assets = build_design_assets(td)
+            for status in ['active', 'pending', 'error', 'inactive']:
+                assert f'jewel_{status}' in assets
+
+
+class TestWatchmakerResponsive:
+    """Test responsive CSS for watchmaker views."""
+
+    @pytest.fixture
+    def template(self):
+        from slate_web.dashboard_template import build_template
+        return build_template()
+
+    def test_gpu_workbench_responsive(self, template):
+        # On small screens, GPU workbench should stack
+        assert "gpu-workbench" in template
+        # Check the responsive media query handles gpu-workbench
+        assert "grid-template-columns: 1fr" in template
+
+    def test_health_ring_responsive(self, template):
+        assert "health-ring" in template
+
+    def test_gear_bg_responsive(self, template):
+        assert ".gear-bg" in template
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])

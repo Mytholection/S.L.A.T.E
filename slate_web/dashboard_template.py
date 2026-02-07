@@ -753,6 +753,389 @@ def build_template() -> str:
             .schematic-modal-body {{ padding: 12px; }}
         }}
 
+        /* ═══ Phase 3: Watchmaker 3D Dashboard ═══════════════════════════ */
+        /* Modified: 2026-02-08T06:00:00Z | Author: COPILOT | Change: Add 3D perspective container, z-layer management, watchmaker views */
+
+        /* 3D Perspective Container */
+        .dashboard-3d {{
+            perspective: 1200px;
+            perspective-origin: 50% 50%;
+            transform-style: preserve-3d;
+        }}
+
+        /* Z-Layer System */
+        .z-background {{
+            transform: translateZ(-200px) scale(1.17);
+            pointer-events: none;
+        }}
+        .z-grid {{
+            transform: translateZ(-100px) scale(1.083);
+            pointer-events: none;
+        }}
+        .z-connections {{
+            transform: translateZ(-50px) scale(1.042);
+            pointer-events: none;
+        }}
+        .z-components {{
+            transform: translateZ(0px);
+        }}
+        .z-floating {{
+            transform: translateZ(50px);
+        }}
+        .z-overlay {{
+            transform: translateZ(100px);
+        }}
+
+        /* Gear Background Decoration */
+        .gear-bg {{
+            position: fixed;
+            top: 0;
+            left: 220px;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+            opacity: 0.08;
+        }}
+        .gear-bg svg {{
+            width: 100%;
+            height: 100%;
+        }}
+
+        /* Watchmaker Card */
+        .watchmaker-card {{
+            background: var(--sl-bg-container);
+            border: 1px solid var(--sl-border);
+            border-radius: 16px;
+            padding: 32px;
+            transform: translateZ(0);
+            transform-style: preserve-3d;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+            background-image: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 50%);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }}
+        .watchmaker-card:hover {{
+            transform: translateZ(12px) rotateX(-1deg);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.15);
+        }}
+        .watchmaker-card-header {{
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }}
+        .watchmaker-card-header .gear-icon {{
+            width: 24px;
+            height: 24px;
+            opacity: 0.5;
+            flex-shrink: 0;
+        }}
+        .watchmaker-card.active .gear-icon {{
+            animation: gear-spin 8s linear infinite;
+        }}
+        @keyframes gear-spin {{
+            to {{ transform: rotate(360deg); }}
+        }}
+
+        /* Status Jewel */
+        .status-jewel {{
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }}
+        .status-jewel.active {{
+            background: radial-gradient(circle at 30% 30%, #22C55E 0%, rgba(34,197,94,0.6) 100%);
+            box-shadow: 0 0 4px #22C55E, inset 0 1px 2px rgba(255,255,255,0.3);
+        }}
+        .status-jewel.pending {{
+            background: radial-gradient(circle at 30% 30%, #F59E0B 0%, rgba(245,158,11,0.6) 100%);
+            box-shadow: 0 0 4px #F59E0B, inset 0 1px 2px rgba(255,255,255,0.3);
+            animation: jewel-pulse 1.5s ease-in-out infinite;
+        }}
+        .status-jewel.error {{
+            background: radial-gradient(circle at 30% 30%, #EF4444 0%, rgba(239,68,68,0.6) 100%);
+            box-shadow: 0 0 4px #EF4444, inset 0 1px 2px rgba(255,255,255,0.3);
+        }}
+        .status-jewel.inactive {{
+            background: radial-gradient(circle at 30% 30%, #6B7280 0%, rgba(107,114,128,0.6) 100%);
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.2);
+        }}
+        @keyframes jewel-pulse {{
+            0%, 100% {{ opacity: 1; transform: scale(1); }}
+            50% {{ opacity: 0.7; transform: scale(1.15); }}
+        }}
+
+        /* Data Flow Line */
+        .data-flow-line {{
+            stroke: var(--sl-accent, #B85A3C);
+            stroke-width: 2;
+            stroke-dasharray: 10 5;
+            animation: flow-pulse 1.5s linear infinite;
+        }}
+        @keyframes flow-pulse {{
+            to {{ stroke-dashoffset: -15; }}
+        }}
+
+        /* System Health Ring */
+        .health-ring {{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            padding: 24px;
+            flex-wrap: wrap;
+        }}
+        .health-ring-node {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 16px;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            min-width: 100px;
+            text-align: center;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }}
+        .health-ring-node:hover {{
+            border-color: var(--sl-accent);
+            box-shadow: 0 0 12px rgba(184,90,60,0.15);
+        }}
+        .health-ring-node .hr-icon {{
+            font-size: 1.4rem;
+        }}
+        .health-ring-node .hr-label {{
+            font-size: 0.65rem;
+            color: var(--sl-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }}
+        .health-ring-node .hr-value {{
+            font-size: 0.85rem;
+            font-weight: 700;
+            font-family: var(--sl-font-mono);
+        }}
+        .health-ring-connector {{
+            width: 32px;
+            height: 2px;
+            background: var(--sl-border);
+            position: relative;
+        }}
+        .health-ring-connector::after {{
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--sl-accent);
+            opacity: 0;
+            animation: connector-pulse 3s ease-in-out infinite;
+        }}
+        @keyframes connector-pulse {{
+            0%, 100% {{ opacity: 0; }}
+            50% {{ opacity: 0.6; }}
+        }}
+
+        /* Service Constellation */
+        .constellation-view {{
+            position: relative;
+            min-height: 400px;
+            background: rgba(15,14,13,0.4);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.04);
+            overflow: hidden;
+        }}
+        .constellation-view svg {{
+            width: 100%;
+            height: 100%;
+        }}
+        .constellation-legend {{
+            display: flex;
+            gap: 16px;
+            padding: 12px 16px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            font-size: 0.6rem;
+            color: var(--sl-text-disabled);
+        }}
+        .constellation-legend-item {{
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }}
+
+        /* GPU Workbench */
+        .gpu-workbench {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }}
+        .gpu-unit {{
+            background: var(--sl-bg-container);
+            border: 1px solid var(--sl-border);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }}
+        .gpu-unit-header {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }}
+        .gpu-unit-title {{
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--sl-text-primary);
+        }}
+        .gpu-meters {{
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }}
+        .gpu-meter-row {{
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }}
+        .gpu-meter-label {{
+            font-size: 0.6rem;
+            color: var(--sl-text-secondary);
+            min-width: 60px;
+            font-family: var(--sl-font-mono);
+        }}
+        .gpu-meter-bar {{
+            flex: 1;
+            height: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+            overflow: hidden;
+        }}
+        .gpu-meter-fill {{
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            background: linear-gradient(90deg, var(--sl-accent), rgba(184,90,60,0.7));
+        }}
+        .gpu-meter-value {{
+            font-size: 0.65rem;
+            font-weight: 600;
+            font-family: var(--sl-font-mono);
+            min-width: 36px;
+            text-align: right;
+        }}
+        .gpu-tasks-list {{
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+        }}
+        .gpu-task-item {{
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 0;
+            font-size: 0.65rem;
+            color: var(--sl-text-secondary);
+            font-family: var(--sl-font-mono);
+        }}
+        .gpu-load-scheduler {{
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: var(--sl-bg-container);
+            border: 1px solid var(--sl-border);
+            border-radius: 8px;
+            font-size: 0.7rem;
+        }}
+        .gpu-load-bar {{
+            flex: 1;
+            height: 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }}
+        .gpu-load-fill-0 {{
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: linear-gradient(90deg, var(--sl-accent), rgba(184,90,60,0.4));
+            border-radius: 6px 0 0 6px;
+            transition: width 0.5s ease;
+        }}
+        .gpu-load-fill-1 {{
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
+            background: linear-gradient(270deg, #98C1D9, rgba(152,193,217,0.4));
+            border-radius: 0 6px 6px 0;
+            transition: width 0.5s ease;
+        }}
+
+        /* Task Orchestration View */
+        .task-orchestration {{
+            position: relative;
+        }}
+        .task-pipeline-viz {{
+            display: flex;
+            align-items: stretch;
+            gap: 0;
+            padding: 24px 16px;
+            overflow-x: auto;
+        }}
+        .task-pipeline-stage {{
+            flex: 1;
+            min-width: 140px;
+            text-align: center;
+            padding: 16px 12px;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            position: relative;
+            background: var(--sl-bg-container);
+        }}
+        .task-pipeline-stage.current {{
+            border-color: var(--sl-accent);
+            box-shadow: 0 0 12px rgba(184,90,60,0.15);
+        }}
+        .task-pipeline-stage-name {{
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 8px;
+        }}
+        .task-pipeline-stage-count {{
+            font-size: 1.4rem;
+            font-weight: 700;
+            font-family: var(--sl-font-mono);
+        }}
+        .task-pipeline-arrow {{
+            display: flex;
+            align-items: center;
+            padding: 0 4px;
+            color: var(--sl-text-disabled);
+            font-size: 1.2rem;
+        }}
+
+        @media (max-width: 900px) {{
+            .gpu-workbench {{ grid-template-columns: 1fr; }}
+            .health-ring {{ gap: 16px; }}
+            .health-ring-connector {{ width: 16px; }}
+            .task-pipeline-viz {{ flex-direction: column; gap: 8px; }}
+            .task-pipeline-arrow {{ transform: rotate(90deg); justify-content: center; }}
+            .gear-bg {{ left: 56px; }}
+        }}
+
         /* ─── Buttons (M3-inspired) ────────────────────────────────── */
         .btn {{
             display: inline-flex;
@@ -1661,6 +2044,22 @@ def build_template() -> str:
                 </button>
             </div>
 
+            <div class="nav-section">
+                <div class="nav-section-label">Watchmaker</div>
+                <button class="nav-item" onclick="showSection('command-center', this)">
+                    <span class="nav-item-icon">&#9881;</span><span>Command</span>
+                </button>
+                <button class="nav-item" onclick="showSection('constellation', this)">
+                    <span class="nav-item-icon">&#9733;</span><span>Services</span>
+                </button>
+                <button class="nav-item" onclick="showSection('gpu-workbench', this)">
+                    <span class="nav-item-icon">&#9883;</span><span>GPU Lab</span>
+                </button>
+                <button class="nav-item" onclick="showSection('task-orch', this)">
+                    <span class="nav-item-icon">&#8631;</span><span>Pipeline</span>
+                </button>
+            </div>
+
             <!-- Compact Schematic Widget (Spec 012 Phase 2) -->
             <div style="padding: 0 var(--sl-space-4); margin-bottom: var(--sl-space-4);">
                 <div class="schematic-compact" id="sidebar-schematic" onclick="openSchematicModal('system')" title="Click to expand system architecture">
@@ -2149,6 +2548,314 @@ def build_template() -> str:
                 </div>
                 </div>
 
+                <!-- ═══ SECTION: Command Center (Watchmaker Phase 3) ═══ -->
+                <div class="dash-section" id="sec-command-center">
+                    <div class="dashboard-3d">
+                        <!-- Health Ring Schematic -->
+                        <div class="watchmaker-card active" style="margin-bottom:24px;">
+                            <div class="watchmaker-card-header">
+                                <svg class="gear-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
+                                    <path d="M12 1v3m0 16v3M1 12h3m16 0h3M4.22 4.22l2.12 2.12m11.3 11.3l2.12 2.12M4.22 19.78l2.12-2.12m11.3-11.3l2.12-2.12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                </svg>
+                                <span style="font-weight:600;font-size:0.85rem;">System Health Ring</span>
+                                <span style="margin-left:auto;font-size:0.6rem;color:var(--sl-text-disabled);">Real-time component status</span>
+                            </div>
+                            <div class="health-ring" id="health-ring">
+                                <div class="health-ring-node" data-component="gpu">
+                                    <span class="hr-icon">&#9883;</span>
+                                    <span class="hr-label">GPU</span>
+                                    <span class="hr-value" id="hr-gpu-val">--</span>
+                                    <span class="status-jewel active" id="hr-gpu-jewel"></span>
+                                </div>
+                                <div class="health-ring-connector"></div>
+                                <div class="health-ring-node" data-component="ai">
+                                    <span class="hr-icon">&#129302;</span>
+                                    <span class="hr-label">AI</span>
+                                    <span class="hr-value" id="hr-ai-val">--</span>
+                                    <span class="status-jewel active" id="hr-ai-jewel"></span>
+                                </div>
+                                <div class="health-ring-connector"></div>
+                                <div class="health-ring-node" data-component="tasks">
+                                    <span class="hr-icon">&#9744;</span>
+                                    <span class="hr-label">Tasks</span>
+                                    <span class="hr-value" id="hr-tasks-val">--</span>
+                                    <span class="status-jewel pending" id="hr-tasks-jewel"></span>
+                                </div>
+                                <div class="health-ring-connector"></div>
+                                <div class="health-ring-node" data-component="runner">
+                                    <span class="hr-icon">&#9654;</span>
+                                    <span class="hr-label">Runner</span>
+                                    <span class="hr-value" id="hr-runner-val">--</span>
+                                    <span class="status-jewel pending" id="hr-runner-jewel"></span>
+                                </div>
+                                <div class="health-ring-connector"></div>
+                                <div class="health-ring-node" data-component="services">
+                                    <span class="hr-icon">&#9670;</span>
+                                    <span class="hr-label">Services</span>
+                                    <span class="hr-value" id="hr-svc-val">--</span>
+                                    <span class="status-jewel active" id="hr-svc-jewel"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Summary Cards Grid -->
+                        <div class="grid">
+                            <div class="col-3">
+                                <div class="watchmaker-card active" onclick="showSection('constellation',null)">
+                                    <div class="watchmaker-card-header">
+                                        <span class="status-jewel active" id="cc-svc-jewel"></span>
+                                        <span style="font-size:0.7rem;font-weight:600;">Services</span>
+                                    </div>
+                                    <div style="font-size:1.6rem;font-weight:700;font-family:var(--sl-font-mono);" id="cc-svc-count">--</div>
+                                    <div style="font-size:0.55rem;color:var(--sl-text-disabled);margin-top:4px;">Active connections</div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="watchmaker-card active" onclick="showSection('gpu-workbench',null)">
+                                    <div class="watchmaker-card-header">
+                                        <span class="status-jewel active" id="cc-gpu-jewel"></span>
+                                        <span style="font-size:0.7rem;font-weight:600;">GPU Farm</span>
+                                    </div>
+                                    <div style="font-size:1.6rem;font-weight:700;font-family:var(--sl-font-mono);" id="cc-gpu-count">2x</div>
+                                    <div style="font-size:0.55rem;color:var(--sl-text-disabled);margin-top:4px;">RTX 5070 Ti &middot; 32GB</div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="watchmaker-card" onclick="showSection('task-orch',null)">
+                                    <div class="watchmaker-card-header">
+                                        <span class="status-jewel pending" id="cc-task-jewel"></span>
+                                        <span style="font-size:0.7rem;font-weight:600;">Task Queue</span>
+                                    </div>
+                                    <div style="font-size:1.6rem;font-weight:700;font-family:var(--sl-font-mono);" id="cc-task-count">--</div>
+                                    <div style="font-size:0.55rem;color:var(--sl-text-disabled);margin-top:4px;">Pending tasks</div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="watchmaker-card active">
+                                    <div class="watchmaker-card-header">
+                                        <span class="status-jewel active" id="cc-model-jewel"></span>
+                                        <span style="font-size:0.7rem;font-weight:600;">AI Models</span>
+                                    </div>
+                                    <div style="font-size:1.6rem;font-weight:700;font-family:var(--sl-font-mono);" id="cc-model-count">--</div>
+                                    <div style="font-size:0.55rem;color:var(--sl-text-disabled);margin-top:4px;">Loaded in Ollama</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ SECTION: Service Constellation (Watchmaker Phase 3) ═══ -->
+                <div class="dash-section" id="sec-constellation">
+                    <div class="dashboard-3d">
+                        <div class="watchmaker-card active" style="padding:0;overflow:hidden;">
+                            <div style="padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;gap:12px;">
+                                <svg class="gear-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
+                                    <path d="M12 1v3m0 16v3M1 12h3m16 0h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                </svg>
+                                <span style="font-weight:600;font-size:0.85rem;">Service Constellation</span>
+                                <span style="font-size:0.6rem;color:var(--sl-text-disabled);margin-left:auto;" id="constellation-count">Loading...</span>
+                            </div>
+                            <div class="constellation-view" id="constellation-svg">
+                                <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:400px;">
+                                    <!-- Dashboard node (center top) -->
+                                    <rect x="345" y="30" width="110" height="40" rx="8" fill="rgba(184,90,60,0.1)" stroke="#B85A3C" stroke-width="1.5"/>
+                                    <text x="400" y="55" text-anchor="middle" fill="#B85A3C" font-size="12" font-family="Consolas,monospace" font-weight="600">Dashboard</text>
+                                    <circle cx="360" cy="45" r="4" id="cst-dash-jewel" fill="#22C55E"/>
+                                    <text x="400" y="25" text-anchor="middle" fill="#666" font-size="9" font-family="Consolas,monospace">:8080</text>
+
+                                    <!-- Connection lines from Dashboard -->
+                                    <line x1="370" y1="70" x2="180" y2="130" class="data-flow-line" stroke-width="1.5"/>
+                                    <line x1="400" y1="70" x2="400" y2="130" class="data-flow-line" stroke-width="1.5"/>
+                                    <line x1="430" y1="70" x2="620" y2="130" class="data-flow-line" stroke-width="1.5"/>
+
+                                    <!-- Ollama node (left) -->
+                                    <rect x="125" y="130" width="110" height="40" rx="8" fill="rgba(34,197,94,0.08)" stroke="#22C55E" stroke-width="1"/>
+                                    <text x="180" y="155" text-anchor="middle" fill="#98C1D9" font-size="12" font-family="Consolas,monospace">Ollama</text>
+                                    <circle cx="140" cy="145" r="4" id="cst-ollama-jewel" fill="#22C55E"/>
+                                    <text x="180" y="125" text-anchor="middle" fill="#666" font-size="9" font-family="Consolas,monospace">:11434</text>
+
+                                    <!-- ChromaDB node (center) -->
+                                    <rect x="345" y="130" width="110" height="40" rx="8" fill="rgba(34,197,94,0.08)" stroke="#22C55E" stroke-width="1"/>
+                                    <text x="400" y="155" text-anchor="middle" fill="#98C1D9" font-size="12" font-family="Consolas,monospace">ChromaDB</text>
+                                    <circle cx="360" cy="145" r="4" id="cst-chroma-jewel" fill="#22C55E"/>
+                                    <text x="400" y="125" text-anchor="middle" fill="#666" font-size="9" font-family="Consolas,monospace">:8000</text>
+
+                                    <!-- MCP Server node (right) -->
+                                    <rect x="565" y="130" width="110" height="40" rx="8" fill="rgba(34,197,94,0.08)" stroke="#22C55E" stroke-width="1"/>
+                                    <text x="620" y="155" text-anchor="middle" fill="#98C1D9" font-size="12" font-family="Consolas,monospace">MCP Server</text>
+                                    <circle cx="580" cy="145" r="4" id="cst-mcp-jewel" fill="#6B7280"/>
+                                    <text x="620" y="125" text-anchor="middle" fill="#666" font-size="9" font-family="Consolas,monospace">:stdio</text>
+
+                                    <!-- Lower connections -->
+                                    <line x1="180" y1="170" x2="180" y2="240" class="data-flow-line" stroke-width="1"/>
+                                    <line x1="400" y1="170" x2="290" y2="240" class="data-flow-line" stroke-width="1"/>
+                                    <line x1="400" y1="170" x2="510" y2="240" class="data-flow-line" stroke-width="1"/>
+
+                                    <!-- Foundry node -->
+                                    <rect x="125" y="240" width="110" height="40" rx="8" fill="rgba(152,193,217,0.08)" stroke="#98C1D9" stroke-width="1"/>
+                                    <text x="180" y="265" text-anchor="middle" fill="#98C1D9" font-size="12" font-family="Consolas,monospace">Foundry</text>
+                                    <circle cx="140" cy="255" r="4" id="cst-foundry-jewel" fill="#6B7280"/>
+                                    <text x="180" y="235" text-anchor="middle" fill="#666" font-size="9" font-family="Consolas,monospace">:5272</text>
+
+                                    <!-- GPU Farm node -->
+                                    <rect x="235" y="240" width="110" height="40" rx="8" fill="rgba(184,90,60,0.1)" stroke="#B85A3C" stroke-width="1.5"/>
+                                    <text x="290" y="265" text-anchor="middle" fill="#B85A3C" font-size="12" font-family="Consolas,monospace" font-weight="600">GPU Farm</text>
+                                    <circle cx="250" cy="255" r="4" id="cst-gpu-jewel" fill="#22C55E"/>
+                                    <text x="290" y="235" text-anchor="middle" fill="#666" font-size="9" font-family="Consolas,monospace">2x RTX 5070 Ti</text>
+
+                                    <!-- Runner node -->
+                                    <rect x="455" y="240" width="110" height="40" rx="8" fill="rgba(152,193,217,0.08)" stroke="#98C1D9" stroke-width="1"/>
+                                    <text x="510" y="265" text-anchor="middle" fill="#98C1D9" font-size="12" font-family="Consolas,monospace">Runner</text>
+                                    <circle cx="470" cy="255" r="4" id="cst-runner-jewel" fill="#F59E0B"/>
+                                    <text x="510" y="235" text-anchor="middle" fill="#666" font-size="9" font-family="Consolas,monospace">Actions</text>
+
+                                    <!-- GPU interconnect -->
+                                    <line x1="290" y1="280" x2="290" y2="340" stroke="#B85A3C" stroke-width="1" stroke-dasharray="4,3"/>
+                                    <rect x="235" y="340" width="110" height="30" rx="6" fill="rgba(184,90,60,0.06)" stroke="#B85A3C" stroke-width="0.8"/>
+                                    <text x="290" y="360" text-anchor="middle" fill="#666" font-size="9" font-family="Consolas,monospace">32GB VRAM Total</text>
+                                </svg>
+                            </div>
+                            <div class="constellation-legend">
+                                <div class="constellation-legend-item"><span class="status-jewel active" style="width:8px;height:8px;"></span> Active</div>
+                                <div class="constellation-legend-item"><span class="status-jewel pending" style="width:8px;height:8px;"></span> Standby</div>
+                                <div class="constellation-legend-item"><span class="status-jewel inactive" style="width:8px;height:8px;"></span> Offline</div>
+                                <div class="constellation-legend-item" style="margin-left:auto;">&#8212; Data Flow</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ SECTION: GPU Workbench (Watchmaker Phase 3) ═══ -->
+                <div class="dash-section" id="sec-gpu-workbench">
+                    <div class="dashboard-3d">
+                        <div class="gpu-workbench">
+                            <div class="gpu-unit" id="gpu-unit-0">
+                                <div class="gpu-unit-header">
+                                    <span class="gpu-unit-title">GPU 0: RTX 5070 Ti</span>
+                                    <span class="status-jewel active" id="wb-gpu0-jewel"></span>
+                                </div>
+                                <div class="gpu-meters">
+                                    <div class="gpu-meter-row">
+                                        <span class="gpu-meter-label">&#9883; Compute</span>
+                                        <div class="gpu-meter-bar"><div class="gpu-meter-fill" id="wb-gpu0-compute" style="width:0%"></div></div>
+                                        <span class="gpu-meter-value" id="wb-gpu0-compute-val">--%</span>
+                                    </div>
+                                    <div class="gpu-meter-row">
+                                        <span class="gpu-meter-label">&#9673; Memory</span>
+                                        <div class="gpu-meter-bar"><div class="gpu-meter-fill" id="wb-gpu0-memory" style="width:0%"></div></div>
+                                        <span class="gpu-meter-value" id="wb-gpu0-memory-val">--%</span>
+                                    </div>
+                                    <div class="gpu-meter-row">
+                                        <span class="gpu-meter-label">&#9889; Power</span>
+                                        <div class="gpu-meter-bar"><div class="gpu-meter-fill" id="wb-gpu0-power" style="width:0%"></div></div>
+                                        <span class="gpu-meter-value" id="wb-gpu0-power-val">--W</span>
+                                    </div>
+                                </div>
+                                <div class="gpu-tasks-list" id="wb-gpu0-tasks">
+                                    <div class="gpu-task-item"><span class="status-jewel active" style="width:6px;height:6px;"></span> Loading...</div>
+                                </div>
+                                <div style="margin-top:12px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.04);font-size:0.55rem;color:var(--sl-text-disabled);font-family:var(--sl-font-mono);">
+                                    <span id="wb-gpu0-temp">Temp: --&deg;C</span> &middot; <span>CUDA 12.8</span> &middot; <span>Blackwell</span>
+                                </div>
+                            </div>
+
+                            <div class="gpu-unit" id="gpu-unit-1">
+                                <div class="gpu-unit-header">
+                                    <span class="gpu-unit-title">GPU 1: RTX 5070 Ti</span>
+                                    <span class="status-jewel active" id="wb-gpu1-jewel"></span>
+                                </div>
+                                <div class="gpu-meters">
+                                    <div class="gpu-meter-row">
+                                        <span class="gpu-meter-label">&#9883; Compute</span>
+                                        <div class="gpu-meter-bar"><div class="gpu-meter-fill" id="wb-gpu1-compute" style="width:0%"></div></div>
+                                        <span class="gpu-meter-value" id="wb-gpu1-compute-val">--%</span>
+                                    </div>
+                                    <div class="gpu-meter-row">
+                                        <span class="gpu-meter-label">&#9673; Memory</span>
+                                        <div class="gpu-meter-bar"><div class="gpu-meter-fill" id="wb-gpu1-memory" style="width:0%"></div></div>
+                                        <span class="gpu-meter-value" id="wb-gpu1-memory-val">--%</span>
+                                    </div>
+                                    <div class="gpu-meter-row">
+                                        <span class="gpu-meter-label">&#9889; Power</span>
+                                        <div class="gpu-meter-bar"><div class="gpu-meter-fill" id="wb-gpu1-power" style="width:0%"></div></div>
+                                        <span class="gpu-meter-value" id="wb-gpu1-power-val">--W</span>
+                                    </div>
+                                </div>
+                                <div class="gpu-tasks-list" id="wb-gpu1-tasks">
+                                    <div class="gpu-task-item"><span class="status-jewel active" style="width:6px;height:6px;"></span> Loading...</div>
+                                </div>
+                                <div style="margin-top:12px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.04);font-size:0.55rem;color:var(--sl-text-disabled);font-family:var(--sl-font-mono);">
+                                    <span id="wb-gpu1-temp">Temp: --&deg;C</span> &middot; <span>CUDA 12.8</span> &middot; <span>Blackwell</span>
+                                </div>
+                            </div>
+
+                            <div class="gpu-load-scheduler">
+                                <span style="font-weight:600;font-size:0.7rem;white-space:nowrap;">GPU 0</span>
+                                <div class="gpu-load-bar">
+                                    <div class="gpu-load-fill-0" id="wb-load-0" style="width:50%"></div>
+                                    <div class="gpu-load-fill-1" id="wb-load-1" style="width:30%"></div>
+                                </div>
+                                <span style="font-weight:600;font-size:0.7rem;white-space:nowrap;">GPU 1</span>
+                                <span style="font-size:0.55rem;color:var(--sl-text-disabled);margin-left:8px;">Load Distribution</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ SECTION: Task Orchestration (Watchmaker Phase 3) ═══ -->
+                <div class="dash-section" id="sec-task-orch">
+                    <div class="dashboard-3d">
+                        <div class="watchmaker-card active" style="margin-bottom:24px;">
+                            <div class="watchmaker-card-header">
+                                <svg class="gear-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
+                                    <path d="M12 1v3m0 16v3M1 12h3m16 0h3M4.22 4.22l2.12 2.12m11.3 11.3l2.12 2.12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                </svg>
+                                <span style="font-weight:600;font-size:0.85rem;">Task Orchestration Pipeline</span>
+                                <button class="card-action" onclick="refreshTaskOrchestration()" style="margin-left:auto;">Refresh</button>
+                            </div>
+                            <div class="task-pipeline-viz" id="task-pipeline">
+                                <div class="task-pipeline-stage" id="tp-pending">
+                                    <div class="task-pipeline-stage-name">Pending</div>
+                                    <div class="task-pipeline-stage-count" id="tp-pending-count">0</div>
+                                    <span class="status-jewel pending" style="margin-top:8px;"></span>
+                                </div>
+                                <div class="task-pipeline-arrow">&raquo;</div>
+                                <div class="task-pipeline-stage current" id="tp-running">
+                                    <div class="task-pipeline-stage-name">Running</div>
+                                    <div class="task-pipeline-stage-count" id="tp-running-count">0</div>
+                                    <span class="status-jewel active" style="margin-top:8px;"></span>
+                                </div>
+                                <div class="task-pipeline-arrow">&raquo;</div>
+                                <div class="task-pipeline-stage" id="tp-review">
+                                    <div class="task-pipeline-stage-name">Review</div>
+                                    <div class="task-pipeline-stage-count" id="tp-review-count">0</div>
+                                    <span class="status-jewel pending" style="margin-top:8px;"></span>
+                                </div>
+                                <div class="task-pipeline-arrow">&raquo;</div>
+                                <div class="task-pipeline-stage" id="tp-completed">
+                                    <div class="task-pipeline-stage-name">Complete</div>
+                                    <div class="task-pipeline-stage-count" id="tp-completed-count">0</div>
+                                    <span class="status-jewel active" style="margin-top:8px;"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Task List -->
+                        <div class="grid">
+                            <div class="card col-12">
+                                <div class="card-header">
+                                    <span class="card-title">Active Workflow Runs</span>
+                                    <button class="card-action" onclick="refreshWorkflowRuns()">Refresh</button>
+                                </div>
+                                <div id="task-orch-runs"><div class="empty">Loading workflow runs...</div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 </main>
             </div>
         </div>
@@ -2230,7 +2937,11 @@ def build_template_js() -> str:
             tasks:     { title: 'Tasks',      sub: 'Task queue, heatmap, and scheduling' },
             github:    { title: 'GitHub',     sub: 'PRs, issues, commits, and releases' },
             agents:    { title: 'Agents',     sub: 'AI agent system and routing' },
-            activity:  { title: 'Activity',   sub: 'Recent operations and events' }
+            activity:  { title: 'Activity',   sub: 'Recent operations and events' },
+            'command-center': { title: 'Command Center', sub: 'Watchmaker system health overview' },
+            'constellation':  { title: 'Service Constellation', sub: 'Interactive service topology map' },
+            'gpu-workbench':  { title: 'GPU Workbench', sub: 'Dual RTX 5070 Ti workload management' },
+            'task-orch':      { title: 'Task Orchestration', sub: 'Pipeline visualization and workflow runs' }
         };
 
         let activeSection = localStorage.getItem('slate_section') || 'overview';
@@ -2257,7 +2968,7 @@ def build_template_js() -> str:
         (function() {
             const saved = localStorage.getItem('slate_section') || 'overview';
             const navItems = document.querySelectorAll('.nav-item');
-            const sectionNames = ['overview','controls','hardware','workflows','tasks','github','agents','activity'];
+            const sectionNames = ['overview','controls','hardware','workflows','tasks','github','agents','activity','command-center','constellation','gpu-workbench','task-orch'];
             const idx = sectionNames.indexOf(saved);
             if (idx >= 0 && navItems[idx]) {
                 showSection(saved, navItems[idx]);
@@ -3109,6 +3820,185 @@ def build_template_js() -> str:
             } catch (e) {}
         }
 
+        // ─── Watchmaker Phase 3: View Update Functions ───────────
+        // Modified: 2026-02-08T06:00:00Z | Author: COPILOT | Change: Add watchmaker dashboard view controllers
+
+        async function updateHealthRing() {
+            try {
+                const resp = await fetch('/api/status');
+                const data = await resp.json();
+                // GPU
+                const gpuCount = (data.gpus || []).length;
+                const gpuOk = gpuCount > 0;
+                setEl('hr-gpu-val', gpuCount + 'x GPU');
+                setJewel('hr-gpu-jewel', gpuOk ? 'active' : 'error');
+                // AI (Ollama models)
+                const modelCount = (data.ollama_models || []).length;
+                setEl('hr-ai-val', modelCount + ' models');
+                setJewel('hr-ai-jewel', modelCount > 0 ? 'active' : 'inactive');
+                // Services
+                const svcTotal = (data.services_online || 0);
+                setEl('hr-svc-val', svcTotal + ' online');
+                setJewel('hr-svc-jewel', svcTotal >= 3 ? 'active' : svcTotal > 0 ? 'pending' : 'error');
+                // Command center summary cards
+                setEl('cc-svc-count', svcTotal + '/' + (data.services_total || '?'));
+                setJewel('cc-svc-jewel', svcTotal >= 3 ? 'active' : 'pending');
+                setEl('cc-model-count', modelCount.toString());
+                setJewel('cc-model-jewel', modelCount > 0 ? 'active' : 'inactive');
+            } catch (e) {}
+            try {
+                const resp2 = await fetch('/api/tasks');
+                const tasks = await resp2.json();
+                const pending = (tasks.tasks || []).filter(t => t.status === 'pending' || t.status === 'not_started').length;
+                const running = (tasks.tasks || []).filter(t => t.status === 'in_progress' || t.status === 'running').length;
+                setEl('hr-tasks-val', pending + ' pending');
+                setJewel('hr-tasks-jewel', running > 0 ? 'active' : pending > 0 ? 'pending' : 'inactive');
+                setEl('cc-task-count', pending.toString());
+                setJewel('cc-task-jewel', pending > 0 ? 'pending' : 'active');
+            } catch (e) {
+                setEl('hr-tasks-val', '--');
+            }
+            try {
+                const resp3 = await fetch('/api/runner/status');
+                const r = await resp3.json();
+                const rOnline = r.process_running || r.runner_running || false;
+                setEl('hr-runner-val', rOnline ? 'Online' : 'Offline');
+                setJewel('hr-runner-jewel', rOnline ? 'active' : 'inactive');
+            } catch (e) {
+                setEl('hr-runner-val', '--');
+            }
+        }
+
+        function setEl(id, text) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = text;
+        }
+
+        function setJewel(id, status) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.className = 'status-jewel ' + status;
+        }
+
+        async function updateConstellationJewels() {
+            try {
+                const resp = await fetch('/api/services');
+                const data = await resp.json();
+                const svcMap = {};
+                (data.services || []).forEach(s => { svcMap[s.name.toLowerCase()] = s.status; });
+                const map = {
+                    'cst-dash-jewel': 'dashboard',
+                    'cst-ollama-jewel': 'ollama',
+                    'cst-chroma-jewel': 'chromadb',
+                    'cst-foundry-jewel': 'foundry',
+                    'cst-runner-jewel': 'runner',
+                    'cst-gpu-jewel': 'gpu'
+                };
+                for (const [id, svc] of Object.entries(map)) {
+                    const el = document.getElementById(id);
+                    if (!el) continue;
+                    const status = svcMap[svc];
+                    el.setAttribute('fill', status === 'online' ? '#22C55E' : status === 'offline' ? '#EF4444' : '#F59E0B');
+                }
+                const count = Object.values(svcMap).filter(v => v === 'online').length;
+                setEl('constellation-count', count + ' / ' + Object.keys(svcMap).length + ' online');
+            } catch (e) {}
+        }
+
+        async function updateGPUWorkbench() {
+            try {
+                const resp = await fetch('/api/gpu');
+                const data = await resp.json();
+                const gpus = data.gpus || [];
+                gpus.forEach((gpu, i) => {
+                    const util = gpu.utilization || gpu.load || 0;
+                    const memPct = gpu.memory_used && gpu.memory_total ? Math.round((gpu.memory_used / gpu.memory_total) * 100) : 0;
+                    const power = gpu.power_draw || gpu.power || 0;
+                    const temp = gpu.temperature || gpu.temp || 0;
+                    // Meters
+                    const compFill = document.getElementById('wb-gpu' + i + '-compute');
+                    if (compFill) compFill.style.width = util + '%';
+                    setEl('wb-gpu' + i + '-compute-val', util + '%');
+                    const memFill = document.getElementById('wb-gpu' + i + '-memory');
+                    if (memFill) memFill.style.width = memPct + '%';
+                    setEl('wb-gpu' + i + '-memory-val', memPct + '%');
+                    const pwrFill = document.getElementById('wb-gpu' + i + '-power');
+                    if (pwrFill) pwrFill.style.width = Math.min(100, (power / 250) * 100) + '%';
+                    setEl('wb-gpu' + i + '-power-val', power + 'W');
+                    setEl('wb-gpu' + i + '-temp', 'Temp: ' + temp + '°C');
+                    setJewel('wb-gpu' + i + '-jewel', util > 80 ? 'pending' : 'active');
+                    // Load distribution
+                    const loadFill = document.getElementById('wb-load-' + i);
+                    if (loadFill) loadFill.style.width = util + '%';
+                    // Tasks
+                    const taskEl = document.getElementById('wb-gpu' + i + '-tasks');
+                    if (taskEl && gpu.processes) {
+                        taskEl.innerHTML = gpu.processes.map(p =>
+                            '<div class="gpu-task-item"><span class="status-jewel active" style="width:6px;height:6px;"></span> ' + (p.name || p) + '</div>'
+                        ).join('') || '<div class="gpu-task-item" style="color:var(--sl-text-disabled);">&#8212; idle</div>';
+                    }
+                });
+            } catch (e) {}
+        }
+
+        async function refreshTaskOrchestration() {
+            try {
+                const resp = await fetch('/api/tasks');
+                const data = await resp.json();
+                const tasks = data.tasks || [];
+                let pending = 0, running = 0, review = 0, completed = 0;
+                tasks.forEach(t => {
+                    const s = (t.status || '').toLowerCase();
+                    if (s === 'pending' || s === 'not_started') pending++;
+                    else if (s === 'in_progress' || s === 'running') running++;
+                    else if (s === 'review' || s === 'waiting') review++;
+                    else if (s === 'completed' || s === 'done') completed++;
+                });
+                setEl('tp-pending-count', pending.toString());
+                setEl('tp-running-count', running.toString());
+                setEl('tp-review-count', review.toString());
+                setEl('tp-completed-count', completed.toString());
+                // Highlight current stage
+                ['tp-pending','tp-running','tp-review','tp-completed'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.classList.remove('current');
+                });
+                if (running > 0) document.getElementById('tp-running')?.classList.add('current');
+                else if (pending > 0) document.getElementById('tp-pending')?.classList.add('current');
+                else document.getElementById('tp-completed')?.classList.add('current');
+            } catch (e) {}
+        }
+
+        async function refreshWorkflowRuns() {
+            try {
+                const resp = await fetch('/api/workflows/runs');
+                const data = await resp.json();
+                const runs = (data.runs || data.workflow_runs || []).slice(0, 10);
+                const el = document.getElementById('task-orch-runs');
+                if (!el) return;
+                if (runs.length === 0) { el.innerHTML = '<div class="empty">No recent workflow runs</div>'; return; }
+                el.innerHTML = runs.map(r => {
+                    const status = r.status || r.conclusion || 'unknown';
+                    const jewel = status === 'success' || status === 'completed' ? 'active' : status === 'in_progress' || status === 'queued' ? 'pending' : status === 'failure' ? 'error' : 'inactive';
+                    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:0.7rem;">' +
+                        '<span class="status-jewel ' + jewel + '" style="width:8px;height:8px;"></span>' +
+                        '<span style="flex:1;color:var(--sl-text-primary);">' + (r.name || r.workflow || 'Workflow') + '</span>' +
+                        '<span style="font-family:var(--sl-font-mono);color:var(--sl-text-disabled);">#' + (r.run_number || r.id || '--') + '</span>' +
+                        '<span class="badge ' + (jewel === 'active' ? 'online' : jewel === 'error' ? 'error' : 'pending') + '">' + status + '</span>' +
+                        '</div>';
+                }).join('');
+            } catch (e) {}
+        }
+
+        // Initialize watchmaker views
+        function initWatchmakerViews() {
+            updateHealthRing();
+            updateConstellationJewels();
+            updateGPUWorkbench();
+            refreshTaskOrchestration();
+            refreshWorkflowRuns();
+        }
+
         fetchInitialStatus();
         refreshAll();
         loadSchematic();
@@ -3119,6 +4009,12 @@ def build_template_js() -> str:
         setInterval(requestSchematicUpdate, 30000);
         setInterval(updateSidebarSchematic, 60000);
         setInterval(updateSchematicStatusOverlay, 15000);
+        // Watchmaker Phase 3 - periodic view updates
+        initWatchmakerViews();
+        setInterval(updateHealthRing, 20000);
+        setInterval(updateGPUWorkbench, 10000);
+        setInterval(updateConstellationJewels, 30000);
+        setInterval(refreshTaskOrchestration, 30000);
     </script>
 </body>
 </html>'''

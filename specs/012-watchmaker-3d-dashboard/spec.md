@@ -590,3 +590,185 @@ slate/
 4. **Performance**: Animations < 16ms frame time (60fps)
 5. **Accessibility**: All interactive elements keyboard-navigable
 6. **Schematic Consistency**: Organization matches blueprint style
+
+---
+
+## GitHub Pages Requirements (LOCKED)
+
+### Page Ethos
+
+The SLATE GitHub Pages site is the **public face** of the project. It must:
+- Present **objective project health** information
+- Show **verifiable metrics** from public sources (GitHub API)
+- Demonstrate **professional engineering** quality
+- Follow all SLATE security protocols
+
+### Content Security Rules
+
+```
+╔═══════════════════════════════════════════════════════════════════════╗
+║                    PAGE SECURITY REQUIREMENTS                          ║
+╠═══════════════════════════════════════════════════════════════════════╣
+║                                                                        ║
+║  MUST NOT INCLUDE:                                                     ║
+║  ────────────────────────────────────────────────────────────────────  ║
+║  ✗ Local system information (GPU specs, CPU, RAM)                      ║
+║  ✗ Personal user data or paths                                         ║
+║  ✗ API keys, tokens, or credentials                                    ║
+║  ✗ Internal IP addresses or ports (except documentation examples)      ║
+║  ✗ Runtime status of local services                                    ║
+║  ✗ User-specific configuration                                         ║
+║  ✗ Debug or development information                                    ║
+║                                                                        ║
+║  MUST INCLUDE:                                                         ║
+║  ────────────────────────────────────────────────────────────────────  ║
+║  ✓ Project description and purpose                                     ║
+║  ✓ Feature list (capabilities, not implementation)                     ║
+║  ✓ Installation instructions (generic)                                 ║
+║  ✓ Documentation links                                                 ║
+║  ✓ GitHub project health metrics (public API data only)                ║
+║  ✓ Roadmap and version information                                     ║
+║  ✓ License and attribution                                             ║
+║                                                                        ║
+╚═══════════════════════════════════════════════════════════════════════╝
+```
+
+### Project Health Metrics (Objective Data)
+
+Display only metrics verifiable from public GitHub data:
+
+| Metric | Source | Display |
+|--------|--------|---------|
+| Repository Stars | GitHub API | Live counter badge |
+| Fork Count | GitHub API | Badge |
+| Open Issues | GitHub API | Count with trend |
+| Open PRs | GitHub API | Count |
+| Last Commit | GitHub API | Relative date |
+| CI Status | GitHub Actions | Pass/Fail badge |
+| License | Repository | Badge |
+| Contributors | GitHub API | Count |
+
+### Page Structure Requirements
+
+```
+PAGE ARCHITECTURE (LOCKED)
+══════════════════════════════════════════════════════════════════════
+
+1. HERO SECTION
+   ├── Project name and tagline
+   ├── Primary value proposition (LOCAL AI, FREE, YOUR HARDWARE)
+   ├── CTA buttons (Get Started, Documentation)
+   └── Watchmaker mechanism visual (decorative gears)
+
+2. PROJECT HEALTH DASHBOARD
+   ├── GitHub stats badges (stars, forks, issues)
+   ├── Build status indicator
+   ├── Latest release version
+   └── Community activity pulse
+
+3. FEATURE SHOWCASE
+   ├── Core capabilities (not implementation details)
+   ├── Schematic diagrams of architecture (conceptual)
+   ├── Use case examples
+   └── Integration highlights
+
+4. ARCHITECTURE OVERVIEW
+   ├── System diagram (conceptual, not live)
+   ├── Component relationships
+   ├── Data flow visualization
+   └── Technology stack
+
+5. REQUIREMENTS & INSTALLATION
+   ├── Minimum requirements (generic)
+   ├── Recommended setup (generic)
+   ├── One-line install command
+   └── Link to full documentation
+
+6. ROADMAP
+   ├── Current version features
+   ├── Upcoming releases
+   ├── Community contributions welcome
+   └── Issue tracker link
+
+7. FOOTER
+   ├── License information
+   ├── Attribution
+   ├── Links (GitHub, Wiki, Issues)
+   └── Project activity indicator (decorative)
+```
+
+### Visual Design Lock
+
+```css
+/* LOCKED PAGE DESIGN TOKENS */
+:root {
+  /* Brand Colors (locked) */
+  --page-primary: #B85A3C;        /* Warm rust */
+  --page-surface: #1A1816;        /* Dark earth */
+  --page-surface-variant: #2A2624;
+  --page-on-surface: #E8E2DE;
+
+  /* Blueprint Accent (locked) */
+  --page-blueprint-bg: #0D1B2A;
+  --page-blueprint-accent: #98C1D9;
+
+  /* Watchmaker Elements (locked) */
+  --page-gear-opacity: 0.12;      /* Background gears */
+  --page-gear-speed: 20s;         /* Slow rotation */
+  --page-jewel-glow: 4px;         /* Status indicators */
+
+  /* No local-data styling */
+  --page-no-runtime-data: true;   /* Enforced by design */
+}
+```
+
+### Accessibility Requirements
+
+1. **WCAG 2.1 AA Compliance**
+   - Contrast ratio 4.5:1 minimum for text
+   - Focus indicators on all interactive elements
+   - Skip navigation link
+   - Semantic HTML structure
+
+2. **Performance**
+   - First Contentful Paint < 1.5s
+   - No JavaScript required for core content
+   - CSS animations use `transform` and `opacity` only
+   - Prefers-reduced-motion support
+
+3. **SEO**
+   - Semantic `<h1>` through `<h6>` hierarchy
+   - Meta description
+   - Open Graph tags
+   - Structured data (JSON-LD)
+
+### Page Ethos Declaration
+
+```
++═══════════════════════════════════════════════════════════════════════+
+║                    SLATE PAGE ETHOS (LOCKED)                           ║
++═══════════════════════════════════════════════════════════════════════+
+║                                                                        ║
+║  1. OBJECTIVITY                                                        ║
+║     The page presents verifiable, objective information only.          ║
+║     No marketing hyperbole. No unsubstantiated claims.                 ║
+║                                                                        ║
+║  2. TRANSPARENCY                                                       ║
+║     All metrics come from public, verifiable sources.                  ║
+║     GitHub badges link to their data source.                           ║
+║                                                                        ║
+║  3. SECURITY                                                           ║
+║     Zero local data. Zero runtime information.                         ║
+║     No personal information. No internal paths.                        ║
+║                                                                        ║
+║  4. PROFESSIONALISM                                                    ║
+║     Engineering-quality presentation.                                  ║
+║     Watchmaker precision in every pixel.                               ║
+║     No decorative elements without purpose.                            ║
+║                                                                        ║
+║  5. ACCESSIBILITY                                                      ║
+║     Readable by all users. Keyboard navigable.                         ║
+║     Screen reader compatible. Reduced motion support.                  ║
+║                                                                        ║
++═══════════════════════════════════════════════════════════════════════+
+```
