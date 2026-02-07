@@ -11,7 +11,13 @@
 		"AI",
 		"Chat"
 	],
-	"activationEvents": [],
+	"activationEvents": [
+		"onView:slate.dashboard",
+		"onCommand:slate.openDashboard",
+		"onCommand:slate.refreshDashboard",
+		"onCommand:slate.startDashboardServer",
+		"onCommand:slate.showStatus"
+	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"viewsContainers": {

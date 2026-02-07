@@ -33,7 +33,11 @@ function _execCommand(command: string, token: vscode.CancellationToken, timeoutM
 			}
 		}
 
-		const proc = cp.spawn(config.pythonPath, command.split(' '), {
+		const args = command.split(' ');
+		console.log(`[SLATE Runner] Executing: ${config.pythonPath} ${args.join(' ')}`);
+		console.log(`[SLATE Runner] CWD: ${config.workspacePath}`);
+
+		const proc = cp.spawn(config.pythonPath, args, {
 			cwd: config.workspacePath,
 			env: {
 				...process.env,
@@ -54,6 +58,7 @@ function _execCommand(command: string, token: vscode.CancellationToken, timeoutM
 
 		proc.stderr.on('data', (data: Buffer) => {
 			stderr += data.toString('utf-8');
+			console.log(`[SLATE Runner] STDERR: ${data.toString('utf-8')}`);
 		});
 
 		// Handle cancellation
@@ -64,23 +69,28 @@ function _execCommand(command: string, token: vscode.CancellationToken, timeoutM
 
 		proc.on('close', (code) => {
 			disposable.dispose();
+			console.log(`[SLATE Runner] Exit code: ${code}`);
 			if (code === 0) {
+				console.log(`[SLATE Runner] Output length: ${stdout.length} bytes`);
 				resolve(stdout.trim());
 			} else {
 				// Include stderr in output for diagnostics
 				const output = stdout.trim() + (stderr ? `\n[stderr]: ${stderr.trim()}` : '');
+				console.log(`[SLATE Runner] Error output: ${output.substring(0, 200)}`);
 				resolve(output || `Command exited with code ${code}`);
 			}
 		});
 
 		proc.on('error', (err) => {
 			disposable.dispose();
+			console.error(`[SLATE Runner] Spawn error: ${err.message}`);
 			reject(new Error(`Failed to run command: ${err.message}`));
 		});
 
 		// Timeout
 		setTimeout(() => {
 			if (!proc.killed) {
+				console.warn(`[SLATE Runner] Timeout after ${timeoutMs / 1000}s`);
 				proc.kill('SIGTERM');
 				resolve(stdout.trim() + `\n[timeout after ${timeoutMs / 1000}s]`);
 			}

@@ -1,4 +1,4 @@
-// Modified: 2026-02-07T02:30:00Z | Author: COPILOT | Change: SLATE Athena Dashboard webview provider
+// Modified: 2026-02-07T23:41:00Z | Author: COPILOT | Change: Fix dashboard button wiring
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import { getSlateConfig } from './extension';
@@ -29,6 +29,7 @@ export class SlateDashboardProvider implements vscode.WebviewViewProvider {
 		context: vscode.WebviewViewResolveContext,
 		_token: vscode.CancellationToken,
 	) {
+		console.log('[SLATE Dashboard Provider] resolveWebviewView called');
 		this._view = webviewView;
 
 		webviewView.webview.options = {
@@ -37,31 +38,41 @@ export class SlateDashboardProvider implements vscode.WebviewViewProvider {
 		};
 
 		webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+		console.log('[SLATE Dashboard Provider] HTML loaded, waiting for webview ready...');
 
 		// Handle messages from the webview
 		webviewView.webview.onDidReceiveMessage(async data => {
+			console.log('[SLATE Dashboard Provider] Received message from webview:', data.type);
 			switch (data.type) {
 				case 'refresh':
+					console.log('[SLATE Dashboard Provider] Handling refresh request...');
 					await this.refresh();
 					break;
 				case 'startServer':
+					console.log('[SLATE Dashboard Provider] Handling startServer request...');
 					await this.startDashboardServer();
 					break;
 				case 'runCommand':
+					console.log('[SLATE Dashboard Provider] Handling runCommand request...');
 					await this.runCommand(data.command);
 					break;
 				case 'openBrowser':
+					console.log('[SLATE Dashboard Provider] Opening browser...');
 					vscode.env.openExternal(vscode.Uri.parse('http://127.0.0.1:8080'));
 					break;
+				default:
+					console.log('[SLATE Dashboard Provider] Unknown message type:', data.type);
 			}
 		});
 
 		// Auto-refresh every 10 seconds
 		this._refreshInterval = setInterval(() => {
+			console.log('[SLATE Dashboard Provider] Auto-refresh tick');
 			this.refresh();
 		}, 10000);
 
 		// Initial load
+		console.log('[SLATE Dashboard Provider] Calling initial refresh');
 		this.refresh();
 	}
 
@@ -72,22 +83,50 @@ export class SlateDashboardProvider implements vscode.WebviewViewProvider {
 
 		try {
 			const token = new vscode.CancellationTokenSource().token;
+			const config = getSlateConfig();
+
+			console.log('[SLATE Dashboard] Starting refresh...');
+			console.log('[SLATE Dashboard] Python path:', config.pythonPath);
+			console.log('[SLATE Dashboard] Workspace path:', config.workspacePath);
 
 			// Run status check
+			console.log('[SLATE Dashboard] Executing slate_status.py...');
 			const statusResult = await execSlateCommand('slate/slate_status.py --json', token);
+			console.log('[SLATE Dashboard] Status result:', statusResult.substring(0, 200));
+
+			console.log('[SLATE Dashboard] Executing slate_runtime.py...');
 			const runtimeResult = await execSlateCommand('slate/slate_runtime.py --json', token);
+			console.log('[SLATE Dashboard] Runtime result:', runtimeResult.substring(0, 200));
 
 			const status = this._parseJSON(statusResult);
 			const runtime = this._parseJSON(runtimeResult);
+
+			console.log('[SLATE Dashboard] Parsed status:', status ? 'OK' : 'FAILED');
+			console.log('[SLATE Dashboard] Parsed runtime:', runtime ? 'OK' : 'FAILED');
 
 			this._view.webview.postMessage({
 				type: 'updateStatus',
 				status,
 				runtime,
-				timestamp: new Date().toISOString()
+				timestamp: new Date().toISOString(),
+				debug: {
+					pythonPath: config.pythonPath,
+					workspacePath: config.workspacePath,
+					statusRaw: statusResult.substring(0, 500),
+					runtimeRaw: runtimeResult.substring(0, 500)
+				}
 			});
 		} catch (error) {
-			console.error('SLATE Dashboard refresh error:', error);
+			console.error('[SLATE Dashboard] Refresh error:', error);
+			if (this._view) {
+				this._view.webview.postMessage({
+					type: 'updateStatus',
+					status: null,
+					runtime: null,
+					error: String(error),
+					timestamp: new Date().toISOString()
+				});
+			}
 		}
 	}
 
@@ -315,6 +354,14 @@ export class SlateDashboardProvider implements vscode.WebviewViewProvider {
 			border: 1px solid var(--error);
 		}
 
+		.status-detail {
+			font-size: 10px;
+			color: var(--text-dim);
+			font-family: var(--mono);
+			margin-left: auto;
+			padding-left: 8px;
+		}
+
 		/* ═══ Buttons ═══ */
 		.btn {
 			background: var(--bg-glass);
@@ -454,34 +501,109 @@ export class SlateDashboardProvider implements vscode.WebviewViewProvider {
 	<script nonce="${nonce}">
 		const vscode = acquireVsCodeApi();
 
+		console.log('[SLATE Dashboard Webview] Initialized');
+
 		// Request initial refresh
+		console.log('[SLATE Dashboard Webview] Requesting initial refresh...');
 		vscode.postMessage({ type: 'refresh' });
 
 		// Handle messages from extension
 		window.addEventListener('message', event => {
 			const message = event.data;
+			console.log('[SLATE Dashboard Webview] Received message:', message.type);
 
 			switch (message.type) {
 				case 'updateStatus':
-					renderStatus(message.status, message.runtime, message.timestamp);
+					console.log('[SLATE Dashboard Webview] Rendering status...');
+					renderStatus(message.status, message.runtime, message.timestamp, message.error, message.debug);
 					break;
 				case 'commandResult':
+					console.log('[SLATE Dashboard Webview] Handling command result...');
 					handleCommandResult(message);
 					break;
+				default:
+					console.log('[SLATE Dashboard Webview] Unknown message type:', message.type);
 			}
 		});
 
-		function renderStatus(status, runtime, timestamp) {
-			const content = document.getElementById('content');
-			if (!status || !runtime) {
-				content.innerHTML = '<div class="card"><div class="card-content" style="color: var(--error);">Failed to load SLATE status. Ensure SLATE is installed.</div></div>';
+		document.addEventListener('click', event => {
+			const target = event.target instanceof HTMLElement
+				? event.target.closest('button[data-action]')
+				: null;
+			if (!target) {
 				return;
 			}
 
-			const pythonOk = runtime.python?.available || false;
-			const gpuOk = runtime.gpu?.available || false;
-			const pytorchOk = runtime.pytorch?.available || false;
-			const ollamaOk = runtime.ollama?.available || false;
+			const action = target.getAttribute('data-action');
+			switch (action) {
+				case 'refresh':
+					refresh();
+					break;
+				case 'startServer':
+					startDashboard();
+					break;
+				case 'openBrowser':
+					openBrowser();
+					break;
+				default:
+					console.log('[SLATE Dashboard Webview] Unknown action:', action);
+			}
+		});
+
+		function renderStatus(status, runtime, timestamp, error, debug) {
+			const content = document.getElementById('content');
+			
+			if (error) {
+				content.innerHTML = \`
+					<div class="card">
+						<div class="card-title" style="color: var(--error);">
+							<span class="icon">⚠️</span>
+							Error Loading Status
+						</div>
+						<div class="card-content" style="color: var(--error); font-family: monospace; font-size: 12px; white-space: pre-wrap;">
+							\${error}
+						</div>
+					</div>
+				\`;
+				return;
+			}
+			
+			if (!status || !runtime) {
+				const debugInfo = debug ? \`
+					<div class="card">
+						<div class="card-title">Debug Info</div>
+						<div class="card-content" style="font-family: monospace; font-size: 11px; white-space: pre-wrap;">
+Python: \${debug.pythonPath || 'unknown'}
+Workspace: \${debug.workspacePath || 'unknown'}
+
+Status output:
+\${debug.statusRaw || 'none'}
+
+Runtime output:
+\${debug.runtimeRaw || 'none'}
+						</div>
+					</div>
+				\` : '';
+				content.innerHTML = \`
+					<div class="card">
+						<div class="card-content" style="color: var(--warn);">
+							Failed to parse SLATE status. Check Python installation and workspace paths.
+						</div>
+					</div>
+					\${debugInfo}
+				\`;
+				return;
+			}
+
+			// Parse runtime integrations array
+			const integrations = runtime.integrations || [];
+			const getIntegration = (name) => integrations.find(i => i.name.toLowerCase().includes(name.toLowerCase()));
+			
+			const pythonOk = getIntegration('python')?.status === 'active';
+			const venvOk = getIntegration('virtual env')?.status === 'active';
+			const gpuOk = getIntegration('gpu')?.status === 'active';
+			const pytorchOk = getIntegration('pytorch')?.status === 'active';
+			const ollamaOk = getIntegration('ollama')?.status === 'active';
 
 			const html = \`
 				<!-- System Health -->
@@ -494,22 +616,26 @@ export class SlateDashboardProvider implements vscode.WebviewViewProvider {
 						<div class="status-row">
 							<span class="status-label">Python</span>
 							<span class="status-badge \${pythonOk ? 'ok' : 'error'}">\${pythonOk ? 'OK' : 'ERROR'}</span>
+							<span class="status-detail">\${status.python?.version || 'N/A'}</span>
 						</div>
 						<div class="status-row">
 							<span class="status-label">Virtual Env</span>
-							<span class="status-badge \${runtime.venv?.available ? 'ok' : 'warn'}">\${runtime.venv?.available ? 'OK' : 'MISSING'}</span>
+							<span class="status-badge \${venvOk ? 'ok' : 'warn'}">\${venvOk ? 'OK' : 'MISSING'}</span>
 						</div>
 						<div class="status-row">
 							<span class="status-label">GPU</span>
 							<span class="status-badge \${gpuOk ? 'ok' : 'warn'}">\${gpuOk ? 'OK' : 'N/A'}</span>
+							<span class="status-detail">\${status.gpu?.count || 0} device(s)</span>
 						</div>
 						<div class="status-row">
 							<span class="status-label">PyTorch</span>
 							<span class="status-badge \${pytorchOk ? 'ok' : 'warn'}">\${pytorchOk ? 'OK' : 'N/A'}</span>
+							<span class="status-detail">\${status.pytorch?.version || 'N/A'}</span>
 						</div>
 						<div class="status-row">
 							<span class="status-label">Ollama</span>
 							<span class="status-badge \${ollamaOk ? 'ok' : 'warn'}">\${ollamaOk ? 'OK' : 'N/A'}</span>
+							<span class="status-detail">\${status.ollama?.model_count || 0} models</span>
 						</div>
 					</div>
 				</div>
@@ -522,35 +648,36 @@ export class SlateDashboardProvider implements vscode.WebviewViewProvider {
 					</div>
 					<div class="metric-grid">
 						<div class="metric">
-							<div class="metric-value">\${status.cpu?.cores || 0}</div>
+							<div class="metric-value">\${status.system?.cpu_count || 0}</div>
 							<div class="metric-label">CPU Cores</div>
 						</div>
 						<div class="metric">
-							<div class="metric-value">\${status.cpu?.usage_percent?.toFixed(1) || 0}%</div>
+							<div class="metric-value">\${status.system?.cpu_percent?.toFixed(1) || 0}%</div>
 							<div class="metric-label">CPU Usage</div>
 						</div>
 						<div class="metric">
-							<div class="metric-value">\${(status.memory?.available_gb || 0).toFixed(1)}</div>
+							<div class="metric-value">\${(status.system?.memory_available_gb || 0).toFixed(1)}</div>
 							<div class="metric-label">RAM Free (GB)</div>
 						</div>
 						<div class="metric">
-							<div class="metric-value">\${(status.disk?.free_gb || 0).toFixed(0)}</div>
+							<div class="metric-value">\${(status.system?.disk_free_gb || 0).toFixed(0)}</div>
 							<div class="metric-label">Disk Free (GB)</div>
 						</div>
 					</div>
 				</div>
 
 				<!-- GPU Info -->
-				\${gpuOk && status.gpu?.devices ? \`
+				\${gpuOk && status.gpu?.gpus && status.gpu.gpus.length > 0 ? \`
 					<div class="card">
 						<div class="card-title">
 							<span class="icon">⚡</span>
 							GPU
 						</div>
-						\${status.gpu.devices.map(gpu => \`
+						\${status.gpu.gpus.map(gpu => \`
 							<div class="gpu-item">
 								<div class="gpu-name">\${gpu.name || 'Unknown GPU'}</div>
-								<div class="gpu-memory">\${gpu.memory_total || 'N/A'}</div>
+								<div class="gpu-memory">\${gpu.memory_total || 'N/A'} (\${gpu.memory_free || 'N/A'} free)</div>
+								<div class="gpu-compute">Compute: \${gpu.compute_capability || 'N/A'}</div>
 							</div>
 						\`).join('')}
 					</div>
@@ -562,9 +689,9 @@ export class SlateDashboardProvider implements vscode.WebviewViewProvider {
 						<span class="icon">🎯</span>
 						Quick Actions
 					</div>
-					<button class="btn btn-primary" onclick="startDashboard()">🚀 Start Dashboard Server</button>
-					<button class="btn" onclick="openBrowser()">🌐 Open in Browser</button>
-					<button class="btn" onclick="refresh()">🔄 Refresh Status</button>
+					<button class="btn btn-primary" data-action="startServer">🚀 Start Dashboard Server</button>
+					<button class="btn" data-action="openBrowser">🌐 Open in Browser</button>
+					<button class="btn" data-action="refresh">🔄 Refresh Status</button>
 				</div>
 			\`;
 
