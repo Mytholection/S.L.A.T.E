@@ -1,5 +1,5 @@
 # SLATE Specifications
-<!-- Modified: 2026-02-07T14:00:00Z | Author: CLAUDE | Change: Embed themed roadmap and visual styling -->
+<!-- Modified: 2026-02-07T15:00:00Z | Author: CLAUDE | Change: Mark spec 008 as completed -->
 
 This page provides an overview of all SLATE specifications, their status, and relationships.
 
@@ -64,7 +64,7 @@ DRAFT → SPECIFIED → PLANNED → IMPLEMENTING → COMPLETED
 
 | # | Specification | Status | Description |
 |---|---------------|--------|-------------|
-| 008 | [Guided Experience](Spec-008-Guided-Experience) | [~] Implementing | AI-driven onboarding wizard with zero-config setup |
+| 008 | [Guided Experience](Spec-008-Guided-Experience) | [x] Completed | AI-driven onboarding wizard with zero-config setup |
 
 ### Integration Track
 

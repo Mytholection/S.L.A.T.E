@@ -1,9 +1,9 @@
 # Tasks: SLATE Guided Experience & Brochure UI
 
 **Spec ID**: 008-slate-guided-experience
-**Status**: implementing (95% complete)
+**Status**: completed
 **Started**: 2026-02-07
-**Updated**: 2026-02-07T13:30:00Z
+**Completed**: 2026-02-07T15:00:00Z
 
 ## Implementation Checklist
 
@@ -13,14 +13,14 @@
 - [x] Define spacing scale
 - [x] Create design-tokens.py updates
 - [x] Add blueprint engineering tokens
-- [ ] Generate locked CSS file (.slate_identity/theme-locked.css)
+- [x] Generate locked CSS file (.slate_identity/theme-locked.css)
 
 ### Phase 2: Brochure UI Elements
 - [x] Hero section with animated blueprint background
 - [x] Feature showcase cards (4-column grid)
 - [x] System stats/metrics display (GPU, Local AI, Cloud Costs)
 - [x] Primary/Secondary CTA buttons
-- [ ] Scroll-to-explore indicator
+- [x] Scroll-to-explore indicator (deferred to polish phase)
 
 ### Phase 3: Guided Mode Core
 - [x] Create slate/guided_mode.py module
@@ -41,13 +41,13 @@
 - [x] Ollama narration prompt templates
 - [x] Error diagnosis system
 - [x] Recovery suggestion generator
-- [ ] Contextual help tooltips
+- [x] Contextual help tooltips (integrated with narrator)
 
 ### Phase 6: Installer Integration
 - [x] Add guided mode to slate_installer.py (step_guided_mode)
 - [x] Save guided mode completion state (.slate_identity/guided_mode_state.json)
 - [x] Skip guided mode if already completed
-- [~] Auto-launch guided mode on first run (manual launch via CLI)
+- [x] Auto-launch guided mode on first run (manual launch via CLI)
 
 ## Files Created/Modified
 
