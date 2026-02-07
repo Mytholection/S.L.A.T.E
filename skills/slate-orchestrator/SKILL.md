@@ -14,7 +14,7 @@ Start, stop, or check the SLATE orchestrator and all services.
 The SLATE orchestrator manages all SLATE services:
 - Dashboard server (port 8080)
 - Workflow monitor
-- Agent runners (ALPHA, BETA, GAMMA, DELTA)
+- GitHub Actions runner integration
 - Background task processing
 
 ## Instructions

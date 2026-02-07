@@ -129,8 +129,8 @@ planning           -> speckit          (FREE)
 
 ```text
 slate/             # Core SLATE engine modules
-agents/            # Agent implementations (ALPHA, BETA, GAMMA, DELTA)
-slate_core/        # Shared infrastructure (agents, locks, memory, GPU scheduler)
+agents/            # Dashboard server and legacy agent code (deprecated)
+slate_core/        # Shared infrastructure (locks, memory, GPU scheduler)
 specs/             # Active specifications
 src/               # Source code (backend/frontend)
 tests/             # Test suite
@@ -183,7 +183,7 @@ ruff check .
 
 - **All servers bind to `127.0.0.1` only** — never `0.0.0.0`
 - No external network calls unless explicitly requested by user
-- ActionGuard (`slate/action_guard.py`) validates all agent actions
+- ActionGuard (`slate/action_guard.py`) validates all actions
 - Content Security Policy enforced — no external CDN/fonts
 - Rate limiting active on dashboard API endpoints
 
@@ -218,17 +218,12 @@ SDKSourceGuard (`slate/sdk_source_guard.py`) enforces that ALL packages come fro
 - Known typosquatting packages
 - Suspicious naming patterns
 
-## Agent System
+## Task Execution System
 
-| Agent | Role | Preference |
-| --- | --- | --- |
-| ALPHA | Coding & implementation | GPU-preferred |
-| BETA | Testing & validation | GPU-preferred |
-| GAMMA | Planning & triage | CPU-preferred |
-| DELTA | Claude Code bridge | CLI-based |
+SLATE uses GitHub Actions with a self-hosted runner for all task execution. The deprecated agent system (ALPHA, BETA, GAMMA, DELTA) has been replaced by workflow-based execution.
 
-Tasks in `current_tasks.json` use `assigned_to` field for routing.
-Tasks with `assigned_to: "auto"` use ML-based smart routing.
+Tasks in `current_tasks.json` are processed by GitHub Actions workflows.
+Use `assigned_to: "workflow"` for workflow-based execution.
 
 ## Task Management
 
@@ -333,19 +328,18 @@ Repository: https://github.com/SynchronizedLivingArchitecture/S.L.A.T.E.
 - CODEOWNERS enforces review requirements for critical paths
 - All PRs must pass SLATE compatibility checklist
 
-## GitHub Agentic Workflow System
+## GitHub Workflow System
 
-SLATE uses GitHub as an **agentic task execution platform**. The GitHub ecosystem manages the entire project lifecycle autonomously: issues → tasks → agent routing → workflow execution → PR completion.
+SLATE uses GitHub as a **task execution platform**. The GitHub ecosystem manages the entire project lifecycle: issues → tasks → workflow execution → PR completion.
 
-### Agentic Architecture
+### Workflow Architecture
 
 ```
-GitHub Issues/Tasks → current_tasks.json → Agent Assignment → Workflow Dispatch
+GitHub Issues/Tasks → current_tasks.json → Workflow Dispatch → Self-hosted Runner
         ↓                     ↓                   ↓                    ↓
-    Tracking              Task Queue          ALPHA/BETA           Self-hosted
-                                             GAMMA/DELTA             Runner
+    Tracking              Task Queue          CI/CD Jobs          AI Execution
                                                   ↓                    ↓
-                                              AI Execution    →    PR/Commit
+                                              Validation     →    PR/Commit
 ```
 
 ### Workflow Files
@@ -353,7 +347,7 @@ GitHub Issues/Tasks → current_tasks.json → Agent Assignment → Workflow Dis
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | `ci.yml` | Push/PR | Smoke tests, lint, unit tests, security |
-| `slate.yml` | Core path changes | Tech tree, task queue, agent validation |
+| `slate.yml` | Core path changes | Tech tree, task queue, validation |
 | `nightly.yml` | Daily 4am UTC | Full test suite, dependency audit |
 | `cd.yml` | Tags/main | Build EXE, create releases |
 | `fork-validation.yml` | Fork PRs | Security gate |
@@ -369,7 +363,7 @@ SLATE **auto-detects** and configures the GitHub Actions runner. No manual setup
 # Auto-configure hooks, environment, and labels
 .\.venv\Scripts\python.exe slate/slate_runner_manager.py --setup
 
-# Dispatch a workflow for agentic execution
+# Dispatch a workflow for execution
 .\.venv\Scripts\python.exe slate/slate_runner_manager.py --dispatch "ci.yml"
 ```
 

@@ -33,7 +33,7 @@
 - [Quick Start](#quick-start)
 - [System Requirements](#system-requirements)
 - [Core Modules](#core-modules)
-- [Agent System](#agent-system)
+- [Task Execution](#task-execution)
 - [Local AI Providers](#local-ai-providers)
 - [Dashboard](#dashboard)
 - [CLI Reference](#cli-reference)
@@ -56,23 +56,23 @@ SLATE is a local-first AI orchestration system that:
 ┌─────────────────────────────────────────────────────────────────┐
 │                        S.L.A.T.E.                               │
 ├─────────────────────────────────────────────────────────────────┤
-│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐            │
-│  │  ALPHA  │  │  BETA   │  │  GAMMA  │  │  DELTA  │   Agents   │
-│  │ Coding  │  │ Testing │  │Planning │  │ Bridge  │            │
-│  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘            │
-│       │            │            │            │                  │
-│  ┌────┴────────────┴────────────┴────────────┴────┐            │
-│  │              Task Router / Scheduler            │            │
-│  └────────────────────┬────────────────────────────┘            │
-│                       │                                         │
-│  ┌────────────────────┴────────────────────────────┐            │
-│  │              AI Backend Selector                │            │
-│  └──────┬──────────────┬──────────────┬───────────┘            │
-│         │              │              │                         │
-│  ┌──────┴──────┐ ┌─────┴─────┐ ┌──────┴──────┐                 │
-│  │   Ollama    │ │  Foundry  │ │  External   │   Backends      │
-│  │ mistral-nemo│ │   Local   │ │    APIs     │                 │
-│  └─────────────┘ └───────────┘ └─────────────┘                 │
+│  ┌───────────────────────────────────────────────────────┐     │
+│  │                 Task Queue & Scheduler                 │     │
+│  └────────────────────────┬──────────────────────────────┘     │
+│                           │                                     │
+│  ┌────────────────────────┴──────────────────────────────┐     │
+│  │                 GitHub Actions Runner                  │     │
+│  │               (Self-hosted, GPU-enabled)               │     │
+│  └────────────────────────┬──────────────────────────────┘     │
+│                           │                                     │
+│  ┌────────────────────────┴──────────────────────────────┐     │
+│  │                  AI Backend Selector                   │     │
+│  └──────┬──────────────────┬──────────────────┬─────────┘     │
+│         │                  │                  │                 │
+│  ┌──────┴──────┐    ┌──────┴──────┐    ┌──────┴──────┐        │
+│  │   Ollama    │    │   Foundry   │    │  External   │        │
+│  │ mistral-nemo│    │    Local    │    │    APIs     │        │
+│  └─────────────┘    └─────────────┘    └─────────────┘        │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -205,24 +205,19 @@ slate/
     └── slatepi_benchmark.py   # Performance testing
 ```
 
-## Agent System
+## Task Execution
 
-SLATE coordinates multiple specialized agents:
+SLATE uses GitHub Actions with a self-hosted runner for task execution:
 
-| Agent | Role | Hardware | Capabilities |
-|-------|------|----------|--------------|
-| **ALPHA** | Implementation | GPU | Code generation, refactoring, bug fixes |
-| **BETA** | Validation | GPU | Testing, code review, security analysis |
-| **GAMMA** | Planning | CPU | Architecture, research, documentation |
-| **DELTA** | Integration | API | External service coordination |
+| Component | Purpose | Features |
+|-----------|---------|----------|
+| **Task Queue** | Work management | Priority-based, FIFO ordering |
+| **Workflow System** | Execution engine | CI/CD integration, parallel jobs |
+| **Self-hosted Runner** | Local execution | GPU-enabled, secure |
 
-### Task Routing
+### Task Management
 
-Tasks are automatically routed based on:
-- Complexity score (0-100)
-- Hardware requirements
-- Agent availability
-- Priority level
+Tasks are managed via GitHub Actions workflows:
 
 ```python
 # Example: Create a task
@@ -232,7 +227,7 @@ task = create_task(
     title="Implement user authentication",
     description="Add JWT-based auth to the API",
     priority=2,  # 1=highest, 5=lowest
-    assigned_to="ALPHA"
+    assigned_to="workflow"
 )
 ```
 
@@ -279,7 +274,7 @@ The web dashboard provides:
 
 - **System Overview**: CPU, GPU, memory usage
 - **Task Queue**: Pending, in-progress, completed tasks
-- **Agent Status**: Health and activity of each agent
+- **Workflow Status**: Running and completed workflows
 - **Metrics**: Response times, token usage, error rates
 - **Logs**: Real-time log streaming
 
@@ -443,17 +438,16 @@ Co-Authored-By: Your Name <email>
 - [ ] Custom model training
 - [ ] Plugin ecosystem
 
-## GitHub Agentic Workflow System
+## GitHub Workflow System
 
-SLATE uses GitHub as an **agentic task execution platform**. The entire project lifecycle is managed autonomously: issues become tasks, agents claim work, workflows execute, and PRs track completion.
+SLATE uses GitHub as a **task execution platform**. The entire project lifecycle is managed via workflows: issues become tasks, workflows execute, and PRs track completion.
 
 ### Architecture
 
 ```
-GitHub Issues → current_tasks.json → Agent Routing → Workflow Dispatch → PR/Commit
-     ↓                 ↓                  ↓                  ↓              ↓
-  Tracking         Task Queue         ALPHA/BETA        Self-hosted     Completion
-                                     GAMMA/DELTA          Runner
+GitHub Issues → current_tasks.json → Workflow Dispatch → Self-hosted Runner → PR/Commit
+     ↓                 ↓                    ↓                    ↓               ↓
+  Tracking         Task Queue           CI/CD Jobs           Execution       Completion
 ```
 
 ### Workflow Overview
@@ -461,7 +455,7 @@ GitHub Issues → current_tasks.json → Agent Routing → Workflow Dispatch →
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | `ci.yml` | Push/PR | Smoke tests, linting, unit tests, security scans |
-| `slate.yml` | Push to core paths | SLATE-specific validation (tech tree, task queue, agents) |
+| `slate.yml` | Push to core paths | SLATE-specific validation (tech tree, task queue) |
 | `nightly.yml` | Daily at 4am UTC | Full test suite, dependency checks, SDK import audit |
 | `cd.yml` | Push to main/tags | Build EXE, create releases |
 | `fork-validation.yml` | Fork PRs | Security gate, prerequisite validation |
@@ -477,7 +471,7 @@ python slate/slate_runner_manager.py --status
 # Auto-configure hooks, environment, and labels
 python slate/slate_runner_manager.py --setup
 
-# Dispatch a workflow for agentic execution
+# Dispatch a workflow
 python slate/slate_runner_manager.py --dispatch "ci.yml"
 
 # JSON output for automation
@@ -569,7 +563,7 @@ Set `MAIN_REPO_TOKEN` in BETA repo (Settings → Secrets → Actions):
 
 ```
 slate/                 # Core SDK modules
-agents/                # Agent implementations
+agents/                # Dashboard server
 slate_core/            # Shared infrastructure
 slate/                 # SLATE workflow tools
 .github/               # CI/CD workflows

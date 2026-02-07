@@ -17,7 +17,7 @@ SLATE is a local-first AI agent orchestration framework that:
 |---------|-------------|
 | [Getting Started](Getting-Started) | Installation and first steps |
 | [Architecture](Architecture) | System design and components |
-| [Agent System](Agents) | ALPHA, BETA, GAMMA, DELTA agents |
+| [Task Execution](Task-Execution) | Workflow-based task execution |
 | [AI Backends](AI-Backends) | Ollama, Foundry Local, external APIs |
 | [CLI Reference](CLI-Reference) | Command-line tools and options |
 | [Configuration](Configuration) | Settings and customization |
@@ -29,12 +29,11 @@ SLATE is a local-first AI agent orchestration framework that:
 ### Local-First
 All SLATE services bind to `127.0.0.1`. Your code, prompts, and data never leave your machine.
 
-### Multi-Agent Architecture
-SLATE uses specialized agents for different tasks:
-- **ALPHA**: Code generation and implementation
-- **BETA**: Testing and validation
-- **GAMMA**: Planning and research
-- **DELTA**: External integrations
+### Workflow-Based Execution
+SLATE uses GitHub Actions with a self-hosted runner for task execution:
+- **Task Queue**: Priority-based task management
+- **Workflow Dispatch**: CI/CD pipeline integration
+- **Local Runner**: GPU-enabled local execution
 
 ### Hardware Optimization
 SLATE auto-detects your hardware and configures:

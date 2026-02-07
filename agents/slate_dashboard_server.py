@@ -241,6 +241,52 @@ async def api_workflow_detail(run_id: int):
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
+@app.get("/api/workflow-pipeline")
+async def api_workflow_pipeline():
+    """Get workflow pipeline data."""
+    try:
+        tasks = load_tasks()
+
+        # Pipeline stats
+        pipeline = {
+            "tasks": len(tasks),
+            "pending": len([t for t in tasks if t.get("status") == "pending"]),
+            "in_progress": len([t for t in tasks if t.get("status") == "in-progress"]),
+            "completed": len([t for t in tasks if t.get("status") == "completed"])
+        }
+
+        # Get workflow info
+        try:
+            gh_cli = get_gh_cli()
+            result = subprocess.run(
+                [gh_cli, "run", "list", "--limit", "10", "--json", "status,conclusion"],
+                capture_output=True, text=True, timeout=10, cwd=str(WORKSPACE_ROOT)
+            )
+            if result.returncode == 0:
+                runs = json.loads(result.stdout)
+                pipeline["workflows_running"] = len([r for r in runs if r.get("status") == "in_progress"])
+                pipeline["workflows_success"] = len([r for r in runs if r.get("conclusion") == "success"])
+                pipeline["workflows_failed"] = len([r for r in runs if r.get("conclusion") == "failure"])
+        except Exception:
+            pipeline["workflows_running"] = 0
+            pipeline["workflows_success"] = 0
+            pipeline["workflows_failed"] = 0
+
+        # Get runner status
+        try:
+            from slate.slate_runner_manager import SlateRunnerManager
+            mgr = SlateRunnerManager()
+            detection = mgr.detect()
+            pipeline["runner_online"] = detection.get("runner_installed", False)
+            pipeline["runner_busy"] = pipeline["workflows_running"] > 0
+        except Exception:
+            pipeline["runner_online"] = False
+            pipeline["runner_busy"] = False
+
+        return JSONResponse(content={"pipeline": pipeline})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
 # ─── Task Management Endpoints ────────────────────────────────────────────────
 
 @app.get("/api/tasks")
@@ -401,18 +447,47 @@ DASHBOARD_HTML = """
     <title>S.L.A.T.E. Dashboard</title>
     <style>
         :root {
-            --bg-dark: #0f1419;
-            --bg-card: rgba(30, 41, 59, 0.75);
-            --bg-card-hover: rgba(30, 41, 59, 0.85);
-            --border: rgba(148, 163, 184, 0.1);
-            --text-primary: #e2e8f0;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --accent-blue: #60a5fa;
-            --accent-green: #4ade80;
-            --accent-yellow: #fbbf24;
-            --accent-red: #f87171;
-            --accent-purple: #a78bfa;
+            /* Monochrome Base Palette */
+            --bg-dark: #0a0a0a;
+            --bg-card: rgba(18, 18, 18, 0.80);
+            --bg-card-hover: rgba(28, 28, 28, 0.90);
+            --bg-elevated: rgba(38, 38, 38, 0.85);
+
+            /* Border System */
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.15);
+            --border-focus: rgba(255, 255, 255, 0.25);
+
+            /* Text Hierarchy */
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --text-muted: #666666;
+            --text-dim: #404040;
+
+            /* Status Colors (CRITICAL - Red/Green only) */
+            --status-success: #22c55e;
+            --status-error: #ef4444;
+            --status-success-bg: rgba(34, 197, 94, 0.12);
+            --status-error-bg: rgba(239, 68, 68, 0.12);
+
+            /* Neutral Status (monochrome) */
+            --status-pending: #808080;
+            --status-active: #ffffff;
+            --status-pending-bg: rgba(128, 128, 128, 0.12);
+            --status-active-bg: rgba(255, 255, 255, 0.08);
+
+            /* Workflow Pipeline */
+            --pipeline-task: #808080;
+            --pipeline-runner: #b3b3b3;
+            --pipeline-workflow: #ffffff;
+            --pipeline-result: #22c55e;
+
+            /* Legacy compatibility */
+            --accent-blue: #ffffff;
+            --accent-green: #22c55e;
+            --accent-yellow: #808080;
+            --accent-red: #ef4444;
+            --accent-purple: #b3b3b3;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -421,8 +496,8 @@ DASHBOARD_HTML = """
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg-dark);
             background-image:
-                radial-gradient(ellipse at 20% 30%, rgba(96, 165, 250, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 70%, rgba(167, 139, 250, 0.06) 0%, transparent 50%);
+                radial-gradient(ellipse at 20% 30%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(255, 255, 255, 0.015) 0%, transparent 50%);
             color: var(--text-primary);
             min-height: 100vh;
             line-height: 1.5;
@@ -453,7 +528,7 @@ DASHBOARD_HTML = """
         .logo-icon {
             width: 48px;
             height: 48px;
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            background: linear-gradient(135deg, #ffffff, #666666);
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -461,6 +536,7 @@ DASHBOARD_HTML = """
             font-size: 24px;
             font-weight: bold;
             font-family: Consolas, monospace;
+            color: var(--bg-dark);
         }
 
         .logo-text h1 {
@@ -496,9 +572,10 @@ DASHBOARD_HTML = """
             animation: pulse 2s infinite;
         }
 
-        .status-dot.online { background: var(--accent-green); }
-        .status-dot.offline { background: var(--accent-red); }
-        .status-dot.pending { background: var(--accent-yellow); }
+        .status-dot.online { background: var(--status-success); }
+        .status-dot.offline { background: var(--status-error); }
+        .status-dot.pending { background: var(--status-pending); }
+        .status-dot.active { background: var(--status-active); }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; }
@@ -581,10 +658,10 @@ DASHBOARD_HTML = """
             color: var(--text-muted);
         }
 
-        .stat-value.green { color: var(--accent-green); }
-        .stat-value.blue { color: var(--accent-blue); }
-        .stat-value.yellow { color: var(--accent-yellow); }
-        .stat-value.red { color: var(--accent-red); }
+        .stat-value.green { color: var(--status-success); }
+        .stat-value.blue { color: var(--text-primary); }
+        .stat-value.yellow { color: var(--text-secondary); }
+        .stat-value.red { color: var(--status-error); }
 
         /* Service Status */
         .service-list {
@@ -627,10 +704,11 @@ DASHBOARD_HTML = """
             font-weight: 600;
         }
 
-        .badge.online { background: rgba(74, 222, 128, 0.15); color: var(--accent-green); }
-        .badge.offline { background: rgba(248, 113, 113, 0.15); color: var(--accent-red); }
-        .badge.pending { background: rgba(251, 191, 36, 0.15); color: var(--accent-yellow); }
-        .badge.busy { background: rgba(96, 165, 250, 0.15); color: var(--accent-blue); }
+        .badge.online { background: var(--status-success-bg); color: var(--status-success); }
+        .badge.offline { background: var(--status-error-bg); color: var(--status-error); }
+        .badge.pending { background: var(--status-pending-bg); color: var(--status-pending); }
+        .badge.busy { background: var(--status-active-bg); color: var(--status-active); border: 1px solid rgba(255,255,255,0.2); }
+        .badge.in-progress { background: var(--status-active-bg); color: var(--status-active); border: 1px solid rgba(255,255,255,0.2); }
 
         /* Task List */
         .task-list {
@@ -651,9 +729,9 @@ DASHBOARD_HTML = """
             border-left: 3px solid transparent;
         }
 
-        .task-item.pending { border-left-color: var(--accent-yellow); }
-        .task-item.in-progress { border-left-color: var(--accent-blue); }
-        .task-item.completed { border-left-color: var(--accent-green); }
+        .task-item.pending { border-left-color: var(--status-pending); }
+        .task-item.in-progress { border-left-color: var(--status-active); }
+        .task-item.completed { border-left-color: var(--status-success); }
 
         .task-content { flex: 1; }
 
@@ -702,12 +780,13 @@ DASHBOARD_HTML = """
         .gpu-icon {
             width: 40px;
             height: 40px;
-            background: linear-gradient(135deg, #76b900, #4a7c00);
+            background: linear-gradient(135deg, #ffffff, #666666);
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 18px;
+            color: var(--bg-dark);
         }
 
         .gpu-info h4 {
@@ -736,12 +815,12 @@ DASHBOARD_HTML = """
         }
 
         .btn-primary {
-            background: var(--accent-blue);
-            color: white;
+            background: var(--text-primary);
+            color: var(--bg-dark);
         }
 
         .btn-primary:hover {
-            background: #3b82f6;
+            background: var(--text-secondary);
         }
 
         .btn-ghost {
@@ -774,15 +853,15 @@ DASHBOARD_HTML = """
         }
 
         #connection-status.connected {
-            background: rgba(74, 222, 128, 0.15);
-            color: var(--accent-green);
-            border: 1px solid rgba(74, 222, 128, 0.3);
+            background: var(--status-success-bg);
+            color: var(--status-success);
+            border: 1px solid rgba(34, 197, 94, 0.3);
         }
 
         #connection-status.disconnected {
-            background: rgba(248, 113, 113, 0.15);
-            color: var(--accent-red);
-            border: 1px solid rgba(248, 113, 113, 0.3);
+            background: var(--status-error-bg);
+            color: var(--status-error);
+            border: 1px solid rgba(239, 68, 68, 0.3);
         }
 
         /* Scrollbar */
@@ -790,6 +869,402 @@ DASHBOARD_HTML = """
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+        /* Agentic Flow Visualization */
+        .agentic-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .flow-pipeline {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            overflow-x: auto;
+        }
+
+        .flow-stage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            min-width: 100px;
+        }
+
+        .flow-stage-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            font-family: Consolas, monospace;
+            border: 2px solid var(--border);
+            transition: all 0.3s ease;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .flow-stage-icon.task { border-color: var(--status-pending); }
+        .flow-stage-icon.agent { border-color: var(--text-primary); }
+        .flow-stage-icon.workflow { border-color: var(--text-secondary); }
+        .flow-stage-icon.pr { border-color: var(--status-success); }
+
+        .flow-stage-icon.active {
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            animation: flow-pulse 2s infinite;
+        }
+
+        @keyframes flow-pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.2); }
+            50% { box-shadow: 0 0 30px rgba(255, 255, 255, 0.4); }
+        }
+
+        .flow-stage-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .flow-stage-value {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            font-family: Consolas, monospace;
+        }
+
+        .flow-connector {
+            flex: 1;
+            height: 2px;
+            background: var(--border);
+            min-width: 30px;
+            position: relative;
+        }
+
+        .flow-connector::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 4px solid transparent;
+            border-left-color: var(--text-muted);
+        }
+
+        .flow-connector.active {
+            background: linear-gradient(90deg, var(--text-muted), var(--text-primary), var(--text-muted));
+        }
+
+        /* Activity Feed */
+        .activity-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            border-left: 2px solid var(--border);
+        }
+
+        .activity-item.workflow { border-left-color: var(--text-secondary); }
+        .activity-item.task { border-left-color: var(--status-pending); }
+        .activity-item.success { border-left-color: var(--status-success); }
+        .activity-item.error { border-left-color: var(--status-error); }
+
+        .activity-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
+        }
+
+        .activity-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .activity-text {
+            font-size: 0.8rem;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .activity-time {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+
+        /* Task Form */
+        .task-form {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .task-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-family: inherit;
+        }
+
+        .task-input:focus {
+            outline: none;
+            border-color: var(--border-focus);
+        }
+
+        .task-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .task-select {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .task-item-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .task-item:hover .task-item-actions {
+            opacity: 1;
+        }
+
+        .task-action-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+        }
+
+        .task-action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .task-action-btn.delete:hover {
+            color: var(--status-error);
+        }
+
+        /* Workflow Expanded */
+        .workflow-item-expanded {
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .workflow-item-expanded:hover {
+            border-color: var(--border-hover);
+        }
+
+        .workflow-item-expanded.expanded {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .workflow-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .workflow-info {
+            flex: 1;
+        }
+
+        .workflow-jobs {
+            display: none;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .workflow-item-expanded.expanded .workflow-jobs {
+            display: block;
+        }
+
+        .workflow-job {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 0.75rem;
+        }
+
+        .workflow-job-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        .workflow-job-icon.success { background: var(--status-success-bg); color: var(--status-success); }
+        .workflow-job-icon.failure { background: var(--status-error-bg); color: var(--status-error); }
+        .workflow-job-icon.in_progress { background: var(--status-active-bg); color: var(--status-active); }
+        .workflow-job-icon.pending { background: var(--status-pending-bg); color: var(--status-pending); }
+
+        .workflow-job-name { flex: 1; color: var(--text-secondary); }
+        .workflow-job-duration { color: var(--text-muted); font-family: Consolas, monospace; }
+
+        /* Tech Tree Container */
+        .tech-tree-container {
+            width: 100%;
+            height: 400px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .tech-tree-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .tech-node {
+            cursor: pointer;
+        }
+
+        .tech-node circle {
+            fill: rgba(0, 0, 0, 0.5);
+            stroke: var(--text-muted);
+            stroke-width: 2;
+            transition: all 0.2s;
+        }
+
+        .tech-node.completed circle {
+            stroke: var(--status-success);
+            fill: var(--status-success-bg);
+        }
+
+        .tech-node.in_progress circle {
+            stroke: var(--status-active);
+            fill: var(--status-active-bg);
+        }
+
+        .tech-node.locked circle {
+            stroke: var(--text-dim);
+            fill: rgba(0, 0, 0, 0.3);
+        }
+
+        .tech-node:hover circle {
+            stroke-width: 3;
+        }
+
+        .tech-node text {
+            fill: var(--text-primary);
+            font-size: 10px;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+
+        .tech-link {
+            stroke: var(--border);
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        .tech-link.unlocked {
+            stroke: var(--text-muted);
+        }
+
+        .tech-tooltip {
+            position: absolute;
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.8rem;
+            max-width: 250px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 100;
+        }
+
+        .tech-tooltip.visible {
+            opacity: 1;
+        }
+
+        .tech-tooltip-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .tech-tooltip-desc {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+
+        .tech-controls {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .tech-control-btn {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .tech-control-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
     </style>
 </head>
 <body>
@@ -830,6 +1305,42 @@ DASHBOARD_HTML = """
             <div class="card col-3">
                 <div class="stat-value" id="stat-workflows">-</div>
                 <div class="stat-label">Workflows Today</div>
+            </div>
+
+            <!-- Workflow Pipeline -->
+            <div class="card col-12">
+                <div class="card-header">
+                    <span class="card-title">Workflow Pipeline</span>
+                    <button class="card-action" onclick="refreshWorkflowPipeline()">Refresh</button>
+                </div>
+                <div class="agentic-flow">
+                    <!-- Pipeline Visualization -->
+                    <div class="flow-pipeline" id="flow-pipeline">
+                        <div class="flow-stage">
+                            <div class="flow-stage-icon task" id="flow-task">T</div>
+                            <div class="flow-stage-label">Tasks</div>
+                            <div class="flow-stage-value" id="flow-task-count">0</div>
+                        </div>
+                        <div class="flow-connector" id="flow-conn-1"></div>
+                        <div class="flow-stage">
+                            <div class="flow-stage-icon workflow" id="flow-runner">R</div>
+                            <div class="flow-stage-label">Runner</div>
+                            <div class="flow-stage-value" id="flow-runner-status">Idle</div>
+                        </div>
+                        <div class="flow-connector" id="flow-conn-2"></div>
+                        <div class="flow-stage">
+                            <div class="flow-stage-icon workflow" id="flow-workflow">W</div>
+                            <div class="flow-stage-label">Workflows</div>
+                            <div class="flow-stage-value" id="flow-workflow-count">0</div>
+                        </div>
+                        <div class="flow-connector" id="flow-conn-3"></div>
+                        <div class="flow-stage">
+                            <div class="flow-stage-icon pr" id="flow-pr">PR</div>
+                            <div class="flow-stage-label">Results</div>
+                            <div class="flow-stage-value" id="flow-pr-count">0</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Services & GPU -->
@@ -890,6 +1401,15 @@ DASHBOARD_HTML = """
                     <span class="card-title">Task Queue</span>
                     <button class="card-action" onclick="refreshTasks()">Refresh</button>
                 </div>
+                <div class="task-form">
+                    <input type="text" class="task-input" id="new-task-title" placeholder="New task title..." onkeypress="if(event.key==='Enter')createTask()">
+                    <select class="task-select" id="new-task-priority">
+                        <option value="3">Normal</option>
+                        <option value="1">High</option>
+                        <option value="5">Low</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="createTask()">Add</button>
+                </div>
                 <div class="task-list" id="task-list">
                     <div class="empty-state">Loading tasks...</div>
                 </div>
@@ -902,6 +1422,37 @@ DASHBOARD_HTML = """
                 </div>
                 <div id="workflow-list">
                     <div class="empty-state">Loading workflows...</div>
+                </div>
+            </div>
+
+            <!-- Activity Feed -->
+            <div class="card col-6">
+                <div class="card-header">
+                    <span class="card-title">Activity Feed</span>
+                    <button class="card-action" onclick="clearActivity()">Clear</button>
+                </div>
+                <div class="activity-feed" id="activity-feed">
+                    <div class="empty-state">No recent activity</div>
+                </div>
+            </div>
+
+            <!-- Tech Tree -->
+            <div class="card col-6">
+                <div class="card-header">
+                    <span class="card-title">Tech Tree</span>
+                    <button class="card-action" onclick="refreshTechTree()">Refresh</button>
+                </div>
+                <div class="tech-tree-container" id="tech-tree-container">
+                    <svg class="tech-tree-svg" id="tech-tree-svg"></svg>
+                    <div class="tech-tooltip" id="tech-tooltip">
+                        <div class="tech-tooltip-title"></div>
+                        <div class="tech-tooltip-desc"></div>
+                    </div>
+                    <div class="tech-controls">
+                        <button class="tech-control-btn" onclick="zoomTechTree(1.2)">+</button>
+                        <button class="tech-control-btn" onclick="zoomTechTree(0.8)">-</button>
+                        <button class="tech-control-btn" onclick="resetTechTree()">Reset</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1083,10 +1634,43 @@ DASHBOARD_HTML = """
             }
         }
 
+        // Workflow Pipeline Functions
+        async function refreshWorkflowPipeline() {
+            try {
+                const res = await fetch('/api/workflow-pipeline');
+                const data = await res.json();
+                const pipeline = data.pipeline || {};
+
+                // Update task count
+                document.getElementById('flow-task-count').textContent = pipeline.tasks || 0;
+                document.getElementById('flow-task').classList.toggle('active', (pipeline.pending || 0) > 0);
+                document.getElementById('flow-conn-1').classList.toggle('active', (pipeline.in_progress || 0) > 0);
+
+                // Update runner status
+                const runnerStatus = pipeline.runner_busy ? 'Busy' : (pipeline.runner_online ? 'Ready' : 'Offline');
+                document.getElementById('flow-runner-status').textContent = runnerStatus;
+                document.getElementById('flow-runner').classList.toggle('active', pipeline.runner_busy);
+                document.getElementById('flow-conn-2').classList.toggle('active', pipeline.workflows_running > 0);
+
+                // Update workflow count
+                document.getElementById('flow-workflow-count').textContent = pipeline.workflows_running || 0;
+                document.getElementById('flow-workflow').classList.toggle('active', (pipeline.workflows_running || 0) > 0);
+                document.getElementById('flow-conn-3').classList.toggle('active', (pipeline.workflows_success || 0) > 0);
+
+                // Update results count
+                document.getElementById('flow-pr-count').textContent = pipeline.workflows_success || 0;
+                document.getElementById('flow-pr').classList.toggle('active', (pipeline.workflows_success || 0) > 0);
+
+            } catch (e) {
+                console.error('Failed to refresh workflow pipeline:', e);
+            }
+        }
+
         function refreshAll() {
             refreshTasks();
             refreshWorkflows();
             refreshRunner();
+            refreshWorkflowPipeline();
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ type: 'refresh' }));
             }

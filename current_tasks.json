@@ -5,13 +5,13 @@
       "title": "Fix discover_work() to not short-circuit on completed/stale tasks",
       "description": "The _load_pending_tasks() returns immediately if ANY pending tasks exist, preventing coverage/tech tree/Nemo discovery from running. Fix: filter out stale tasks before returning, or continue to other discovery sources even when pending tasks exist.",
       "priority": "high",
-      "assigned_to": "ALPHA",
+      "assigned_to": "workflow",
       "source": "copilot_analysis",
       "file_paths": "slate/slate_unified_autonomous.py",
       "status": "pending",
       "created_at": "2026-02-06T07:35:00+00:00",
       "started_at": "2026-02-06T09:30:00+00:00",
-      "started_by": "ALPHA",
+      "started_by": "workflow",
       "reset_at": "2026-02-06T12:40:09.146317"
     },
     {
@@ -19,13 +19,13 @@
       "title": "Diagnose and fix dashboard crash (exit code 1)",
       "description": "The SLATE Dashboard task exits with code 1 immediately on startup. Investigate slate_dashboard_server.py / agents/slate_dashboard_server.py for the root cause and fix.",
       "priority": "high",
-      "assigned_to": "ALPHA",
+      "assigned_to": "workflow",
       "source": "copilot_analysis",
       "file_paths": "agents/slate_dashboard_server.py",
       "status": "pending",
       "created_at": "2026-02-06T07:35:00+00:00",
       "started_at": "2026-02-06T09:30:00+00:00",
-      "started_by": "ALPHA",
+      "started_by": "workflow",
       "reset_at": "2026-02-06T12:40:09.146317"
     },
     {
@@ -33,13 +33,13 @@
       "title": "Add new tech tree nodes for Phase 2 capabilities (UV, Discord)",
       "description": "All 16 tech tree nodes are 100% complete. Add new Phase 2 nodes: UV package manager migration, Discord bot completion (#17). Set status to 'available' so autonomous discovery finds them.",
       "priority": "medium",
-      "assigned_to": "ALPHA",
+      "assigned_to": "workflow",
       "source": "copilot_analysis",
       "file_paths": ".slate_tech_tree/tech_tree.json",
       "status": "pending",
       "created_at": "2026-02-06T07:35:00+00:00",
       "started_at": "2026-02-06T09:30:00+00:00",
-      "started_by": "ALPHA",
+      "started_by": "workflow",
       "reset_at": "2026-02-06T12:40:09.146317"
     }
   ],

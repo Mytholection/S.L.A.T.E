@@ -98,7 +98,7 @@ This verifies:
 - Task queue
 - File locks
 - Configuration files
-- Agent system
+- Workflow system
 
 ## Your First Task
 
@@ -114,7 +114,7 @@ Tasks are managed in `current_tasks.json`:
       "title": "Fix login bug",
       "description": "Users can't login with special characters in password",
       "status": "pending",
-      "assigned_to": "ALPHA",
+      "assigned_to": "workflow",
       "priority": 2
     }
   ]

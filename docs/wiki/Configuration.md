@@ -131,17 +131,17 @@ GPU_MEMORY_CONFIGS = {
 }
 ```
 
-## Agent Configuration
+## Task Configuration
 
-### Agent Preferences
+### Task Preferences
 
-Configure agent task preferences in `current_tasks.json`:
+Configure task execution in `current_tasks.json`:
 
 ```json
 {
   "task_id": "task_001",
   "title": "Implement feature",
-  "assigned_to": "ALPHA",
+  "assigned_to": "workflow",
   "priority": "high"
 }
 ```
@@ -150,11 +150,8 @@ Configure agent task preferences in `current_tasks.json`:
 
 | Value | Behavior |
 |-------|----------|
-| `"ALPHA"` | Force to ALPHA (coding) |
-| `"BETA"` | Force to BETA (testing) |
-| `"GAMMA"` | Force to GAMMA (planning) |
-| `"DELTA"` | Force to DELTA (integration) |
-| `"auto"` | ML-based smart routing |
+| `"workflow"` | Execute via GitHub Actions workflow |
+| `"auto"` | Automatic routing |
 
 ### Priority Levels
 

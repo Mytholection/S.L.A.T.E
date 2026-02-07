@@ -105,7 +105,7 @@ class Task:
     description: str
     status: str  # "pending", "in_progress", "completed", "blocked"
     priority: str  # "low", "medium", "high", "urgent"
-    assigned_to: str  # "ALPHA", "BETA", "GAMMA", "DELTA", "auto"
+    assigned_to: str  # "workflow" or "auto"
     created_at: datetime
     updated_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
@@ -126,7 +126,7 @@ for task in tasks:
 
 **Parameters:**
 - `status_filter` (optional): Filter by status ("pending", "in_progress", "completed")
-- `assigned_to` (optional): Filter by agent
+- `assigned_to` (optional): Filter by executor
 
 **Returns:** List of task dictionaries.
 
@@ -141,7 +141,7 @@ task = create_task(
     title="Implement login feature",
     description="Add user authentication with JWT",
     priority="high",
-    assigned_to="ALPHA"
+    assigned_to="workflow"
 )
 print(f"Created task: {task['task_id']}")
 ```
