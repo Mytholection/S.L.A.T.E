@@ -150,6 +150,16 @@ except ImportError as e:
     print(f"[-] Interactive API not available: {e}")
     _feedback_layer = None
 
+# ─── Schematic Diagram API Router ────────────────────────────────────────────
+# Modified: 2026-02-08T03:00:00Z | Author: Claude Opus 4.5 | Change: Add schematic visualization API
+
+try:
+    from slate.schematic_api import router as schematic_router
+    app.include_router(schematic_router)
+    print("[+] Schematic Diagram API mounted at /api/schematic")
+except ImportError as e:
+    print(f"[-] Schematic API not available: {e}")
+
 # WebSocket connection manager
 class ConnectionManager:
     def __init__(self):
