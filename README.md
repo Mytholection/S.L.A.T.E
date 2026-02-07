@@ -22,16 +22,28 @@
   while keeping your code and data on your machine.
 </p>
 
+<p align="center">
+  <strong>Works with GitHub Copilot, VS Code, AI Toolkit, and PyTorch</strong>
+</p>
+
 ---
 
 > **Status**: v2.4 - Production-ready local AI orchestration with GitHub Actions integration
+>
+> **Quick Install**: Copy this into Copilot Chat:
+> ```
+> Clone and set up S.L.A.T.E. from https://github.com/SynchronizedLivingArchitecture/S.L.A.T.E
+> ```
 
 ## Table of Contents
 
 - [Overview](#overview)
+  - [The Fork Feedback Loop](#the-fork-feedback-loop)
+  - [The /slate Agent](#the-slate-agent)
 - [System Architecture](#system-architecture)
 - [Key Features](#key-features)
 - [Quick Start](#quick-start)
+- [Copilot Integration](#copilot-integration)
 - [GitHub Project Boards](#github-project-boards)
 - [Multi-Runner System](#multi-runner-system)
 - [Docker Deployment](#docker-deployment)
@@ -50,6 +62,37 @@ SLATE is a local-first AI orchestration system that:
 - **Coordinates multiple AI models** - Ollama, Foundry Local, and API-based models
 - **Optimizes for your hardware** - Auto-detects GPUs and configures optimal settings
 - **Manages complex workflows** - GitHub Projects, multi-runner execution, parallel processing
+- **Integrates with your AI tools** - GitHub Copilot, VS Code, AI Toolkit, and PyTorch
+
+### The Fork Feedback Loop
+
+When you install SLATE, you're encouraged to **fork the repository** rather than just clone it. This creates a powerful feedback loop:
+
+```
+SLATE (main repo)  ←→  Your Fork (your workspace)
+       ↑                      ↓
+       └──── Improvements ←───┘
+```
+
+Your fork becomes a personalized AI workspace that:
+- Stays in sync with SLATE updates
+- Adapts to your development patterns
+- Contributes improvements back to the ecosystem
+- Runs a self-hosted GitHub Runner for task execution
+
+### The /slate Agent
+
+SLATE comes with a custom `/slate` agent for VS Code and Claude Code:
+
+| Command | Description |
+|---------|-------------|
+| `/slate start` | Start all SLATE services |
+| `/slate status` | Check system and GPU status |
+| `/slate-workflow` | Manage task queue |
+| `/slate-runner` | Control GitHub Actions runner |
+| `/slate-help` | Show all available commands |
+
+These commands orchestrate your local AI infrastructure directly from your editor.
 
 ## System Architecture
 
@@ -170,7 +213,50 @@ SLATE is a local-first AI orchestration system that:
 
 ## Quick Start
 
-### 1. Clone and Setup
+### Option A: Full Ecosystem Install (Recommended)
+
+```bash
+git clone https://github.com/SynchronizedLivingArchitecture/S.L.A.T.E.git
+cd S.L.A.T.E
+
+# Full ecosystem install: venv, deps, PyTorch, Ollama, VS Code extension, models
+python install_slate.py
+```
+
+This installs **everything** with a live dashboard at http://127.0.0.1:8080:
+- Python virtual environment + pip dependencies
+- PyTorch (GPU-aware -- auto-detects CUDA)
+- Ollama (local LLM inference)
+- Docker detection
+- VS Code @slate chat participant extension
+- SLATE custom models (slate-coder, slate-fast, slate-planner)
+- Copilot Chat skills
+- ChromaDB vector store
+- Dual-GPU configuration
+- GitHub Actions runner detection
+- System benchmarks + final validation
+
+Additional install options:
+```bash
+python install_slate.py --no-dashboard   # CLI-only (no browser)
+python install_slate.py --skip-gpu       # Skip GPU detection
+python install_slate.py --resume         # Resume a failed install
+python install_slate.py --check          # Check ecosystem dependencies only
+python install_slate.py --update         # Update mode: pull latest + re-validate
+python install_slate.py --full           # Force full ecosystem via SlateInstaller
+```
+
+### Option B: Install with GitHub Copilot
+
+In VS Code with the SLATE extension installed, use Copilot Chat:
+
+```
+@slate /install
+```
+
+Copilot will handle the full ecosystem setup interactively.
+
+### Option C: Manual Setup
 
 ```bash
 git clone https://github.com/SynchronizedLivingArchitecture/S.L.A.T.E.git
@@ -183,22 +269,23 @@ source .venv/bin/activate  # Linux/macOS
 
 # Install dependencies
 pip install -r requirements.txt
+pip install -e .
 ```
 
-### 2. Verify Installation
+### Verify Installation
 
 ```bash
 # Quick status check
 python slate/slate_status.py --quick
 
-# Full system check
+# Full runtime integrations (Python, GPU, PyTorch, Transformers, Ollama, ChromaDB, venv)
 python slate/slate_runtime.py --check-all
 
-# Check project boards
-python slate/slate_project_board.py --status
+# Ecosystem dependency check
+python slate/slate_installer.py --check
 ```
 
-### 3. Start SLATE
+### Start SLATE
 
 ```bash
 # Start all services (dashboard, runner, workflow monitor)
@@ -209,6 +296,49 @@ python agents/slate_dashboard_server.py
 ```
 
 Open http://127.0.0.1:8080 in your browser.
+
+## Copilot Integration
+
+SLATE is designed to work seamlessly with GitHub Copilot and VS Code, creating an AI-powered development workflow.
+
+### Using SLATE with Copilot Chat
+
+Once SLATE is installed, you can interact with it through Copilot:
+
+```
+@workspace What's the status of my SLATE installation?
+```
+
+```
+@workspace Start the SLATE orchestrator and show me the dashboard
+```
+
+```
+@workspace Run the SLATE workflow manager to check for stale tasks
+```
+
+### VS Code Extension Support
+
+SLATE provides slash commands when the Claude Code extension is installed:
+
+| Command | Action |
+|---------|--------|
+| `/slate start` | Launch all SLATE services |
+| `/slate stop` | Stop all services |
+| `/slate status` | System health check |
+| `/slate-workflow` | Manage task queue |
+| `/slate-gpu` | GPU status and optimization |
+
+### Creating Your Fork
+
+For the full SLATE experience, fork the repository to create your personalized workspace:
+
+1. **Fork on GitHub**: https://github.com/SynchronizedLivingArchitecture/S.L.A.T.E/fork
+2. **Clone your fork**: `git clone https://github.com/YOUR-USERNAME/S.L.A.T.E.git`
+3. **Add upstream**: `git remote add upstream https://github.com/SynchronizedLivingArchitecture/S.L.A.T.E.git`
+4. **Initialize SLATE**: `python slate/slate_fork_manager.py --init`
+
+Your fork maintains sync with the main SLATE repository while allowing customization.
 
 ## GitHub Project Boards
 

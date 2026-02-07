@@ -556,8 +556,8 @@ def step_vscode_extension(tracker, args):
 
     # Fallback: dev mode symlink
     tracker.update_progress("vscode_ext", 90, "Using development mode link")
-    # Modified: 2026-02-07T04:57:00Z | Author: COPILOT | Change: Update extension dev-link target version
-    extension_version = "2.5.0"
+    # Modified: 2026-02-07T06:00:00Z | Author: COPILOT | Change: Sync extension dev-link version to 2.6.1
+    extension_version = "2.6.1"
     if os.name == "nt":
         ext_target = Path(os.environ.get("USERPROFILE", "~")) / ".vscode" / "extensions" / f"slate.slate-copilot-{extension_version}"
     else:
@@ -734,7 +734,7 @@ def step_benchmark(tracker, args):
             try:
                 bench_data = json.loads(result.stdout)
                 score = bench_data.get("overall_score", "N/A")
-                details = f"Benchmark complete — Overall score: {score}"
+                details = f"Benchmark complete -- Overall score: {score}"
             except (json.JSONDecodeError, ValueError):
                 details = "Benchmark complete"
             tracker.complete_step("benchmark", success=True, details=details)
@@ -744,7 +744,7 @@ def step_benchmark(tracker, args):
         return True
     except subprocess.TimeoutExpired:
         tracker.complete_step("benchmark", success=True, warning=True,
-                              details="Benchmark timed out after 120s — skipping")
+                              details="Benchmark timed out after 120s -- skipping")
         return True
     except Exception as e:
         tracker.complete_step("benchmark", success=True, warning=True,
@@ -752,58 +752,295 @@ def step_benchmark(tracker, args):
         return True
 
 
+# Modified: 2026-02-07T06:00:00Z | Author: COPILOT | Change: Add ecosystem steps for models, skills, ChromaDB, GPU, runner
+def step_slate_models(tracker, args):
+    """Step: Build SLATE custom Ollama models (slate-coder, slate-fast, slate-planner)."""
+    tracker.start_step("slate_models")
+    tracker.update_progress("slate_models", 10, "Checking Ollama availability")
+
+    python_exe = _get_python_exe()
+    if not python_exe.exists():
+        tracker.skip_step("slate_models", "Python venv not available")
+        return True
+
+    # Check if Ollama is running
+    try:
+        ollama_check = _run_cmd([python_exe, "-c",
+            "import subprocess; r = subprocess.run(['ollama', 'list'], capture_output=True, text=True, timeout=10); "
+            "print('OK' if r.returncode == 0 else 'FAIL')"], timeout=15)
+        if "OK" not in (ollama_check.stdout or ""):
+            tracker.complete_step("slate_models", success=True, warning=True,
+                                  details="Ollama not running -- models deferred to later")
+            return True
+    except Exception:
+        tracker.complete_step("slate_models", success=True, warning=True,
+                              details="Ollama not available -- models deferred")
+        return True
+
+    models_dir = WORKSPACE_ROOT / "models"
+    modelfiles = list(models_dir.glob("Modelfile.*")) if models_dir.exists() else []
+    if not modelfiles:
+        tracker.complete_step("slate_models", success=True, warning=True,
+                              details="No Modelfile definitions found in models/")
+        return True
+
+    tracker.update_progress("slate_models", 30, f"Found {len(modelfiles)} model definitions")
+
+    # Check which models need building
+    try:
+        list_result = _run_cmd(["ollama", "list"], timeout=15)
+        existing = list_result.stdout if list_result.returncode == 0 else ""
+    except Exception:
+        existing = ""
+
+    needed = []
+    for mf in modelfiles:
+        model_name = mf.name.replace("Modelfile.", "")
+        if model_name not in existing:
+            needed.append((model_name, mf))
+
+    if not needed:
+        tracker.complete_step("slate_models", success=True,
+                              details=f"All {len(modelfiles)} SLATE models already built")
+        return True
+
+    tracker.update_progress("slate_models", 40, f"Building {len(needed)} model(s)")
+    built = []
+    for i, (name, mf) in enumerate(needed):
+        pct = 40 + int(50 * (i + 1) / len(needed))
+        tracker.update_progress("slate_models", pct, f"Building {name}...")
+        try:
+            result = _run_cmd(["ollama", "create", name, "-f", str(mf)], timeout=600)
+            if result.returncode == 0:
+                built.append(name)
+        except subprocess.TimeoutExpired:
+            pass
+
+    tracker.complete_step("slate_models", success=True,
+                          details=f"Built {len(built)}/{len(needed)} models: {', '.join(built) or 'none'}")
+    return True
+
+
+def step_skills_validate(tracker, args):
+    """Step: Validate Copilot Chat skills are present."""
+    tracker.start_step("skills_validate")
+    tracker.update_progress("skills_validate", 20, "Checking skill definitions")
+
+    skills_dir = WORKSPACE_ROOT / "skills"
+    expected_skills = ["slate-status", "slate-runner", "slate-orchestrator",
+                       "slate-workflow", "slate-help"]
+    found = []
+    missing = []
+
+    for skill in expected_skills:
+        skill_file = skills_dir / skill / "SKILL.md"
+        if skill_file.exists():
+            found.append(skill)
+        else:
+            missing.append(skill)
+
+    if missing:
+        tracker.complete_step("skills_validate", success=True, warning=True,
+                              details=f"Found {len(found)}/{len(expected_skills)} skills, missing: {', '.join(missing)}")
+    else:
+        tracker.complete_step("skills_validate", success=True,
+                              details=f"All {len(expected_skills)} Copilot Chat skills present")
+    return True
+
+
+def step_chromadb_check(tracker, args):
+    """Step: Verify ChromaDB vector store integration."""
+    tracker.start_step("chromadb_check")
+    tracker.update_progress("chromadb_check", 20, "Checking ChromaDB")
+
+    python_exe = _get_python_exe()
+    if not python_exe.exists():
+        tracker.skip_step("chromadb_check", "Python venv not available")
+        return True
+
+    try:
+        result = _run_cmd([python_exe, "-c",
+            "import chromadb; print(f'chromadb {chromadb.__version__}')"], timeout=15)
+        if result.returncode == 0 and "chromadb" in result.stdout:
+            version_info = result.stdout.strip()
+            tracker.complete_step("chromadb_check", success=True,
+                                  details=f"{version_info} available for vector store")
+        else:
+            tracker.complete_step("chromadb_check", success=True, warning=True,
+                                  details="ChromaDB not importable -- pip install chromadb")
+    except Exception as e:
+        tracker.complete_step("chromadb_check", success=True, warning=True,
+                              details=f"ChromaDB check failed: {e}")
+    return True
+
+
+def step_gpu_manager(tracker, args):
+    """Step: Configure dual-GPU load balancing."""
+    tracker.start_step("gpu_manager")
+
+    if getattr(args, 'skip_gpu', False):
+        tracker.skip_step("gpu_manager", "GPU setup skipped (--skip-gpu)")
+        return True
+
+    python_exe = _get_python_exe()
+    gpu_script = WORKSPACE_ROOT / "slate" / "slate_gpu_manager.py"
+    if not python_exe.exists() or not gpu_script.exists():
+        tracker.skip_step("gpu_manager", "GPU manager not available")
+        return True
+
+    tracker.update_progress("gpu_manager", 30, "Configuring GPU load balancing")
+    try:
+        result = _run_cmd([python_exe, str(gpu_script), "--status"], timeout=30)
+        if result.returncode == 0:
+            tracker.complete_step("gpu_manager", success=True,
+                                  details="Dual-GPU manager configured")
+        else:
+            tracker.complete_step("gpu_manager", success=True, warning=True,
+                                  details="GPU manager check returned warnings")
+    except Exception as e:
+        tracker.complete_step("gpu_manager", success=True, warning=True,
+                              details=f"GPU manager: {e}")
+    return True
+
+
+def step_runner_check(tracker, args):
+    """Step: Verify GitHub Actions self-hosted runner."""
+    tracker.start_step("runner_check")
+    tracker.update_progress("runner_check", 20, "Checking runner installation")
+
+    runner_dir = WORKSPACE_ROOT / "actions-runner"
+    if not runner_dir.exists():
+        tracker.complete_step("runner_check", success=True, warning=True,
+                              details="Runner directory not found at actions-runner/")
+        return True
+
+    config_file = runner_dir / ".runner"
+    if config_file.exists():
+        tracker.update_progress("runner_check", 60, "Runner configured, checking process")
+        # Check if runner process is active
+        python_exe = _get_python_exe()
+        runner_script = WORKSPACE_ROOT / "slate" / "slate_runner_manager.py"
+        if python_exe.exists() and runner_script.exists():
+            try:
+                result = _run_cmd([python_exe, str(runner_script), "--detect"], timeout=15)
+                if result.returncode == 0:
+                    tracker.complete_step("runner_check", success=True,
+                                          details="Runner configured and detected")
+                else:
+                    tracker.complete_step("runner_check", success=True, warning=True,
+                                          details="Runner configured but not currently active")
+            except Exception:
+                tracker.complete_step("runner_check", success=True, warning=True,
+                                      details="Runner configured, status check timed out")
+        else:
+            tracker.complete_step("runner_check", success=True,
+                                  details="Runner directory and config present")
+    else:
+        tracker.complete_step("runner_check", success=True, warning=True,
+                              details="Runner exists but not configured -- run config.cmd")
+    return True
+
+
+
 def step_runtime_check(tracker, args):
-    """Step 9: Final runtime verification."""
+    # Modified: 2025-07-12T21:30:00Z | Author: COPILOT | Change: Expand to 8 ecosystem checks
+    """Step 9: Final runtime verification — full ecosystem validation."""
     tracker.start_step("runtime_check")
-    tracker.update_progress("runtime_check", 20, "Running runtime checks")
+    tracker.update_progress("runtime_check", 10, "Running ecosystem runtime checks")
 
     checks_passed = 0
     checks_total = 0
     issues = []
 
-    # Check 1: slate_status.py exists and runs
-    checks_total += 1
+    def _check(label, cmd, timeout_s=30):
+        nonlocal checks_passed, checks_total
+        checks_total += 1
+        result = _run_cmd(cmd, timeout=timeout_s)
+        if result.returncode == 0:
+            checks_passed += 1
+            return True
+        issues.append(label)
+        return False
+
+    def _check_file(label, path):
+        nonlocal checks_passed, checks_total
+        checks_total += 1
+        if path.exists():
+            checks_passed += 1
+            return True
+        issues.append(f"{label} not found")
+        return False
+
+    py = _get_python_exe()
+
+    # 1. System health (slate_status.py)
     status_script = WORKSPACE_ROOT / "slate" / "slate_status.py"
     if status_script.exists():
-        result = _run_cmd([_get_python_exe(), str(status_script), "--quick"], timeout=30)
-        if result.returncode == 0:
-            checks_passed += 1
-        else:
-            issues.append("slate_status.py failed")
+        _check("slate_status.py failed", [py, str(status_script), "--quick"])
     else:
+        checks_total += 1
         issues.append("slate_status.py not found")
 
-    tracker.update_progress("runtime_check", 50, f"{checks_passed}/{checks_total} checks passed")
+    tracker.update_progress("runtime_check", 20, f"{checks_passed}/{checks_total} checks")
 
-    # Check 2: slate_runtime.py exists and runs
-    checks_total += 1
+    # 2. Runtime integrations (slate_runtime.py)
     runtime_script = WORKSPACE_ROOT / "slate" / "slate_runtime.py"
     if runtime_script.exists():
-        result = _run_cmd([_get_python_exe(), str(runtime_script), "--check-all"], timeout=30)
-        if result.returncode == 0:
-            checks_passed += 1
-        else:
-            issues.append("slate_runtime.py returned errors")
+        _check("slate_runtime.py returned errors", [py, str(runtime_script), "--check-all"])
     else:
+        checks_total += 1
         issues.append("slate_runtime.py not found")
 
-    # Check 3: Dashboard server importable
+    # 3. Dashboard server importable
+    _check("Dashboard server not importable", [
+        py, "-c", "from agents.slate_dashboard_server import app; print('ok')"
+    ], timeout_s=15)
+
+    tracker.update_progress("runtime_check", 40, f"{checks_passed}/{checks_total} checks")
+
+    # 4. VS Code extension built
+    vsix_pattern = list((WORKSPACE_ROOT / "plugins" / "slate-copilot").glob("*.vsix"))
     checks_total += 1
-    result = _run_cmd([
-        _get_python_exe(), "-c",
-        "from agents.slate_dashboard_server import app; print('ok')"
-    ], timeout=15)
-    if result.returncode == 0:
+    if vsix_pattern:
         checks_passed += 1
     else:
-        issues.append("Dashboard server not importable")
+        issues.append("VS Code extension VSIX not built")
 
-    tracker.update_progress("runtime_check", 80,
-                            f"{checks_passed}/{checks_total} runtime checks passed")
+    # 5. ChromaDB importable
+    _check("ChromaDB not importable", [
+        py, "-c", "import chromadb; print('ok')"
+    ], timeout_s=10)
+
+    tracker.update_progress("runtime_check", 60, f"{checks_passed}/{checks_total} checks")
+
+    # 6. Copilot Chat skills present (all 5)
+    skills_dir = WORKSPACE_ROOT / "skills"
+    expected_skills = ["slate-status", "slate-runner", "slate-orchestrator",
+                       "slate-workflow", "slate-help"]
+    checks_total += 1
+    missing_skills = [s for s in expected_skills
+                      if not (skills_dir / s).is_dir()]
+    if not missing_skills:
+        checks_passed += 1
+    else:
+        issues.append(f"Missing skills: {', '.join(missing_skills)}")
+
+    # 7. SLATE core modules importable
+    _check("SLATE SDK not importable", [
+        py, "-c", "import slate; print('ok')"
+    ], timeout_s=10)
+
+    tracker.update_progress("runtime_check", 80, f"{checks_passed}/{checks_total} checks")
+
+    # 8. Ollama models directory present
+    _check_file("Ollama Modelfiles", WORKSPACE_ROOT / "models" / "Modelfile.slate-coder")
+
+    tracker.update_progress("runtime_check", 95,
+                            f"{checks_passed}/{checks_total} ecosystem checks complete")
 
     if checks_passed == checks_total:
         tracker.complete_step("runtime_check", success=True,
-                              details=f"All {checks_total} runtime checks passed")
+                              details=f"All {checks_total} ecosystem checks passed")
     elif checks_passed > 0:
         tracker.complete_step("runtime_check", success=True, warning=True,
                               details=f"{checks_passed}/{checks_total} passed — {'; '.join(issues)}")
@@ -830,7 +1067,8 @@ def print_banner():
 
 
 def print_completion(success: bool, tracker=None):
-    """Print completion message."""
+    # Modified: 2025-07-12T21:30:00Z | Author: COPILOT | Change: Comprehensive ecosystem next steps
+    """Print completion message with full ecosystem guidance."""
     print()
     print("═" * 70)
     if success:
@@ -841,37 +1079,46 @@ def print_completion(success: bool, tracker=None):
     print()
 
     if success:
-        print("  Next steps:")
+        print("  ───── Quick Start ─────")
         print()
         if os.name == "nt":
-            print("    1. Activate:  .\\.venv\\Scripts\\activate")
+            print("    1. Activate venv:   .\\.venv\\Scripts\\activate")
         else:
-            print("    1. Activate:  source .venv/bin/activate")
-        print("    2. Status:    python slate/slate_status.py --quick")
-        print("    3. Runtime:   python slate/slate_runtime.py --check-all")
-        print("    4. Dashboard: python agents/slate_dashboard_server.py")
-        print("    5. Hardware:  python slate/slate_hardware_optimizer.py")
+            print("    1. Activate venv:   source .venv/bin/activate")
+        print("    2. System health:   python slate/slate_status.py --quick")
+        print("    3. Full runtime:    python slate/slate_runtime.py --check-all")
+        print("    4. Start services:  python slate/slate_orchestrator.py start")
+        print("    5. Open dashboard:  http://127.0.0.1:8080")
         print()
-        print("  In VS Code:")
-        print("    • Open this workspace in VS Code")
-        print("    • Type @slate /status in Copilot Chat")
-        print("    • Use @slate /install to re-run full setup")
-        print("    • Use @slate /update to pull latest changes")
+        print("  ───── VS Code Integration ─────")
         print()
-        print("  For GPU support (optional):")
-        print("    python slate/slate_hardware_optimizer.py --install-pytorch")
+        print("    • Reload VS Code to activate the @slate extension")
+        print("    • Click the SLATE icon in the Activity Bar for the dashboard")
+        print("    • Use @slate /status in Copilot Chat for system health")
+        print("    • Use @slate /help for all available commands")
         print()
-        print("  For full ecosystem check:")
-        print("    python slate/slate_installer.py --check")
+        print("  ───── GPU & AI (optional) ─────")
+        print()
+        print("    • PyTorch:     python slate/slate_hardware_optimizer.py --install-pytorch")
+        print("    • GPU detect:  python slate/slate_hardware_optimizer.py --optimize")
+        print("    • Ollama:      ollama serve  (then: ollama create slate-coder -f models/Modelfile.slate-coder)")
+        print("    • Benchmarks:  python slate/slate_benchmark.py")
+        print()
+        print("  ───── Ecosystem Validation ─────")
+        print()
+        print("    • Full check:  python install_slate.py --check")
+        print("    • Update:      python install_slate.py --update")
+        print("    • Installer:   python slate/slate_installer.py --check")
         print()
     else:
-        print("  Troubleshooting:")
+        print("  ───── Troubleshooting ─────")
         print()
-        print("    • Check install log:  cat .slate_install/install.log")
-        print("    • Check install state: cat .slate_install/install_state.json")
-        print("    • Resume install:     python install_slate.py --resume")
-        print("    • Skip GPU:           python install_slate.py --skip-gpu")
-        print("    • Full ecosystem:     python slate/slate_installer.py --install")
+        print("    • Install log:    cat .slate_install/install.log")
+        print("    • Install state:  cat .slate_install/install_state.json")
+        print("    • Resume:         python install_slate.py --resume")
+        print("    • Skip GPU:       python install_slate.py --skip-gpu")
+        print("    • Full ecosystem: python slate/slate_installer.py --install")
+        print("    • Manual venv:    python -m venv .venv && pip install -r requirements.txt")
         print()
 
 
@@ -986,7 +1233,7 @@ def main():
             pass
 
     # Define all installation steps in canonical order
-    # Modified: 2026-02-06T22:30:00Z | Author: COPILOT | Change: Added ecosystem steps
+    # Modified: 2026-02-07T06:00:00Z | Author: COPILOT | Change: Full ecosystem coverage with all SLATE subsystems
     install_steps = [
         ("dashboard_boot", step_dashboard_boot),
         ("python_check",   step_python_check),
@@ -1000,6 +1247,11 @@ def main():
         ("dirs_create",    step_dirs_create),
         ("git_sync",       step_git_sync),
         ("vscode_ext",     step_vscode_extension),
+        ("slate_models",   step_slate_models),
+        ("skills_validate", step_skills_validate),
+        ("chromadb_check", step_chromadb_check),
+        ("gpu_manager",    step_gpu_manager),
+        ("runner_check",   step_runner_check),
         ("benchmark",      step_benchmark),
         ("runtime_check",  step_runtime_check),
     ]

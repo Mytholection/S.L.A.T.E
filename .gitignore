@@ -89,6 +89,11 @@ actions-runner-*/
 .slate_model_state.json
 .slate_copilot_runner.json
 .slate_copilot_queue.json
+.slate_runner_costs.json
+.slate_runners.json
+.slate_warmup_state.json
+.slate_gpu_config.json
+.slate_install/
 vscode_errors.json
 vscode_code_actions.json
 vscode_debug_state.json
