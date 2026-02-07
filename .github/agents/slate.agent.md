@@ -97,6 +97,24 @@ Project board mapping:
 & "E:\11132025\.venv\Scripts\python.exe" slate/ml_orchestrator.py --benchmarks    # Inference benchmarks
 & "E:\11132025\.venv\Scripts\python.exe" slate/ml_orchestrator.py --index-now     # Index codebase
 & "E:\11132025\.venv\Scripts\python.exe" slate/ml_orchestrator.py --infer "prompt" # Direct inference
+& "E:\11132025\.venv\Scripts\python.exe" slate/ml_orchestrator.py --train-now     # Build SLATE custom models
+
+# SLATE Model Trainer — custom model lifecycle
+& "E:\11132025\.venv\Scripts\python.exe" slate/slate_model_trainer.py --status       # Model status
+& "E:\11132025\.venv\Scripts\python.exe" slate/slate_model_trainer.py --build-all    # Build all SLATE models
+& "E:\11132025\.venv\Scripts\python.exe" slate/slate_model_trainer.py --test         # Test all models
+& "E:\11132025\.venv\Scripts\python.exe" slate/slate_model_trainer.py --benchmark    # Benchmark models
+& "E:\11132025\.venv\Scripts\python.exe" slate/slate_model_trainer.py --update-context # Update models with codebase
+
+# GPU Manager — dual-GPU load balancing
+& "E:\11132025\.venv\Scripts\python.exe" slate/slate_gpu_manager.py --status        # GPU status
+& "E:\11132025\.venv\Scripts\python.exe" slate/slate_gpu_manager.py --configure     # Configure dual-GPU
+& "E:\11132025\.venv\Scripts\python.exe" slate/slate_gpu_manager.py --preload       # Preload models to GPUs
+
+# SLATE Custom Models (Ollama)
+# slate-coder:   12B code generation (mistral-nemo base, GPU 0, ~91 tok/s)
+# slate-fast:    3B classification/summary (llama3.2 base, GPU 1, ~308 tok/s)
+# slate-planner: 7B planning/analysis (mistral base, GPU 0, ~154 tok/s)
 
 # Unified Autonomous Loop — task discovery + execution
 & "E:\11132025\.venv\Scripts\python.exe" slate/slate_unified_autonomous.py --discover     # Discover tasks
@@ -119,6 +137,7 @@ Project board mapping:
 & "E:\11132025\.venv\Scripts\python.exe" slate/slate_runner_manager.py --agentic autonomous       # Run agent loop via CI
 & "E:\11132025\.venv\Scripts\python.exe" slate/slate_runner_manager.py --agentic inference-bench  # Benchmarks via CI
 & "E:\11132025\.venv\Scripts\python.exe" slate/slate_runner_manager.py --agentic health-check     # Health check via CI
+& "E:\11132025\.venv\Scripts\python.exe" slate/slate_runner_manager.py --agentic build-models     # Build SLATE models via CI
 ```
 
 ### RunnerAPI (Python)

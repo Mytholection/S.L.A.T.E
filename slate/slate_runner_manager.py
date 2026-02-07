@@ -27,7 +27,6 @@ import argparse
 import json
 import os
 import subprocess
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -462,7 +461,7 @@ try {{
             elif service.get("process_running"):
                 print(f"  Process:    Running (PID {service.get('pid')})")
             else:
-                print(f"  Status:     Running")
+                print("  Status:     Running")
         elif service.get("installed"):
             print(f"  Service:    Stopped ({service.get('service_name')})")
         else:
@@ -481,7 +480,7 @@ try {{
         gh = detection.get("github", {})
         if gh.get("authenticated"):
             repo = gh.get("repo", {})
-            print(f"\n  GitHub:     Authenticated")
+            print("\n  GitHub:     Authenticated")
             if repo:
                 print(f"  Repository: {repo.get('nameWithOwner', 'unknown')}")
             workflows = gh.get("workflows", [])
@@ -512,9 +511,10 @@ def main():
     parser.add_argument("--force", action="store_true", help="Force reconfiguration")
     parser.add_argument("--status", action="store_true", help="Show runner status")
     parser.add_argument("--dispatch", metavar="WORKFLOW", help="Dispatch a workflow")
-    # Modified: 2026-02-07T04:45:00Z | Author: COPILOT | Change: Add agentic dispatch shortcuts
+    # Modified: 2026-02-07T06:00:00Z | Author: COPILOT | Change: Add build-models to agentic dispatch
     parser.add_argument("--agentic", metavar="MODE", nargs="?", const="autonomous",
-                        choices=["autonomous", "single-task", "inference-bench", "discover", "health-check"],
+                        choices=["autonomous", "single-task", "inference-bench", "discover",
+                                 "health-check", "build-models"],
                         help="Dispatch agentic AI workflow (default: autonomous)")
     parser.add_argument("--max-tasks", type=str, default="10", help="Max tasks for agentic mode")
     parser.add_argument("--json", action="store_true", help="Output as JSON")

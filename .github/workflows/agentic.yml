@@ -1,4 +1,4 @@
-# Modified: 2026-02-07T04:45:00Z | Author: COPILOT | Change: Agentic AI inference workflow for self-hosted runners
+# Modified: 2026-02-07T06:00:00Z | Author: COPILOT | Change: Agentic AI with SLATE model training + dual-GPU
 name: SLATE Agentic AI
 
 on:
@@ -15,6 +15,7 @@ on:
           - inference-bench  # Run GPU inference benchmarks
           - discover         # Discover tasks only (no execution)
           - health-check     # Full system health + ML status
+          - build-models     # Build/rebuild SLATE custom models
       max_tasks:
         description: 'Max tasks to execute (autonomous mode)'
         required: false
@@ -102,6 +103,10 @@ jobs:
       - name: Setup Python
         run: |
           'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH
+      - name: Build SLATE models (if needed)
+        run: python slate/ml_orchestrator.py --train-now
+      - name: GPU status before run
+        run: nvidia-smi --query-gpu=index,name,memory.used,memory.total,utilization.gpu --format=csv,noheader
       - name: Sync KANBAN tasks
         run: python slate/slate_project_board.py --sync
         continue-on-error: true
@@ -249,3 +254,30 @@ jobs:
         run: python slate/slate_workflow_manager.py --status
       - name: Orchestrator status
         run: python slate/slate_orchestrator.py status
+
+  # ─── Build/Rebuild SLATE Models ───
+  build-models:
+    name: Build SLATE Models
+    needs: inference-health
+    if: github.event.inputs.mode == 'build-models'
+    runs-on: [self-hosted, slate, gpu]
+    timeout-minutes: 15
+    env:
+      CUDA_VISIBLE_DEVICES: '0,1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        run: |
+          'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH
+      - name: GPU status
+        run: nvidia-smi --query-gpu=index,name,memory.used,memory.total --format=csv,noheader
+      - name: Build all SLATE models
+        run: python slate/slate_model_trainer.py --build-all
+      - name: Test all SLATE models
+        run: python slate/slate_model_trainer.py --test
+      - name: Benchmark SLATE models
+        run: python slate/slate_model_trainer.py --benchmark
+      - name: Model status
+        run: python slate/slate_model_trainer.py --status
+      - name: GPU status after build
+        run: nvidia-smi --query-gpu=index,name,memory.used,memory.total --format=csv,noheader

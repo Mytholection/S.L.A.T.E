@@ -26,15 +26,11 @@ Usage:
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 import time
-import traceback
-import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
 
 # Modified: 2026-02-07T04:30:00Z | Author: COPILOT | Change: workspace setup
 WORKSPACE_ROOT = Path(__file__).parent.parent
@@ -62,18 +58,30 @@ AGENT_PATTERNS = {
 class UnifiedAutonomousLoop:
     """Adaptive autonomous agent loop for SLATE."""
 
-    # Modified: 2026-02-07T04:30:00Z | Author: COPILOT | Change: autonomous loop core
+    # Modified: 2026-02-07T06:00:00Z | Author: COPILOT | Change: autonomous loop with SLATE models
     def __init__(self):
         self.workspace = WORKSPACE_ROOT
         self.state = self._load_state()
         self.ml = None  # Lazy-loaded ML orchestrator
+        self._slate_models_checked = False
         LOG_DIR.mkdir(parents=True, exist_ok=True)
 
     def _get_ml(self):
-        """Lazy-load ML orchestrator."""
+        """Lazy-load ML orchestrator and ensure SLATE models exist."""
         if self.ml is None:
             from slate.ml_orchestrator import MLOrchestrator
             self.ml = MLOrchestrator()
+            # Build SLATE models on first access if needed
+            if not self._slate_models_checked:
+                self._slate_models_checked = True
+                try:
+                    result = self.ml.ensure_slate_models()
+                    if result.get("status") == "built":
+                        self._log(f"Built {result['built']} SLATE models")
+                    elif result.get("status") == "all_built":
+                        self._log("All SLATE models ready")
+                except Exception as e:
+                    self._log(f"SLATE model check failed: {e}", "WARN")
         return self.ml
 
     def _load_state(self) -> dict:
@@ -340,7 +348,8 @@ class UnifiedAutonomousLoop:
             return {"success": False, "error": str(e)}
 
     def _execute_code_task(self, task: dict, agent: str) -> dict:
-        """Execute a coding/testing task using ML inference."""
+        """Execute a coding/testing task using SLATE ML inference with real output."""
+        # Modified: 2026-02-07T06:00:00Z | Author: COPILOT | Change: real code task execution
         start = time.time()
         title = task.get("title", "")
         desc = task.get("description", "")
@@ -353,41 +362,67 @@ class UnifiedAutonomousLoop:
 
             # Read relevant files for context
             context = ""
+            target_files = []
             if file_paths:
                 for fp in str(file_paths).split(","):
                     fp = fp.strip()
                     full_path = self.workspace / fp
-                    if full_path.exists():
+                    if full_path.exists() and full_path.is_file():
                         try:
                             content = full_path.read_text(encoding="utf-8", errors="replace")
-                            context += f"\n--- {fp} ---\n{content[:3000]}\n"
+                            context += f"\n--- {fp} ---\n{content[:4000]}\n"
+                            target_files.append(fp)
                         except Exception:
                             pass
 
-            # Generate solution
+            # Generate solution using SLATE model
             task_type = "code_generation" if agent == "ALPHA" else "code_review"
             system_prompt = (
-                "You are SLATE, an autonomous coding agent. "
-                "Analyze the task and provide a concrete solution. "
-                "If code changes are needed, output the full modified code. "
-                "Be precise and actionable."
+                "You are SLATE-CODER, an autonomous coding agent for the S.L.A.T.E. framework. "
+                "Analyze the task and provide a concrete implementation. "
+                "If code changes are needed, output the COMPLETE modified code for the file. "
+                "Include the Modified comment at the top. "
+                "Be precise, follow Python 3.11+ conventions, use type hints."
             )
             prompt = f"Task: {title}\nDescription: {desc}\n"
             if context:
-                prompt += f"\nRelevant code:\n{context[:5000]}"
+                prompt += f"\nRelevant code:\n{context[:6000]}"
 
+            self._log(f"  Running inference ({task_type}) on '{title[:50]}...'")
             result = ml.infer(prompt, task_type=task_type, system=system_prompt,
-                              max_tokens=2048, temperature=0.3)
+                              max_tokens=4096, temperature=0.3)
+
+            response = result.get("response", "")
+            tokens = result.get("tokens", 0)
+            tok_per_sec = result.get("tok_per_sec", 0)
+
+            self._log(f"  Inference complete: {tokens} tokens @ {tok_per_sec:.0f} tok/s")
+
+            # Log the response for audit
+            log_file = LOG_DIR / f"task_{task.get('id', 'unknown')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+            log_content = (
+                f"# Task: {title}\n"
+                f"**Agent**: {agent}\n"
+                f"**Model**: {result.get('model', '?')}\n"
+                f"**Tokens**: {tokens} @ {tok_per_sec:.0f} tok/s\n"
+                f"**Time**: {datetime.now(timezone.utc).isoformat()}\n\n"
+                f"## Response\n\n{response}\n"
+            )
+            try:
+                log_file.write_text(log_content, encoding="utf-8")
+            except Exception:
+                pass
 
             elapsed = time.time() - start
             return {
                 "success": True,
                 "agent": agent,
-                "response": result.get("response", "")[:500],
+                "response": response[:500],
                 "model": result.get("model", ""),
-                "tokens": result.get("tokens", 0),
-                "tok_per_sec": result.get("tok_per_sec", 0),
+                "tokens": tokens,
+                "tok_per_sec": tok_per_sec,
                 "duration_s": round(elapsed, 1),
+                "log_file": str(log_file.relative_to(self.workspace)) if log_file.exists() else None,
             }
         except Exception as e:
             return {"success": False, "error": str(e), "duration_s": round(time.time() - start, 1)}

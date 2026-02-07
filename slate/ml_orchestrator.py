@@ -25,7 +25,6 @@ Usage:
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 import time
@@ -33,7 +32,6 @@ import urllib.request
 import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
 
 # Modified: 2026-02-07T04:30:00Z | Author: COPILOT | Change: workspace setup
 WORKSPACE_ROOT = Path(__file__).parent.parent
@@ -43,30 +41,39 @@ OLLAMA_BASE = "http://127.0.0.1:11434"
 STATE_FILE = WORKSPACE_ROOT / ".slate_ml_state.json"
 EMBEDDINGS_DIR = WORKSPACE_ROOT / "slate_memory" / "embeddings"
 
-# Modified: 2026-02-07T04:30:00Z | Author: COPILOT | Change: model routing config
-# Model routing: task type -> preferred model
+# Modified: 2026-02-07T06:00:00Z | Author: COPILOT | Change: SLATE model routing with dual-GPU
+# Model routing: task type -> preferred model (SLATE custom models preferred)
 MODEL_ROUTING = {
-    "code_generation": "mistral-nemo:latest",      # 12B, best for code
-    "code_review": "mistral:latest",               # 7B, good balance
-    "summarization": "llama3.2:3b",                # 3B, fast summaries
-    "classification": "phi:latest",                 # 3B, fast classification
-    "embedding": "nomic-embed-text:latest",         # 137M, embeddings
-    "general": "mistral:latest",                    # 7B, general purpose
-    "planning": "mistral-nemo:latest",              # 12B, complex reasoning
-    "quick": "llama3.2:3b",                         # 3B, fastest
+    "code_generation": "slate-coder:latest",        # 12B SLATE-tuned code gen (GPU 0)
+    "code_review": "slate-coder:latest",            # 12B SLATE-tuned review (GPU 0)
+    "summarization": "slate-fast:latest",           # 3B SLATE-tuned summaries (GPU 1)
+    "classification": "slate-fast:latest",          # 3B SLATE-tuned classification (GPU 1)
+    "embedding": "nomic-embed-text:latest",         # 137M embeddings (GPU 1)
+    "general": "slate-planner:latest",              # 7B SLATE-tuned general (GPU 0/1)
+    "planning": "slate-planner:latest",             # 7B SLATE-tuned planning
+    "quick": "slate-fast:latest",                   # 3B SLATE-tuned fast (GPU 1)
 }
 
-# GPU placement strategy
+# Fallback routing: if SLATE models not built, use base models
+FALLBACK_ROUTING = {
+    "slate-coder:latest": "mistral-nemo:latest",
+    "slate-fast:latest": "llama3.2:3b",
+    "slate-planner:latest": "mistral:latest",
+}
+
+# GPU placement strategy — dual RTX 5070 Ti (16GB each)
 GPU_STRATEGY = {
     0: {
         "role": "primary_inference",
         "max_vram_mb": 14000,
-        "preferred_models": ["mistral-nemo:latest", "mistral:latest"],
+        "preferred_models": ["slate-coder:latest", "slate-planner:latest",
+                             "mistral-nemo:latest", "mistral:latest"],
     },
     1: {
         "role": "secondary_inference",
         "max_vram_mb": 14000,
-        "preferred_models": ["llama3.2:3b", "phi:latest", "nomic-embed-text:latest"],
+        "preferred_models": ["slate-fast:latest", "nomic-embed-text:latest",
+                             "llama3.2:3b", "phi:latest"],
     },
 }
 
@@ -180,17 +187,45 @@ class MLOrchestrator:
     # ------------------------------------------------------------------
 
     def get_model_for_task(self, task_type: str) -> str:
-        """Route a task to the best available model."""
+        """Route a task to the best available model, preferring SLATE models."""
         model = MODEL_ROUTING.get(task_type, MODEL_ROUTING["general"])
         # Verify model is available
         available = {m.get("name") for m in self.ollama.list_models()}
         if model in available:
             return model
-        # Fallback chain
-        for fallback in ["mistral:latest", "llama3.2:3b", "phi:latest"]:
-            if fallback in available:
-                return fallback
+        # Try SLATE model fallback (SLATE model -> base model)
+        fallback = FALLBACK_ROUTING.get(model)
+        if fallback and fallback in available:
+            return fallback
+        # Generic fallback chain
+        for fb in ["mistral-nemo:latest", "mistral:latest", "llama3.2:3b", "phi:latest"]:
+            if fb in available:
+                return fb
         raise RuntimeError("No Ollama models available")
+
+    def ensure_slate_models(self) -> dict:
+        """Build SLATE models if not already built."""
+        available = {m.get("name") for m in self.ollama.list_models()}
+        needed = []
+        for model in ["slate-coder:latest", "slate-fast:latest", "slate-planner:latest"]:
+            if model not in available:
+                needed.append(model)
+
+        if not needed:
+            return {"status": "all_built", "models": 3}
+
+        # Build missing models via trainer
+        try:
+            from slate.slate_model_trainer import SlateModelTrainer
+            trainer = SlateModelTrainer()
+            results = {}
+            for model in needed:
+                name = model.replace(":latest", "")
+                results[name] = trainer.build_model(name)
+            built = sum(1 for r in results.values() if r.get("success"))
+            return {"status": "built", "built": built, "total": len(needed), "results": results}
+        except Exception as e:
+            return {"status": "error", "error": str(e)}
 
     def preload_models(self, task_types: list[str] | None = None):
         """Preload models for expected task types."""
@@ -569,8 +604,26 @@ def main():
         print("Building codebase embedding index...")
         orch.index_codebase()
     elif args.train_now:
-        print("Training/fine-tuning not yet implemented for local models.")
-        print("Use Ollama Modelfiles to create custom models from existing ones.")
+        print("Building SLATE custom models...")
+        # Build all SLATE models
+        model_result = orch.ensure_slate_models()
+        if model_result.get("status") == "all_built":
+            print("All SLATE models already built!")
+        elif model_result.get("status") == "built":
+            print(f"Built {model_result['built']}/{model_result['total']} models")
+        else:
+            print(f"Error: {model_result.get('error', 'unknown')}")
+            sys.exit(1)
+        # Test the models
+        print("\nTesting SLATE models...")
+        try:
+            from slate.slate_model_trainer import SlateModelTrainer
+            trainer = SlateModelTrainer()
+            test_results = trainer.test_all()
+            print(f"Tests passed: {test_results.get('passed', 0)}/{len(test_results.get('results', {}))}")
+        except Exception as e:
+            print(f"Test error: {e}")
+        orch.print_status()
     elif args.benchmarks:
         orch.print_benchmarks()
     elif args.infer:
