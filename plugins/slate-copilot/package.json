@@ -13,7 +13,7 @@
 		"author": "COPILOT",
 		"change": "Add icon and bump version for new packaging"
 	},
-	"version": "2.6.0",
+	"version": "2.6.1",
 	"icon": "media/icon.png",
 	"engines": {
 		"vscode": "^1.100.0"
@@ -32,7 +32,7 @@
 				{
 					"id": "slate-explorer",
 					"title": "SLATE",
-					"icon": "media/icon.png"
+					"icon": "media/slate-activity-icon.svg"
 				}
 			]
 		},
