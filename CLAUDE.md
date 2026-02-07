@@ -1,4 +1,5 @@
 # S.L.A.T.E. Development Guidelines
+<!-- Modified: 2026-02-07T04:57:00Z | Author: COPILOT | Change: Add AAA standards and fix MCP JSON indentation -->
 
 **S.L.A.T.E.** = Synchronized Living Architecture for Transformation and Evolution
 
@@ -38,17 +39,38 @@ The SLATE MCP server provides AI tools. Add to `~/.claude/config.json`:
 ```json
 {
   "mcpServers": {
-    "slate": {
-      "command": "<workspace>\\.venv\\Scripts\\python.exe",
-      "args": ["<workspace>\\slate\\mcp_server.py"],
-      "env": {
-      "SLATE_WORKSPACE": "<workspace>",
-      "PYTHONPATH": "<workspace>"
+      "slate": {
+         "command": "<workspace>\\.venv\\Scripts\\python.exe",
+         "args": ["<workspace>\\slate\\mcp_server.py"],
+         "env": {
+            "SLATE_WORKSPACE": "<workspace>",
+            "PYTHONPATH": "<workspace>"
+         }
       }
-    }
   }
 }
 ```
+
+## AAA Standards
+
+SLATE follows AAA standards across testing, accessibility, security, and performance.
+
+### Testing (Arrange-Act-Assert)
+- Use explicit Arrange, Act, Assert sections in tests
+- Use pytest and pytest-asyncio
+
+### Accessibility (WCAG AAA)
+- Keyboard accessible UI, visible focus, high contrast
+- Avoid motion without a disable option
+
+### Security/Compliance
+- Local-only bindings (`127.0.0.1`)
+- No dynamic execution (`eval`, `exec`)
+- No secrets or tokens in code or logs
+
+### Performance/Reliability
+- Validate with `slate/slate_benchmark.py`
+- Add timeouts and retries for IO
 
 ### MCP Tools
 

@@ -1,5 +1,5 @@
 # S.L.A.T.E. Agent Instructions
-# Modified: 2026-02-07T05:04:40Z | Author: COPILOT | Change: Add AAA standards guidance
+# Modified: 2026-02-07T04:57:00Z | Author: COPILOT | Change: Add AAA standards for agent workflows
 
 ## Overview
 SLATE (Synchronized Living Architecture for Transformation and Evolution) is a local-first
@@ -57,11 +57,26 @@ All code edits MUST include a timestamp + author comment:
 # Modified: YYYY-MM-DDTHH:MM:SSZ | Author: COPILOT | Change: description
 ```
 
-## AAA Standards (REQUIRED)
-- Tests: use Arrange-Act-Assert structure and add regression tests for defects.
-- Accessibility: UI/webview changes follow WCAG AAA where feasible.
-- Security: keep localhost-only bindings, avoid secrets, and obey ActionGuard rules.
-- Performance/Reliability: add benchmarks or checks for hot paths and document SLO impact.
+## AAA Standards (All Agents)
+
+Apply AAA standards for every change:
+
+1) Testing (Arrange-Act-Assert)
+- Explicit Arrange, Act, Assert sections in tests
+- Use pytest and pytest-asyncio
+
+2) Accessibility (WCAG AAA)
+- Keyboard accessible UI, visible focus, sufficient contrast
+- Avoid motion without a disable option
+
+3) Security/Compliance
+- Local-only bindings (`127.0.0.1`)
+- No dynamic execution (`eval`, `exec`)
+- No secrets in code or logs
+
+4) Performance/Reliability
+- Validate with `slate/slate_benchmark.py`
+- Add timeouts/retries for IO
 
 ## Protocol Commands
 ```bash

@@ -1,4 +1,5 @@
 # Contributing to SLATE
+# Modified: 2026-02-07T04:57:00Z | Author: COPILOT | Change: Add AAA standards and update license guidance
 
 Thank you for your interest in contributing to S.L.A.T.E. (Synchronized Living Architecture for Transformation and Evolution)!
 
@@ -51,7 +52,7 @@ Push your branch and create a Pull Request against the `main` branch.
 
 All contributions must:
 
-- [ ] Pass all tests
+- [ ] Pass all tests (Arrange-Act-Assert format)
 - [ ] Pass validation checks
 - [ ] Not modify protected files (see below)
 - [ ] Bind only to `127.0.0.1` (never `0.0.0.0`)
@@ -72,6 +73,41 @@ These files cannot be modified by external contributors:
 - **Type hints** for all functions
 - **Google-style docstrings**
 - **Ruff** for linting and formatting
+
+## AAA Engineering Standards (Required)
+
+SLATE follows AAA standards across testing, accessibility, security, and performance.
+
+### 1) Test Rigor (Arrange-Act-Assert)
+- Tests must use explicit Arrange, Act, Assert sections
+- Coverage should focus on `slate/` and `slate_core/`
+- Use `pytest` and `pytest-asyncio` for async tests
+
+### 2) Accessibility (WCAG AAA for UI)
+- All UI must be keyboard accessible (tab order, focus states)
+- Provide text alternatives for non-text content
+- Maintain strong contrast and readable typography
+- Avoid motion that cannot be disabled
+
+### 3) Security/Compliance
+- No external network calls without explicit user consent
+- ActionGuard must remain enforced
+- Avoid dynamic execution (no `eval`, `exec`)
+- No secrets or tokens in code or logs
+
+### 4) Performance/Reliability
+- Validate performance using `slate/slate_benchmark.py`
+- Avoid blocking calls in request handlers
+- Add timeouts and retries to IO operations
+
+### SLATE System Validation
+Use SLATE workflows and tools for validation before PRs:
+
+```bash
+python slate/slate_status.py --quick
+python slate/slate_runtime.py --check-all
+python slate/slate_workflow_manager.py --status
+```
 
 ```bash
 # Lint
@@ -98,7 +134,8 @@ SLATE is a **local-only** system. All contributions must:
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
+By contributing, you agree that your contributions will be licensed under the
+S.L.A.T.E. Experimental Open Source License (EOSL-1.0).
 
 ---
 

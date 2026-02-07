@@ -3,6 +3,7 @@
 </p>
 
 <h1 align="center">S.L.A.T.E.</h1>
+<!-- Modified: 2026-02-07T04:57:00Z | Author: COPILOT | Change: Document AAA standards and developer-grade practices -->
 
 <p align="center">
   <strong>Synchronized Living Architecture for Transformation and Evolution</strong>
@@ -37,6 +38,7 @@
 - [Local AI Providers](#local-ai-providers)
 - [CLI Reference](#cli-reference)
 - [Security](#security)
+- [AAA Standards](#aaa-standards)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -442,6 +444,33 @@ Only packages from verified sources are allowed:
 - Meta (torch, torchvision)
 - Google (tensorflow, jax)
 - Hugging Face (transformers, datasets)
+
+## AAA Standards
+
+SLATE is built to developer-grade AAA standards across testing, accessibility,
+security/compliance, and performance/reliability.
+
+### Testing (Arrange-Act-Assert)
+- Use explicit Arrange, Act, Assert sections in tests
+- Prefer deterministic tests with clear fixtures
+- Use `pytest` and `pytest-asyncio` for async coverage
+
+### Accessibility (WCAG AAA)
+- Keyboard navigation for all UI and webviews
+- Visible focus states for interactive elements
+- High contrast and readable text size
+- Avoid motion that cannot be disabled
+
+### Security/Compliance
+- Local-only network bindings (`127.0.0.1`)
+- ActionGuard enforced for all tool execution
+- No secrets or tokens in code or logs
+- Avoid dynamic execution (`eval`, `exec`)
+
+### Performance/Reliability
+- Validate performance with `slate/slate_benchmark.py`
+- Use timeouts and retries for IO
+- Monitor GPU/CPU utilization via SLATE status tools
 
 ## Contributing
 

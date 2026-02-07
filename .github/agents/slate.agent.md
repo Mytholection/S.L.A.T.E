@@ -5,7 +5,7 @@ argument-hint: "A SLATE operation: 'check status', 'runner status', 'dispatch ci
 tools: ['vscode', 'execute', 'read', 'agent', 'edit', 'search', 'todo']
 ---
 
-Modified: 2026-02-07T05:04:40Z | Author: COPILOT | Change: Add AAA standards guidance
+Modified: 2026-02-07T04:57:00Z | Author: COPILOT | Change: Add AAA standards for agent workflows
 
 # SLATE Agent  System Operator
 
@@ -37,12 +37,6 @@ Execute these via terminal using the Python executable above. Always run from th
 & "$env:SLATE_WORKSPACE\.venv\Scripts\python.exe" slate/slate_status.py --quick     # Quick check
 & "$env:SLATE_WORKSPACE\.venv\Scripts\python.exe" slate/slate_status.py --json      # JSON output
 ```
-
-## AAA Standards (REQUIRED)
-- Tests: use Arrange-Act-Assert structure and add regression tests for defects.
-- Accessibility: UI/webview changes follow WCAG AAA where feasible.
-- Security: keep localhost-only bindings, avoid secrets, and obey ActionGuard rules.
-- Performance/Reliability: add benchmarks or checks for hot paths and document SLO impact.
 
 ### Runtime Integrations
 ```powershell
@@ -279,6 +273,25 @@ SLATE workflows are self-documenting and self-maintaining:
 8. **Shell** is `powershell` (5.1), NOT `pwsh` (not installed)
 9. **File encoding**: Always use `encoding='utf-8'` when opening files in Python on Windows
 10. **Blocked patterns**: `eval(`, `exec(os`, `rm -rf /`, `base64.b64decode`
+
+## AAA Standards (ENFORCED)
+
+1) Testing (Arrange-Act-Assert)
+- Explicit Arrange, Act, Assert sections in tests
+- Use pytest and pytest-asyncio
+
+2) Accessibility (WCAG AAA)
+- Keyboard access, visible focus, strong contrast
+- Avoid motion without a disable option
+
+3) Security/Compliance
+- Local-only bindings (`127.0.0.1`)
+- No dynamic execution (`eval`, `exec`)
+- No secrets or tokens in code or logs
+
+4) Performance/Reliability
+- Validate with `slate/slate_benchmark.py`
+- Add timeouts and retries for IO
 
 ## Response Format
 
