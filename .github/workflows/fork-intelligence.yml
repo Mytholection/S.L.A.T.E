@@ -176,15 +176,17 @@ jobs:
           retention-days: 30
           if-no-files-found: ignore
 
+  # Modified: 2026-02-08T02:00:00Z | Author: COPILOT | Change: Use local self-hosted runner instead of ubuntu-latest
   notify-on-breaking:
     name: Notify on Breaking Changes
     needs: fork-intelligence
     if: failure() || needs.fork-intelligence.outputs.breaking_changes > 0
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, slate]
     timeout-minutes: 5
 
     steps:
       - name: Log notification
+        shell: powershell
         run: |
-          echo "Breaking changes or failure detected"
-          echo "Would send notification here (Slack, Discord, etc.)"
+          Write-Host "Breaking changes or failure detected"
+          Write-Host "Would send notification here (Slack, Discord, etc.)"
