@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1100" height="700" viewBox="0 0 1100 700"
+     xmlns="http://www.w3.org/2000/svg"
+     role="img" aria-label="SLATE Code Module Architecture">
+
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0D1B2A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1B3A4B;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Primary Accent Gradient -->
+    <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#B85A3C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D4785A;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Status Gradients -->
+    <linearGradient id="activeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#22C55E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4ADE80;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Glow Effect -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Drop Shadow -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="4" stdDeviation="4"
+                    flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+
+    <!-- Arrow Marker -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#B85A3C"/>
+    </marker>
+
+    <!-- Arrow Marker (Active) -->
+    <marker id="arrowhead-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#22C55E"/>
+    </marker>
+
+    <!-- Grid Pattern -->
+    <pattern id="gridPattern" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1B3A4B" stroke-width="0.5" opacity="0.3"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="700" fill="url(#bgGradient)"/>
+
+  <!-- Grid Overlay -->
+  <rect width="1100" height="700" fill="url(#gridPattern)" opacity="0.5"/>
+
+  <!-- Connections Layer -->
+  <g class="connections-layer">
+
+    <g class="connection" data-from="core" data-to="status">
+      <path d="M 280.0 102.0 C 380.0 102.0, 380.0 102.0, 480.0 102.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="core" data-to="runtime">
+      <path d="M 280.0 102.0 C 550.0 102.0, 550.0 102.0, 820.0 102.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="status" data-to="orch">
+      <path d="M 620.0 102.0 C 380.0 102.0, 380.0 226.0, 140.0 226.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="orch" data-to="workflow">
+      <path d="M 280.0 226.0 C 380.0 226.0, 380.0 226.0, 480.0 226.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="orch" data-to="project">
+      <path d="M 280.0 226.0 C 550.0 226.0, 550.0 226.0, 820.0 226.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="workflow" data-to="runner">
+      <path d="M 620.0 226.0 C 380.0 226.0, 380.0 350.0, 140.0 350.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="runner" data-to="multi">
+      <path d="M 280.0 350.0 C 380.0 350.0, 380.0 350.0, 480.0 350.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="multi" data-to="benchmark">
+      <path d="M 620.0 350.0 C 720.0 350.0, 720.0 350.0, 820.0 350.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="multi" data-to="unified">
+      <path d="M 620.0 350.0 C 380.0 350.0, 380.0 474.0, 140.0 474.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="unified" data-to="local">
+      <path d="M 280.0 474.0 C 380.0 474.0, 380.0 474.0, 480.0 474.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="unified" data-to="hardware">
+      <path d="M 280.0 474.0 C 550.0 474.0, 550.0 474.0, 820.0 474.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="runner" data-to="guard">
+      <path d="M 280.0 350.0 C 210.0 350.0, 210.0 598.0, 140.0 598.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+      
+    </g>
+
+    <g class="connection" data-from="guard" data-to="sdk">
+      <path d="M 280.0 598.0 C 380.0 598.0, 380.0 598.0, 480.0 598.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+      
+    </g>
+
+    <g class="connection" data-from="guard" data-to="pii">
+      <path d="M 280.0 598.0 C 550.0 598.0, 550.0 598.0, 820.0 598.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+      
+    </g>
+  </g>
+
+  <!-- Components Layer -->
+  <g class="components-layer" filter="url(#shadow)">
+
+    <g class="component" data-id="core" data-type="service">
+      <rect x="140.0" y="72.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="152.0" cy="84.0" r="5" fill="#22C55E"/>
+      <text x="210.0" y="100.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">slate/__init__.py</text>
+      <text x="210.0" y="116.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Core Package</text>
+    </g>
+
+    <g class="component" data-id="status" data-type="service">
+      <rect x="480.0" y="72.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="492.0" cy="84.0" r="5" fill="#22C55E"/>
+      <text x="550.0" y="100.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">slate_status.py</text>
+      <text x="550.0" y="116.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">System Status</text>
+    </g>
+
+    <g class="component" data-id="runtime" data-type="service">
+      <rect x="820.0" y="72.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="832.0" cy="84.0" r="5" fill="#22C55E"/>
+      <text x="890.0" y="100.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">slate_runtime.py</text>
+      <text x="890.0" y="116.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Integrations</text>
+    </g>
+
+    <g class="component" data-id="orch" data-type="service">
+      <rect x="140.0" y="196.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="152.0" cy="208.0" r="5" fill="#22C55E"/>
+      <text x="210.0" y="224.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">slate_orchestrator.py</text>
+      <text x="210.0" y="240.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Service Lifecycle</text>
+    </g>
+
+    <g class="component" data-id="workflow" data-type="service">
+      <rect x="480.0" y="196.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="492.0" cy="208.0" r="5" fill="#22C55E"/>
+      <text x="550.0" y="224.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">slate_workflow_manager.py</text>
+      <text x="550.0" y="240.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Task Lifecycle</text>
+    </g>
+
+    <g class="component" data-id="project" data-type="service">
+      <rect x="820.0" y="196.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="832.0" cy="208.0" r="5" fill="#22C55E"/>
+      <text x="890.0" y="224.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">slate_project_board.py</text>
+      <text x="890.0" y="240.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">GitHub Projects</text>
+    </g>
+
+    <g class="component" data-id="runner" data-type="service">
+      <rect x="140.0" y="320.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="152.0" cy="332.0" r="5" fill="#22C55E"/>
+      <text x="210.0" y="348.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">slate_runner_manager.py</text>
+      <text x="210.0" y="364.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Runner Setup</text>
+    </g>
+
+    <g class="component" data-id="multi" data-type="service">
+      <rect x="480.0" y="320.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="492.0" cy="332.0" r="5" fill="#22C55E"/>
+      <text x="550.0" y="348.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">slate_multi_runner.py</text>
+      <text x="550.0" y="364.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Parallel Exec</text>
+    </g>
+
+    <g class="component" data-id="benchmark" data-type="service">
+      <rect x="820.0" y="320.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="832.0" cy="332.0" r="5" fill="#22C55E"/>
+      <text x="890.0" y="348.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">slate_runner_benchmark.py</text>
+      <text x="890.0" y="364.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Capacity Test</text>
+    </g>
+
+    <g class="component" data-id="unified" data-type="ai">
+      <rect x="140.0" y="439.0" width="140" height="70"
+            rx="8" fill="#3D1E10" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="152.0" cy="451.0" r="5" fill="#22C55E"/>
+      <text x="265.0" y="457.0" font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="14" fill="#B85A3C">&#129504;</text>
+      <text x="210.0" y="472.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">unified_ai_backend.py</text>
+      <text x="210.0" y="488.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Central Router</text>
+    </g>
+
+    <g class="component" data-id="local" data-type="ai">
+      <rect x="480.0" y="439.0" width="140" height="70"
+            rx="8" fill="#3D1E10" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="492.0" cy="451.0" r="5" fill="#22C55E"/>
+      <text x="605.0" y="457.0" font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="14" fill="#B85A3C">&#129504;</text>
+      <text x="550.0" y="472.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">foundry_local.py</text>
+      <text x="550.0" y="488.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Ollama + Foundry</text>
+    </g>
+
+    <g class="component" data-id="hardware" data-type="service">
+      <rect x="820.0" y="444.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="832.0" cy="456.0" r="5" fill="#22C55E"/>
+      <text x="890.0" y="472.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">slate_hardware_optimizer.py</text>
+      <text x="890.0" y="488.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">GPU Detection</text>
+    </g>
+
+    <g class="component" data-id="guard" data-type="service">
+      <rect x="140.0" y="568.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="152.0" cy="580.0" r="5" fill="#22C55E"/>
+      <text x="210.0" y="596.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">action_guard.py</text>
+      <text x="210.0" y="612.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Action Validation</text>
+    </g>
+
+    <g class="component" data-id="sdk" data-type="service">
+      <rect x="480.0" y="568.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="492.0" cy="580.0" r="5" fill="#22C55E"/>
+      <text x="550.0" y="596.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">sdk_source_guard.py</text>
+      <text x="550.0" y="612.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Package Safety</text>
+    </g>
+
+    <g class="component" data-id="pii" data-type="service">
+      <rect x="820.0" y="568.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="832.0" cy="580.0" r="5" fill="#22C55E"/>
+      <text x="890.0" y="596.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">pii_scanner.py</text>
+      <text x="890.0" y="612.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Data Protection</text>
+    </g>
+  </g>
+
+  <!-- Title -->
+  <text x="40" y="45"
+        font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="24" font-weight="700"
+        fill="#E8E2DE">SLATE Code Module Architecture</text>
+
+  <!-- Legend -->
+  <g class="legend" transform="translate(950, 620)">
+    <text x="0" y="0" font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="10" font-weight="600" fill="#CAC4BF">Status</text>
+    <circle cx="8" cy="15" r="4" fill="#22C55E"/>
+    <text x="18" y="18" font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10" fill="#CAC4BF">Active</text>
+    <circle cx="8" cy="30" r="4" fill="#F59E0B"/>
+    <text x="18" y="33" font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10" fill="#CAC4BF">Pending</text>
+    <circle cx="8" cy="45" r="4" fill="#EF4444"/>
+    <text x="18" y="48" font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10" fill="#CAC4BF">Error</text>
+  </g>
+
+  <!-- Version Badge -->
+  <g class="version-badge">
+    <rect x="990" y="40" width="90" height="24" rx="12" fill="#B85A3C"/>
+    <text x="1035" y="56" text-anchor="middle"
+          font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="11" font-weight="600"
+          fill="#FFFFFF">v2.5</text>
+  </g>
+</svg>

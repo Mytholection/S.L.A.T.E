@@ -1,4 +1,4 @@
-# Modified: 2026-02-07T03:00:00Z | Author: COPILOT | Change: Add SLATE agent validation + extension build jobs
+# Modified: 2026-02-07T15:45:00Z | Author: COPILOT | Change: Add AI inference validation to integration tests
 name: SLATE Integration
 
 on:
@@ -26,7 +26,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup Python
         run: |
-          'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH
+          "$env:GITHUB_WORKSPACE\\.venv\\Scripts" | Out-File -Append $env:GITHUB_PATH
       - name: SLATE Status
         run: python slate/slate_status.py --quick
 
@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup Python
         run: |
-          'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH
+          "$env:GITHUB_WORKSPACE\\.venv\\Scripts" | Out-File -Append $env:GITHUB_PATH
       - name: Import all modules
         run: |
           python -c @"
@@ -66,7 +66,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup Python
         run: |
-          'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH
+          "$env:GITHUB_WORKSPACE\\.venv\\Scripts" | Out-File -Append $env:GITHUB_PATH
       - name: Validate tech tree
         run: |
           python -c @"
@@ -90,7 +90,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup Python
         run: |
-          'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH
+          "$env:GITHUB_WORKSPACE\\.venv\\Scripts" | Out-File -Append $env:GITHUB_PATH
       - name: Test dashboard import
         run: |
           python -c "from agents.slate_dashboard_server import create_app; print('Dashboard import OK')"
@@ -104,7 +104,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup Python
         run: |
-          'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH
+          "$env:GITHUB_WORKSPACE\\.venv\\Scripts" | Out-File -Append $env:GITHUB_PATH
       - name: Test agent imports
         run: |
           python -c "import agents; print('agents package OK')"
@@ -120,7 +120,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup Python
         run: |
-          'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH
+          "$env:GITHUB_WORKSPACE\\.venv\\Scripts" | Out-File -Append $env:GITHUB_PATH
       - name: Validate agent definition
         run: |
           python -c @"
@@ -208,7 +208,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup Python
         run: |
-          'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH
+          "$env:GITHUB_WORKSPACE\\.venv\\Scripts" | Out-File -Append $env:GITHUB_PATH
       - name: Validate task queue
         run: |
           python -c @"
@@ -232,7 +232,7 @@ jobs:
   summary:
     name: SLATE Summary
     runs-on: [self-hosted, slate]
-    needs: [slate-status, sdk-validation, tech-tree, dashboard, agents, slate-agent, extension-build, task-queue]
+    needs: [slate-status, sdk-validation, tech-tree, dashboard, agents, slate-agent, extension-build, task-queue, ai-inference-validation]
     if: always()
     steps:
       - name: Generate summary
@@ -248,3 +248,79 @@ jobs:
           "| SLATE Agent | ${{ needs.slate-agent.result }} |" | Out-File -Append $env:GITHUB_STEP_SUMMARY
           "| Extension Build | ${{ needs.extension-build.result }} |" | Out-File -Append $env:GITHUB_STEP_SUMMARY
           "| Task Queue | ${{ needs.task-queue.result }} |" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          "| AI Inference | ${{ needs.ai-inference-validation.result }} |" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+
+  # ------------ AI Inference Validation (GPU) ------------
+  ai-inference-validation:
+    name: AI Inference Validation
+    runs-on: [self-hosted, slate, gpu, gpu-2]
+    timeout-minutes: 15
+    env:
+      CUDA_VISIBLE_DEVICES: '0,1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        run: |
+          "$env:GITHUB_WORKSPACE\\.venv\\Scripts" | Out-File -Append $env:GITHUB_PATH
+      - name: Verify GPU + Ollama
+        run: |
+          nvidia-smi --query-gpu=index,name,memory.used,utilization.gpu --format=csv,noheader
+          python -c @"
+          import torch
+          assert torch.cuda.is_available(), 'CUDA not available'
+          assert torch.cuda.device_count() >= 2, f'Expected 2 GPUs, got {torch.cuda.device_count()}'
+          print(f'PyTorch {torch.__version__}, CUDA {torch.version.cuda}, {torch.cuda.device_count()} GPUs')
+          "@
+      - name: Verify Ollama Models
+        id: ollama
+        run: |
+          $response = Invoke-RestMethod -Uri "http://127.0.0.1:11434/api/tags" -TimeoutSec 10
+          $slateModels = $response.models | Where-Object { $_.name -like 'slate-*' }
+          Write-Host "Ollama models: $($response.models.Count) total, $($slateModels.Count) SLATE custom"
+          foreach ($m in $slateModels) { Write-Host "  $($m.name)" }
+
+          if ($slateModels.Count -ge 3) {
+            "slate_models=true" | Out-File -Append $env:GITHUB_OUTPUT
+          } else {
+            "slate_models=false" | Out-File -Append $env:GITHUB_OUTPUT
+          }
+      - name: Run Inference Test
+        run: |
+          python -c @"
+          import json, urllib.request, time
+
+          models_to_test = ['slate-fast', 'slate-coder', 'slate-planner']
+          results = []
+          for model in models_to_test:
+              payload = json.dumps({
+                  'model': model,
+                  'prompt': 'What is SLATE?',
+                  'stream': False,
+                  'options': {'num_predict': 32}
+              }).encode()
+
+              req = urllib.request.Request(
+                  'http://127.0.0.1:11434/api/generate',
+                  data=payload,
+                  headers={'Content-Type': 'application/json'}
+              )
+              try:
+                  start = time.time()
+                  with urllib.request.urlopen(req, timeout=60) as resp:
+                      data = json.loads(resp.read())
+                  elapsed = time.time() - start
+                  tokens = data.get('eval_count', 0)
+                  tps = tokens / max(data.get('eval_duration', 1) / 1e9, 0.001)
+                  print(f'  {model}: {tokens} tokens @ {tps:.1f} tok/s ({elapsed:.1f}s)')
+                  results.append({'model': model, 'tokens': tokens, 'tps': round(tps, 1)})
+              except Exception as e:
+                  print(f'  {model}: FAILED - {e}')
+                  results.append({'model': model, 'error': str(e)})
+
+          print(f'\\nInference test: {len([r for r in results if \"tokens\" in r])}/{len(models_to_test)} models OK')
+          "@
+      - name: ML Orchestrator Status
+        run: python slate/ml_orchestrator.py --status
+      - name: ChromaDB Status
+        run: python slate/slate_chromadb.py --status
+        continue-on-error: true

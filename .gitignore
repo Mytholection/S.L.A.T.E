@@ -83,14 +83,29 @@ actions-runner-*/
 # Runtime state files
 .slate_orchestrator.pid
 .slate_orchestrator_state.json
+.slate_watchdog.pid
+.slate_watchdog_state.json
+.slate_gpu_state.json
 .slate_autonomous_state.json
 .slate_integrated_state.json
 .slate_ml_state.json
 .slate_model_state.json
 .slate_copilot_runner.json
 .slate_copilot_queue.json
+.slate_runner_costs.json
+.slate_runners.json
+.slate_warmup_state.json
+.slate_gpu_config.json
+.slate_install/
+.slate_scheduler_state.json
+.slate_task_queue.json
+
+# Copilot Agent Bridge (runtime task queue - source code is in slate/copilot_agent_bridge.py)
+.slate_copilot_bridge.json
+.slate_copilot_bridge_results.json
 vscode_errors.json
 vscode_code_actions.json
+vscode_debug_state.json
 nul
 
 # Runtime logs
@@ -99,14 +114,11 @@ slate_logs/
 # Discussion state (runtime)
 .slate_discussions/
 
-# Claude — track commands/settings (agent definitions), exclude user-local config
+# Claude — track commands for fork compatibility
+# Only ignore user-specific settings
 .claude/settings.local.json
-
-# Ruff lint cache
-.ruff_cache/
-
-# Build artifacts
-dist/
+.claude/todos.json
+.claude/keybindings.json
 
 # Secrets (NEVER commit)
 .env
@@ -129,9 +141,14 @@ install_state.json
 .slate_chromadb_state.json
 .slate_startup_state.json
 .slate_startup.pid
+.slate_spec_kit.json
 
 # Extension build artifacts (root level)
 *.vsix
+
+# Extension build artifacts (plugins)
+plugins/**/out/
+plugins/**/dist/
 
 # Temp developer scripts (contains tokens + scratch files)
 _temp/

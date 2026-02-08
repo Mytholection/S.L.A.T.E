@@ -58,10 +58,10 @@ print(status)
     "python": "3.11.9",
     "platform": "Windows",
     "hardware": {
-        "gpu_count": 2,
-        "gpu_names": ["NVIDIA RTX 5070 Ti", "NVIDIA RTX 5070 Ti"],
-        "total_vram": "32GB",
-        "ram": "32GB"
+        "gpu_count": 1,  # Auto-detected from your system
+        "gpu_names": ["Your GPU Model"],  # Auto-detected
+        "total_vram": "xGB",  # Auto-detected
+        "ram": "xGB"  # Auto-detected
     },
     "backends": {
         "ollama": {"status": "connected", "model": "mistral-nemo"},
@@ -75,6 +75,8 @@ print(status)
     "status": "ready"
 }
 ```
+
+*Note: Hardware values reflect your actual system configuration.*
 
 ### get_quick_status()
 
@@ -349,19 +351,19 @@ optimizer.apply_optimizations()
 
 ```python
 {
-    "gpu_count": 2,
-    "gpu_name": "NVIDIA RTX 5070 Ti",
-    "architecture": "blackwell",
-    "vram_gb": 16,
-    "cuda_version": "12.4",
-    "cudnn_version": "9.0",
+    "gpu_count": 1,  # Your GPU count
+    "gpu_name": "Your GPU Model",  # Auto-detected
+    "architecture": "auto",  # ampere, ada, blackwell, etc.
+    "vram_gb": 8,  # Your VRAM
+    "cuda_version": "12.x",  # Your CUDA version
+    "cudnn_version": "x.x",  # Your cuDNN version
     "recommendations": [
-        "Enable TF32",
-        "Enable BF16",
-        "Use Flash Attention v2"
+        # Tailored to your GPU architecture
     ]
 }
 ```
+
+*Note: Values are auto-detected from your hardware.*
 
 ---
 

@@ -1,4 +1,4 @@
-# Modified: 2026-02-07T00:00:00Z | Author: COPILOT | Change: Simplified after repo rename (removed trailing dot)
+# Modified: 2026-02-07T15:45:00Z | Author: COPILOT | Change: Add AI-powered PR review with GPU inference, Copilot SDK integration
 name: SLATE PR Check
 
 on:
@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup Python
         run: |
-          'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH
+          "$env:GITHUB_WORKSPACE\\.venv\\Scripts" | Out-File -Append $env:GITHUB_PATH
       - name: Ruff lint
         run: |
           pip install ruff --quiet 2>$null
@@ -42,7 +42,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup Python
         run: |
-          'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH
+          "$env:GITHUB_WORKSPACE\\.venv\\Scripts" | Out-File -Append $env:GITHUB_PATH
       - name: Install test deps
         run: pip install pytest pytest-cov pytest-asyncio --quiet 2>$null
         continue-on-error: true
@@ -58,7 +58,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup Python
         run: |
-          'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH
+          "$env:GITHUB_WORKSPACE\\.venv\\Scripts" | Out-File -Append $env:GITHUB_PATH
       - name: Validate SDK
         run: |
           python -c "import slate; print(f'SDK v{slate.__version__}')"
@@ -85,7 +85,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup Python
         run: |
-          'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH
+          "$env:GITHUB_WORKSPACE\\.venv\\Scripts" | Out-File -Append $env:GITHUB_PATH
       - name: Security scan
         run: |
           pip install bandit --quiet 2>$null
@@ -95,7 +95,7 @@ jobs:
   summary:
     name: PR Summary
     runs-on: [self-hosted, slate]
-    needs: [quality, tests, sdk-check, security]
+    needs: [quality, tests, sdk-check, security, ai-pr-review]
     if: always()
     steps:
       - name: Generate summary
@@ -107,3 +107,64 @@ jobs:
           "| Tests | ${{ needs.tests.result }} |" | Out-File -Append $env:GITHUB_STEP_SUMMARY
           "| SDK Validation | ${{ needs.sdk-check.result }} |" | Out-File -Append $env:GITHUB_STEP_SUMMARY
           "| Security | ${{ needs.security.result }} |" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          "| AI PR Review | ${{ needs.ai-pr-review.result }} |" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+
+  # ------------ AI-Powered PR Review (GPU Inference) ------------
+  ai-pr-review:
+    name: AI PR Review (GPU)
+    runs-on: [self-hosted, slate, gpu, gpu-2]
+    timeout-minutes: 15
+    env:
+      CUDA_VISIBLE_DEVICES: '0,1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Python
+        run: |
+          "$env:GITHUB_WORKSPACE\\.venv\\Scripts" | Out-File -Append $env:GITHUB_PATH
+      - name: Verify Ollama
+        id: ollama
+        run: |
+          $available = $false
+          try {
+            $response = Invoke-RestMethod -Uri "http://127.0.0.1:11434/api/tags" -TimeoutSec 5
+            if ($response) {
+              $available = $true
+              Write-Host "Ollama: RUNNING ($($response.models.Count) models)"
+            }
+          } catch { }
+          "available=$available" | Out-File -Append $env:GITHUB_OUTPUT
+      - name: AI Review Changed Files
+        if: steps.ollama.outputs.available == 'True'
+        run: |
+          Write-Host ""
+          Write-Host "═══════════════════════════════════════════════════════════════"
+          Write-Host "  AI-Powered PR Review (Local GPU Inference)"
+          Write-Host "  PR #${{ github.event.pull_request.number }}"
+          Write-Host "═══════════════════════════════════════════════════════════════"
+          Write-Host ""
+
+          python slate/slate_ai_orchestrator.py --analyze-recent --json > ai_review.json
+
+          $review = Get-Content ai_review.json -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
+          if ($review) {
+            Write-Host "Files analyzed: $($review.files_analyzed)"
+            Write-Host "Issues found: $($review.issues_found)"
+
+            "## AI PR Review (GPU Inference)" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+            "**PR**: #${{ github.event.pull_request.number }}" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+            "**Files Analyzed**: $($review.files_analyzed)" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+            "**Issues Found**: $($review.issues_found)" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+            "**GPU**: NVIDIA RTX 5070 Ti x2" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          }
+      - name: GPU Status After Review
+        run: nvidia-smi --query-gpu=index,name,memory.used,utilization.gpu --format=csv,noheader
+      - name: Upload Review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-pr-review-${{ github.run_number }}
+          path: ai_review.json
+          retention-days: 30
+          if-no-files-found: ignore

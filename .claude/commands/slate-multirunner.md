@@ -32,14 +32,16 @@ Report findings including:
 
 ## Multi-Runner Architecture
 
-SLATE supports up to 19 parallel runners distributed across resources:
+SLATE dynamically configures runners based on your hardware:
 
-| Profile | GPU | Count | Use Case |
-|---------|-----|-------|----------|
-| gpu_heavy | 0 | 1 | Large model inference |
-| gpu_light | 1 | 6 | Small inference tasks |
-| standard | CPU | 4 | Tests, validation |
-| light | CPU | 8 | Lint, format checks |
+| Profile | Resource | Scaling | Use Case |
+|---------|----------|---------|----------|
+| gpu_heavy | GPU | 1 per high-VRAM GPU | Large model inference |
+| gpu_light | GPU | Based on VRAM | Small inference tasks |
+| standard | CPU | Based on cores | Tests, validation |
+| light | CPU | Based on cores | Lint, format checks |
+
+*Note: Runner counts scale to your available hardware.*
 
 ## Resource Requirements
 

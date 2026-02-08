@@ -1,4 +1,5 @@
 # S.L.A.T.E. Development Guidelines
+<!-- Modified: 2026-02-07T11:00:00Z | Author: COPILOT | Change: Add Claude Code validator and Agent SDK integration -->
 
 **S.L.A.T.E.** = Synchronized Living Architecture for Transformation and Evolution
 
@@ -27,6 +28,11 @@ Commands are defined in `.claude/commands/` and available when working in this p
 | `/slate-status` | Check system and service status |
 | `/slate-workflow` | Manage task workflow queue |
 | `/slate-runner` | Manage GitHub Actions runner |
+| `/slate-discussions` | Manage GitHub Discussions |
+| `/slate-multirunner` | Manage multi-runner system |
+| `/slate-gpu` | Manage dual-GPU load balancing |
+| `/slate-claude` | Validate Claude Code integration |
+| `/slate-spec-kit` | Process specs, run AI analysis, generate wiki |
 | `/slate-help` | Show all available commands |
 
 ### MCP Server Setup
@@ -36,19 +42,37 @@ The SLATE MCP server provides AI tools. Add to `~/.claude/config.json`:
 ```json
 {
   "mcpServers": {
-    "slate": {
-      "command": "E:\\11132025\\.venv\\Scripts\\python.exe",
-      "args": ["E:\\11132025\\slate\\mcp_server.py"],
-      "env": {
-        "SLATE_WORKSPACE": "E:\\11132025",
-        "PYTHONPATH": "E:\\11132025"
+      "slate": {
+         "command": "<workspace>\\.venv\\Scripts\\python.exe",
+         "args": ["<workspace>\\slate\\mcp_server.py"],
+         "env": {
+            "SLATE_WORKSPACE": "<workspace>",
+            "PYTHONPATH": "<workspace>"
+         }
       }
-    }
   }
 }
 ```
 
-### MCP Tools
+## Built-In Safeguards
+
+SLATE includes multiple protection layers for safe AI automation.
+
+### ActionGuard
+Blocks dangerous patterns: `rm -rf`, `0.0.0.0` bindings, `eval()`/`exec()`, external API calls.
+
+### SDK Source Guard
+Only trusted publishers: Microsoft, NVIDIA, Meta, Google, Hugging Face.
+
+### PII Scanner
+Scans for API keys, tokens, credentials before GitHub sync.
+
+### Resource Limits
+- Max concurrent tasks enforced
+- Stale task detection (>4h in-progress)
+- GPU memory monitoring per-runner
+
+## MCP Tools
 
 | Tool | Description |
 |------|-------------|
@@ -57,6 +81,11 @@ The SLATE MCP server provides AI tools. Add to `~/.claude/config.json`:
 | `slate_orchestrator` | Start/stop services |
 | `slate_runner` | Manage GitHub runner |
 | `slate_ai` | Execute AI tasks via local LLMs |
+| `slate_runtime` | Check runtime integrations |
+| `slate_hardware` | Detect and optimize GPU hardware |
+| `slate_gpu` | Manage dual-GPU load balancing |
+| `slate_claude_code` | Validate Claude Code configuration |
+| `slate_spec_kit` | Process specs, run AI analysis, generate wiki |
 
 ### Structure
 
@@ -66,8 +95,63 @@ The SLATE MCP server provides AI tools. Add to `~/.claude/config.json`:
   slate-status.md     # /slate-status command
   slate-workflow.md   # /slate-workflow command
   slate-runner.md     # /slate-runner command
+  slate-discussions.md  # /slate-discussions command
+  slate-multirunner.md  # /slate-multirunner command
+  slate-gpu.md        # /slate-gpu command
+  slate-claude.md     # /slate-claude command
+  slate-spec-kit.md   # /slate-spec-kit command
   slate-help.md       # /slate-help command
-slate/mcp_server.py   # MCP server implementation
+slate/mcp_server.py           # MCP server implementation
+slate/slate_spec_kit.py       # Spec-Kit wiki integration
+slate/claude_code_validator.py  # Claude Code settings validator
+slate/claude_code_manager.py    # Claude Code configuration manager
+```
+
+### Claude Code Validation
+
+SLATE validates Claude Code integration with multiple checks:
+
+```powershell
+# Validate Claude Code configuration
+.\.venv\Scripts\python.exe slate/claude_code_manager.py --validate
+
+# Generate full validation report
+.\.venv\Scripts\python.exe slate/claude_code_manager.py --report
+
+# Show Agent SDK options
+.\.venv\Scripts\python.exe slate/claude_code_manager.py --agent-options
+
+# Test MCP server
+.\.venv\Scripts\python.exe slate/claude_code_manager.py --test-mcp slate
+```
+
+### Claude Agent SDK Integration
+
+SLATE provides recommended Agent SDK options for programmatic use:
+
+```python
+from slate.claude_code_manager import get_manager
+
+manager = get_manager()
+options = manager.get_agent_options(
+    allowed_tools=["Read", "Write", "Edit", "Bash"],
+    permission_mode="acceptEdits",
+    model="claude-sonnet-4-5-20250929"
+)
+```
+
+Hook integration with ActionGuard:
+
+```python
+# PreToolUse hooks validate through ActionGuard
+result = manager.execute_hooks(
+    event="PreToolUse",
+    tool_name="Bash",
+    tool_input={"command": "python script.py"},
+    session_id="my-session"
+)
+if result.permission_decision == "deny":
+    print(f"Blocked: {result.reason}")
 ```
 
 ## Local AI Providers (FREE - No Cloud Costs)
@@ -125,6 +209,155 @@ planning           -> speckit          (FREE)
 - `slate/inference_instructions.py` - ML-based code generation guidance
 - `slate/action_guard.py` - Security (blocks paid APIs)
 
+## AI Orchestrator (Automated Maintenance)
+
+SLATE includes an AI orchestrator that automatically maintains the codebase using local Ollama models.
+
+### Capabilities
+
+| Feature | Schedule | Description |
+|---------|----------|-------------|
+| Quick Analysis | Every 4 hours | Analyze recently changed files |
+| Full Analysis | Daily 2am | Complete codebase analysis |
+| Documentation | Daily | Auto-generate/update docs |
+| GitHub Monitor | Daily | Analyze workflows and integrations |
+| Model Training | Weekly Sunday | Train custom SLATE model |
+
+### Commands
+
+```powershell
+# Check AI orchestrator status
+.\.venv\Scripts\python.exe slate/slate_ai_orchestrator.py --status
+
+# Warmup AI models
+.\.venv\Scripts\python.exe slate/slate_ai_orchestrator.py --warmup
+
+# Analyze recently changed files
+.\.venv\Scripts\python.exe slate/slate_ai_orchestrator.py --analyze-recent
+
+# Full codebase analysis
+.\.venv\Scripts\python.exe slate/slate_ai_orchestrator.py --analyze-codebase
+
+# Update documentation
+.\.venv\Scripts\python.exe slate/slate_ai_orchestrator.py --update-docs
+
+# Monitor GitHub integrations
+.\.venv\Scripts\python.exe slate/slate_ai_orchestrator.py --monitor-github
+
+# Collect training data
+.\.venv\Scripts\python.exe slate/slate_ai_orchestrator.py --collect-training
+
+# Train custom model
+.\.venv\Scripts\python.exe slate/slate_ai_orchestrator.py --train
+```
+
+### Workflows
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `ai-maintenance.yml` | Every 4h, 2am, push | Codebase analysis and doc updates |
+| `ai-training.yml` | Weekly Sunday 5am | Model training and customization |
+| `fork-intelligence.yml` | Every 6h | AI-powered fork analysis |
+
+### Custom Model
+
+SLATE can train a custom model (`slate-custom`) tuned for the codebase:
+- Based on `mistral-nemo`
+- Trained on SLATE code patterns
+- Understands project architecture
+- Updated weekly with new code
+
+## Secure AI Training Pipeline
+
+The training pipeline ingests the ENTIRE git repository while ensuring secrets are NEVER included.
+
+### Security Protocol
+
+| Protection | Description |
+|------------|-------------|
+| Secret Filtering | API keys, tokens, passwords, credentials are redacted |
+| PII Scanner | Email, phone, SSN, addresses are filtered |
+| File Exclusion | .env, .pem, credentials.json are excluded |
+| Commit Sanitization | Author emails are redacted (except known safe domains) |
+| Local Only | Trained models are NEVER distributed |
+
+### Training Pipeline Commands
+
+```powershell
+# Collect training data (with secret filtering)
+.\.venv\Scripts\python.exe slate/slate_training_pipeline.py --collect
+
+# Validate training data is secret-free
+.\.venv\Scripts\python.exe slate/slate_training_pipeline.py --validate
+
+# Train custom model locally
+.\.venv\Scripts\python.exe slate/slate_training_pipeline.py --train
+
+# Show pipeline status
+.\.venv\Scripts\python.exe slate/slate_training_pipeline.py --status
+```
+
+## AI Task Scheduler
+
+Intelligently schedules AI tasks across dual GPUs for maximum efficiency.
+
+### Features
+
+- Priority-based task queue
+- GPU-aware task placement
+- Model warmup optimization (keeps hot models loaded)
+- Batch processing for similar task types
+- Dependency-aware sequencing
+
+### Scheduler Commands
+
+```powershell
+# View scheduler status and GPU state
+.\.venv\Scripts\python.exe slate/slate_ai_scheduler.py --status
+
+# View task queue
+.\.venv\Scripts\python.exe slate/slate_ai_scheduler.py --queue
+
+# Add task to queue
+.\.venv\Scripts\python.exe slate/slate_ai_scheduler.py --add "code_review:Review recent changes"
+
+# Run scheduled tasks
+.\.venv\Scripts\python.exe slate/slate_ai_scheduler.py --run --max-tasks 10
+
+# Generate optimal schedule
+.\.venv\Scripts\python.exe slate/slate_ai_scheduler.py --schedule
+```
+
+## Workflow Coordinator
+
+Coordinates AI-powered GitHub Actions workflows for intelligent sequencing.
+
+### Commands
+
+```powershell
+# View coordinator status
+.\.venv\Scripts\python.exe slate/slate_workflow_coordinator.py --status
+
+# Generate execution plan
+.\.venv\Scripts\python.exe slate/slate_workflow_coordinator.py --plan
+
+# Dispatch scheduled workflows
+.\.venv\Scripts\python.exe slate/slate_workflow_coordinator.py --dispatch
+
+# Analyze workflow efficiency
+.\.venv\Scripts\python.exe slate/slate_workflow_coordinator.py --optimize
+```
+
+### Optimal Workflow Sequence
+
+```
+Phase 1: Training     → ai-training.yml (model updates first)
+Phase 2: Maintenance  → ai-maintenance.yml, fork-intelligence.yml (parallel)
+Phase 3: Agentic      → agentic.yml (task execution with updated models)
+Phase 4: Validation   → ci.yml, nightly.yml (parallel)
+Phase 5: Services     → service-management.yml (always last)
+```
+
 ## Project Structure
 
 ```text
@@ -176,8 +409,59 @@ ruff check .
 
 - Python: Type hints required. Google-style docstrings. Use `Annotated` for tool parameters.
 - Imports: Add `WORKSPACE_ROOT` to `sys.path` when importing cross-module.
-- UI: Glassmorphism theme (75% opacity, muted pastels). System fonts only (Consolas, Segoe UI).
 - Task files: Always use `slate_core/file_lock.py` for `current_tasks.json` (prevents race conditions).
+
+## UI & Design System (Watchmaker Aesthetic)
+
+All UI and image design follows the **Watchmaker Design Philosophy** (spec 012):
+
+### Core Principles
+| Principle | Description |
+|-----------|-------------|
+| **Precision** | Every pixel serves a purpose. 4px grid alignment. No arbitrary elements. |
+| **Mechanism** | Users see the system working — animated gears, flow lines, visible connections. |
+| **Depth** | Information in discoverable layers (Surface → Mechanism → Components → Internals → Core). |
+| **Function** | Every UI element serves a specific purpose, like watch complications. |
+| **Craft** | Beauty emerges from functional perfection, not decoration. |
+
+### Visual Components
+- **Gear Icons**: Rotating when active, indicating processing
+- **Status Jewels**: Colored gems (green=active, amber=pending, red=error)
+- **Flow Lines**: Animated stroke-dasharray showing data paths
+- **3D Cards**: Depth on hover with perspective transforms
+- **Schematic Layout**: Blueprint-style organization with visible connections
+
+### Design Tokens (LOCKED)
+```css
+/* Primary: Anthropic-inspired warm rust */
+--slate-primary: #B85A3C;
+/* Blueprint: Technical precision */
+--blueprint-bg: #0D1B2A;
+--blueprint-grid: #1B3A4B;
+/* Typography: System fonts only */
+--font-display: 'Segoe UI', 'Inter', system-ui, sans-serif;
+--font-mono: 'Consolas', 'JetBrains Mono', monospace;
+/* Grid: Precision alignment */
+--grid-unit: 4px;
+```
+
+### 3D Dashboard Structure
+```
+Z=-200: Background gears (decorative, subtle rotation)
+Z=-100: Blueprint grid
+Z=-50:  Connection lines (animated data flows)
+Z=0:    Primary UI components
+Z=50:   Floating elements (tooltips, modals)
+Z=100:  Overlays (notifications)
+```
+
+### Schematic-Based Organization
+All information structures use schematic/blueprint layout:
+- **Hierarchy**: Tree views with nested containers
+- **Circuit**: Nodes connected by flow lines
+- **Dataflow**: Input → Processing → Output pipelines
+
+See: `specs/007-slate-design-system/`, `specs/012-watchmaker-3d-dashboard/`
 
 ## Security Architecture — LOCAL ONLY
 
@@ -279,6 +563,45 @@ The `project-automation.yml` workflow:
 - PII scanning before public board exposure
 - Bidirectional sync with `current_tasks.json`
 
+## GitHub Discussions
+
+SLATE integrates GitHub Discussions for community engagement and feature ideation.
+
+### Discussion Categories
+
+| Category | Routing | Action |
+|----------|---------|--------|
+| Announcements | None | Informational only |
+| Ideas | ROADMAP board | Creates tracking issue |
+| Q&A | Metrics tracking | Monitors response time |
+| Show and Tell | Engagement log | Community showcase |
+| General | Engagement log | Community discussion |
+
+### Discussion Commands
+
+```powershell
+# Check discussion system status
+.\.venv\Scripts\python.exe slate/slate_discussion_manager.py --status
+
+# List unanswered Q&A discussions
+.\.venv\Scripts\python.exe slate/slate_discussion_manager.py --unanswered
+
+# Sync actionable discussions to task queue
+.\.venv\Scripts\python.exe slate/slate_discussion_manager.py --sync-tasks
+
+# Generate engagement metrics
+.\.venv\Scripts\python.exe slate/slate_discussion_manager.py --metrics
+```
+
+### Discussion Automation
+
+The `discussion-automation.yml` workflow:
+- Triggers on discussion events (create, edit, label, answer)
+- Hourly scheduled processing for metrics
+- PII scanning before processing
+- Routes Ideas/Bugs to issue tracker
+- Tracks Q&A response times
+
 ## Test-Driven Development (Constitution Mandate)
 
 All code changes must be accompanied by tests. Target 50%+ coverage for `slate/` and `slate_core/`.
@@ -375,6 +698,35 @@ Repository: https://github.com/SynchronizedLivingArchitecture/S.L.A.T.E.
 - CODEOWNERS enforces review requirements for critical paths
 - All PRs must pass SLATE compatibility checklist
 
+## GitHub Pages
+
+SLATE has a public feature page deployed via GitHub Pages.
+
+| Resource | URL |
+|----------|-----|
+| **Website** | https://synchronizedlivingarchitecture.github.io/S.L.A.T.E/ |
+| **Source** | `docs/pages/` |
+| **Workflow** | `pages.yml` |
+
+### Pages Structure
+
+```text
+docs/pages/
+├── index.html      # Main landing/feature page
+├── 404.html        # Custom 404 page
+└── assets/
+    └── slate-logo-v2.svg
+```
+
+The pages match the SLATE dashboard theme (glassmorphism, organic earth tones, Segoe UI).
+
+### Deployment
+
+Pages deploy automatically on push to `main` when files in `docs/pages/` change:
+- Uses GitHub Actions `deploy-pages@v4`
+- Notifies SLATE system on successful deployment
+- Status tracked in `.slate_identity/pages_status.json`
+
 ## GitHub Workflow System
 
 SLATE uses GitHub as a **task execution platform**. The GitHub ecosystem manages the entire project lifecycle: issues → tasks → workflow execution → PR completion.
@@ -398,6 +750,7 @@ GitHub Issues/Tasks → current_tasks.json → Workflow Dispatch → Self-hosted
 | `nightly.yml` | Daily 4am UTC | Full test suite, dependency audit |
 | `cd.yml` | Tags/main | Build EXE, create releases |
 | `fork-validation.yml` | Fork PRs | Security gate |
+| `pages.yml` | docs/pages/** changes | Deploy GitHub Pages feature site |
 
 ### Auto-Configured Runner
 

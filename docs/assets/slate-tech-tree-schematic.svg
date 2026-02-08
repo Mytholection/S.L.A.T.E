@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1000" height="700" viewBox="0 0 1000 700"
+     xmlns="http://www.w3.org/2000/svg"
+     role="img" aria-label="SLATE Tech Tree">
+
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0D1B2A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1B3A4B;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Primary Accent Gradient -->
+    <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#B85A3C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D4785A;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Status Gradients -->
+    <linearGradient id="activeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#22C55E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4ADE80;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Glow Effect -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Drop Shadow -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="4" stdDeviation="4"
+                    flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+
+    <!-- Arrow Marker -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#B85A3C"/>
+    </marker>
+
+    <!-- Arrow Marker (Active) -->
+    <marker id="arrowhead-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#22C55E"/>
+    </marker>
+
+    <!-- Grid Pattern -->
+    <pattern id="gridPattern" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1B3A4B" stroke-width="0.5" opacity="0.3"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="700" fill="url(#bgGradient)"/>
+
+  <!-- Grid Overlay -->
+  <rect width="1000" height="700" fill="url(#gridPattern)" opacity="0.5"/>
+
+  <!-- Connections Layer -->
+  <g class="connections-layer">
+
+    <g class="connection" data-from="core-sdk" data-to="workflow-system">
+      <path d="M 175.71428571428572 195.0 C 171.42857142857142 195.0, 171.42857142857142 195.0, 167.1428571428571 195.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="core-sdk" data-to="mcp-server">
+      <path d="M 175.71428571428572 195.0 C 237.14285714285714 195.0, 237.14285714285714 195.0, 298.57142857142856 195.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="workflow-system" data-to="github-runner">
+      <path d="M 307.1428571428571 195.0 C 368.57142857142856 195.0, 368.57142857142856 195.0, 429.99999999999994 195.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="workflow-system" data-to="workflow-pipeline">
+      <path d="M 307.1428571428571 195.0 C 499.99999999999994 195.0, 499.99999999999994 195.0, 692.8571428571428 195.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="mcp-server" data-to="dashboard">
+      <path d="M 438.57142857142856 195.0 C 499.99999999999994 195.0, 499.99999999999994 195.0, 561.4285714285713 195.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="dashboard" data-to="tech-tree-viz">
+      <path d="M 701.4285714285713 195.0 C 762.8571428571427 195.0, 762.8571428571427 195.0, 824.2857142857141 195.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="github-runner" data-to="workflow-pipeline">
+      <path d="M 570.0 195.0 C 631.4285714285713 195.0, 631.4285714285713 195.0, 692.8571428571428 195.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="workflow-pipeline" data-to="docker-infra">
+      <path d="M 832.8571428571428 195.0 C 422.3376623376623 195.0, 422.3376623376623 505.0, 11.818181818181813 505.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="workflow-pipeline" data-to="meta-workflow">
+      <path d="M 832.8571428571428 195.0 C 589.6103896103896 195.0, 589.6103896103896 505.0, 346.3636363636364 505.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="mcp-server" data-to="claude-dev">
+      <path d="M 438.57142857142856 195.0 C 308.83116883116884 195.0, 308.83116883116884 505.0, 179.0909090909091 505.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="core-sdk" data-to="copilot-dev">
+      <path d="M 175.71428571428572 195.0 C 135.58441558441558 195.0, 135.58441558441558 505.0, 95.45454545454547 505.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="core-sdk" data-to="agent-system">
+      <path d="M 175.71428571428572 195.0 C 302.8571428571429 195.0, 302.8571428571429 505.0, 430.0 505.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="dashboard" data-to="ui-dev">
+      <path d="M 701.4285714285713 195.0 C 482.07792207792204 195.0, 482.07792207792204 505.0, 262.72727272727275 505.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="core-sdk" data-to="uv-migration">
+      <path d="M 175.71428571428572 195.0 C 344.67532467532476 195.0, 344.67532467532476 505.0, 513.6363636363637 505.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="workflow-pipeline" data-to="discord-bot">
+      <path d="M 832.8571428571428 195.0 C 715.0649350649351 195.0, 715.0649350649351 505.0, 597.2727272727274 505.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="github-runner" data-to="multi-runner">
+      <path d="M 570.0 195.0 C 625.4545454545455 195.0, 625.4545454545455 505.0, 680.909090909091 505.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="core-sdk" data-to="vscode-sdk">
+      <path d="M 175.71428571428572 195.0 C 470.12987012987014 195.0, 470.12987012987014 505.0, 764.5454545454546 505.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="multi-runner" data-to="docker-infra">
+      <path d="M 820.909090909091 505.0 C 416.3636363636364 505.0, 416.3636363636364 505.0, 11.818181818181813 505.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="dashboard" data-to="schematic-sdk">
+      <path d="M 701.4285714285713 195.0 C 774.8051948051948 195.0, 774.8051948051948 505.0, 848.1818181818182 505.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="ui-dev" data-to="schematic-sdk">
+      <path d="M 402.72727272727275 505.0 C 625.4545454545455 505.0, 625.4545454545455 505.0, 848.1818181818182 505.0" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+  </g>
+
+  <!-- Components Layer -->
+  <g class="components-layer" filter="url(#shadow)">
+
+    <g class="component" data-id="core-sdk" data-type="service">
+      <rect x="35.71428571428571" y="165.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="47.71428571428571" cy="177.0" r="5" fill="#22C55E"/>
+      <text x="105.71428571428571" y="193.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Core SDK</text>
+      <text x="105.71428571428571" y="209.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">SLATE core SDK and infrastruct</text>
+    </g>
+
+    <g class="component" data-id="workflow-system" data-type="service">
+      <rect x="167.1428571428571" y="165.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="179.1428571428571" cy="177.0" r="5" fill="#22C55E"/>
+      <text x="237.1428571428571" y="193.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Workflow System</text>
+      <text x="237.1428571428571" y="209.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">GitHub Actions workflow-based </text>
+    </g>
+
+    <g class="component" data-id="mcp-server" data-type="service">
+      <rect x="298.57142857142856" y="165.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="310.57142857142856" cy="177.0" r="5" fill="#22C55E"/>
+      <text x="368.57142857142856" y="193.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">MCP Server</text>
+      <text x="368.57142857142856" y="209.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Model Context Protocol integra</text>
+    </g>
+
+    <g class="component" data-id="github-runner" data-type="service">
+      <rect x="429.99999999999994" y="165.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="441.99999999999994" cy="177.0" r="5" fill="#22C55E"/>
+      <text x="499.99999999999994" y="193.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Self-Hosted Runner</text>
+      <text x="499.99999999999994" y="209.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">GPU-accelerated GitHub Actions</text>
+    </g>
+
+    <g class="component" data-id="dashboard" data-type="service">
+      <rect x="561.4285714285713" y="165.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#F59E0B" stroke-width="2"/>
+      
+      <circle cx="573.4285714285713" cy="177.0" r="5" fill="#F59E0B"/>
+      <text x="631.4285714285713" y="193.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Dashboard</text>
+      <text x="631.4285714285713" y="209.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Web-based status dashboard wit</text>
+    </g>
+
+    <g class="component" data-id="workflow-pipeline" data-type="service">
+      <rect x="692.8571428571428" y="165.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="704.8571428571428" cy="177.0" r="5" fill="#22C55E"/>
+      <text x="762.8571428571428" y="193.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Workflow Pipeline</text>
+      <text x="762.8571428571428" y="209.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Tasks -&gt; Runner -&gt; Workflows -</text>
+    </g>
+
+    <g class="component" data-id="tech-tree-viz" data-type="service">
+      <rect x="824.2857142857141" y="165.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#F59E0B" stroke-width="2"/>
+      
+      <circle cx="836.2857142857141" cy="177.0" r="5" fill="#F59E0B"/>
+      <text x="894.2857142857141" y="193.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Tech Tree Visualization</text>
+      <text x="894.2857142857141" y="209.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">D3.js force-directed tech tree</text>
+    </g>
+
+    <g class="component" data-id="docker-infra" data-type="service">
+      <rect x="11.818181818181813" y="475.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="23.818181818181813" cy="487.0" r="5" fill="#22C55E"/>
+      <text x="81.81818181818181" y="503.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Docker Infrastructure</text>
+      <text x="81.81818181818181" y="519.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">GPU/CPU container images, comp</text>
+    </g>
+
+    <g class="component" data-id="copilot-dev" data-type="service">
+      <rect x="95.45454545454547" y="475.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#6B7280" stroke-width="2"/>
+      
+      <circle cx="107.45454545454547" cy="487.0" r="5" fill="#6B7280"/>
+      <text x="165.45454545454547" y="503.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Copilot Development</text>
+      <text x="165.45454545454547" y="519.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">GitHub Copilot instructions, p</text>
+    </g>
+
+    <g class="component" data-id="claude-dev" data-type="service">
+      <rect x="179.0909090909091" y="475.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#6B7280" stroke-width="2"/>
+      
+      <circle cx="191.0909090909091" cy="487.0" r="5" fill="#6B7280"/>
+      <text x="249.0909090909091" y="503.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Claude Integration</text>
+      <text x="249.0909090909091" y="519.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Claude Code commands, MCP serv</text>
+    </g>
+
+    <g class="component" data-id="ui-dev" data-type="service">
+      <rect x="262.72727272727275" y="475.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#6B7280" stroke-width="2"/>
+      
+      <circle cx="274.72727272727275" cy="487.0" r="5" fill="#6B7280"/>
+      <text x="332.72727272727275" y="503.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">UI Development</text>
+      <text x="332.72727272727275" y="519.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Dashboard frontend, tech tree </text>
+    </g>
+
+    <g class="component" data-id="meta-workflow" data-type="service">
+      <rect x="346.3636363636364" y="475.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="358.3636363636364" cy="487.0" r="5" fill="#22C55E"/>
+      <text x="416.3636363636364" y="503.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Meta-Workflow System</text>
+      <text x="416.3636363636364" y="519.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Self-managing workflow analyze</text>
+    </g>
+
+    <g class="component" data-id="agent-system" data-type="service">
+      <rect x="430.0" y="475.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#6B7280" stroke-width="2"/>
+      
+      <circle cx="442.0" cy="487.0" r="5" fill="#6B7280"/>
+      <text x="500.0" y="503.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Agent System</text>
+      <text x="500.0" y="519.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">GitHub Copilot agents (.github</text>
+    </g>
+
+    <g class="component" data-id="uv-migration" data-type="service">
+      <rect x="513.6363636363637" y="475.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#6B7280" stroke-width="2"/>
+      
+      <circle cx="525.6363636363637" cy="487.0" r="5" fill="#6B7280"/>
+      <text x="583.6363636363637" y="503.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">UV Package Manager</text>
+      <text x="583.6363636363637" y="519.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Migrate from pip to UV for fas</text>
+    </g>
+
+    <g class="component" data-id="discord-bot" data-type="service">
+      <rect x="597.2727272727274" y="475.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#6B7280" stroke-width="2"/>
+      
+      <circle cx="609.2727272727274" cy="487.0" r="5" fill="#6B7280"/>
+      <text x="667.2727272727274" y="503.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Discord Bot</text>
+      <text x="667.2727272727274" y="519.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">SLATE Discord integration for </text>
+    </g>
+
+    <g class="component" data-id="multi-runner" data-type="service">
+      <rect x="680.909090909091" y="475.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="692.909090909091" cy="487.0" r="5" fill="#22C55E"/>
+      <text x="750.909090909091" y="503.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Multi-Runner System</text>
+      <text x="750.909090909091" y="519.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">19 parallel runners across 2 G</text>
+    </g>
+
+    <g class="component" data-id="vscode-sdk" data-type="service">
+      <rect x="764.5454545454546" y="475.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="776.5454545454546" cy="487.0" r="5" fill="#22C55E"/>
+      <text x="834.5454545454546" y="503.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">VSCode SDK Integration</text>
+      <text x="834.5454545454546" y="519.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Local VSCode plugins synced to</text>
+    </g>
+
+    <g class="component" data-id="schematic-sdk" data-type="service">
+      <rect x="848.1818181818182" y="475.0" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="860.1818181818182" cy="487.0" r="5" fill="#22C55E"/>
+      <text x="918.1818181818182" y="503.0" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Schematic Diagram SDK</text>
+      <text x="918.1818181818182" y="519.0" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Circuit-board style diagram ge</text>
+    </g>
+  </g>
+
+  <!-- Title -->
+  <text x="40" y="45"
+        font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="24" font-weight="700"
+        fill="#E8E2DE">SLATE Tech Tree</text>
+
+  <!-- Legend -->
+  <g class="legend" transform="translate(850, 620)">
+    <text x="0" y="0" font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="10" font-weight="600" fill="#CAC4BF">Status</text>
+    <circle cx="8" cy="15" r="4" fill="#22C55E"/>
+    <text x="18" y="18" font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10" fill="#CAC4BF">Active</text>
+    <circle cx="8" cy="30" r="4" fill="#F59E0B"/>
+    <text x="18" y="33" font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10" fill="#CAC4BF">Pending</text>
+    <circle cx="8" cy="45" r="4" fill="#EF4444"/>
+    <text x="18" y="48" font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10" fill="#CAC4BF">Error</text>
+  </g>
+
+  <!-- Version Badge -->
+  <g class="version-badge">
+    <rect x="890" y="40" width="90" height="24" rx="12" fill="#B85A3C"/>
+    <text x="935" y="56" text-anchor="middle"
+          font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="11" font-weight="600"
+          fill="#FFFFFF">v2.0.0</text>
+  </g>
+</svg>

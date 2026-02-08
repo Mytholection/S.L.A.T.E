@@ -143,6 +143,15 @@
       "description": "Local VSCode plugins synced to GitHub as complete SDK",
       "workflow": "ci.yml",
       "paths": ["plugins/slate-copilot/", "plugins/slate-sdk/", ".vscode/"]
+    },
+    {
+      "id": "schematic-sdk",
+      "name": "Schematic Diagram SDK",
+      "status": "complete",
+      "phase": 2,
+      "description": "Circuit-board style diagram generation for system visualization",
+      "workflow": "ci.yml",
+      "paths": ["slate/schematic_sdk/", "specs/011-schematic-diagram-sdk/"]
     }
   ],
   "edges": [
@@ -163,6 +172,8 @@
     {"from": "workflow-pipeline", "to": "discord-bot"},
     {"from": "github-runner", "to": "multi-runner"},
     {"from": "core-sdk", "to": "vscode-sdk"},
-    {"from": "multi-runner", "to": "docker-infra"}
+    {"from": "multi-runner", "to": "docker-infra"},
+    {"from": "dashboard", "to": "schematic-sdk"},
+    {"from": "ui-dev", "to": "schematic-sdk"}
   ]
 }

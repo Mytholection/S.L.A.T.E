@@ -1,56 +1,36 @@
 # Architecture
+<!-- Modified: 2026-02-07T14:00:00Z | Author: CLAUDE | Change: Embed themed system architecture diagram -->
 
-This document describes the SLATE system architecture and core components.
+SLATE creates an AI operations layer on your local hardware that bridges to GitHub's cloud infrastructure.
 
 ## System Overview
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                              SLATE System                                │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│  ┌────────────────────────────────────────────────────────────────────┐ │
-│  │                         Presentation Layer                          │ │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐             │ │
-│  │  │  Dashboard   │  │  CLI Tools   │  │  VS Code     │             │ │
-│  │  │  (Port 8080) │  │              │  │  Extension   │             │ │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘             │ │
-│  └────────────────────────────────────────────────────────────────────┘ │
-│                                    │                                     │
-│  ┌────────────────────────────────────────────────────────────────────┐ │
-│  │                         Orchestration Layer                         │ │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐             │ │
-│  │  │    Task      │  │   Workflow   │  │    Load      │             │ │
-│  │  │   Router     │  │  Dispatcher  │  │  Balancer    │             │ │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘             │ │
-│  └────────────────────────────────────────────────────────────────────┘ │
-│                                    │                                     │
-│  ┌────────────────────────────────────────────────────────────────────┐ │
-│  │                         Execution Layer                             │ │
-│  │  ┌──────────────────────────────────────────────────────────────┐ │ │
-│  │  │              GitHub Actions (Self-hosted Runner)              │ │ │
-│  │  │                    GPU-enabled, Local Execution               │ │ │
-│  │  └──────────────────────────────────────────────────────────────┘ │ │
-│  └────────────────────────────────────────────────────────────────────┘ │
-│                                    │                                     │
-│  ┌────────────────────────────────────────────────────────────────────┐ │
-│  │                         AI Backend Layer                            │ │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐             │ │
-│  │  │   Ollama     │  │   Foundry    │  │  External    │             │ │
-│  │  │  (Primary)   │  │    Local     │  │    APIs      │             │ │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘             │ │
-│  └────────────────────────────────────────────────────────────────────┘ │
-│                                    │                                     │
-│  ┌────────────────────────────────────────────────────────────────────┐ │
-│  │                        Infrastructure Layer                         │ │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐           │ │
-│  │  │ Message  │  │   RAG    │  │   GPU    │  │   LLM    │           │ │
-│  │  │ Broker   │  │  Memory  │  │Scheduler │  │  Cache   │           │ │
-│  │  └──────────┘  └──────────┘  └──────────┘  └──────────┘           │ │
-│  └────────────────────────────────────────────────────────────────────┘ │
-│                                                                          │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+<div align="center">
+
+![SLATE System Architecture](../assets/system-architecture.svg)
+
+</div>
+
+### Architecture Layers
+
+| Layer | Components | Purpose |
+|:------|:-----------|:--------|
+| **Presentation** | Dashboard, CLI, VS Code Extension | User interfaces |
+| **Orchestration** | Task Router, Workflow Dispatcher, Load Balancer | Coordination |
+| **Execution** | GitHub Actions, Self-hosted Runner | GPU-enabled task execution |
+| **AI Backends** | Ollama, Foundry Local, External APIs | LLM inference |
+| **Infrastructure** | Message Broker, RAG Memory, GPU Scheduler, LLM Cache | Core services |
+
+### Design Philosophy
+
+<table>
+<tr>
+<td width="25%" align="center"><strong>🔄 Synchronized</strong><br><sub>Harmonious component interactions</sub></td>
+<td width="25%" align="center"><strong>🌱 Living</strong><br><sub>Adaptive, responsive system</sub></td>
+<td width="25%" align="center"><strong>🏗️ Architecture</strong><br><sub>Structured, geometric foundations</sub></td>
+<td width="25%" align="center"><strong>⚡ Evolution</strong><br><sub>Progressive enhancement</sub></td>
+</tr>
+</table>
 
 ## Core Components
 
@@ -238,45 +218,76 @@ slate/
     └── feature_flags.py → (standalone)
 ```
 
-## Security Architecture
+## GitHub Integration
+
+SLATE bridges your local hardware to GitHub's cloud:
+
+```
+GitHub Issues → SLATE local queue → Local AI processes → Results → GitHub PRs/Comments
+```
+
+### Self-Hosted Runner
+
+SLATE auto-configures a GitHub Actions runner with AI access:
+- GPU labels auto-detected (cuda, multi-gpu, blackwell)
+- Pre-job hooks set environment variables
+- Workflows call local LLMs without external APIs
+
+### Project Board Sync
+
+| Board | Auto-Route Keywords |
+|-------|---------------------|
+| KANBAN | Default for pending |
+| BUG TRACKING | bug, fix, crash, error |
+| ROADMAP | feat, add, implement |
+| PLANNING | plan, design, architect |
+
+### Workflow Architecture
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| CI Pipeline | Push/PR | Linting, tests, AI code review |
+| AI Maintenance | Every 4h | Codebase analysis, auto-docs |
+| Nightly Jobs | Daily 4am | Full test suite, dependency audit |
+| Project Automation | Every 30min | Sync Issues/PRs to boards |
+
+## Built-In Safeguards
+
+### ActionGuard
+
+Every action goes through validation:
+
+```python
+from slate.action_guard import validate_action
+
+validate_action("rm -rf /")  # BLOCKED
+validate_action("pip install pkg")  # Allowed
+```
+
+**Blocked patterns:**
+- `rm -rf`, `format`, `del /s` - Destructive commands
+- `0.0.0.0` bindings - Network exposure
+- `eval()`, `exec()` - Dynamic execution
+- External paid API calls
+
+### SDK Source Guard
+
+Only trusted publishers:
+- Microsoft, NVIDIA, Meta, Google, Hugging Face
+- Unknown PyPI packages blocked
+
+### PII Scanner
+
+Before GitHub sync:
+- Scans for API keys, tokens, credentials
+- Blocks sensitive data from public boards
 
 ### Network Isolation
 
 All services bind to localhost only:
 
 ```python
-# All servers use
 host = "127.0.0.1"  # Never "0.0.0.0"
-```
-
-### Action Guard
-
-The `action_guard.py` module validates all agent actions:
-
-```python
-from slate.action_guard import validate_action
-
-# Blocks dangerous operations
-result = validate_action("rm -rf /")  # Blocked
-result = validate_action("pip install pkg")  # Allowed
-```
-
-**Blocked Actions:**
-- Paid cloud API calls (OpenAI, Anthropic direct)
-- Destructive filesystem operations
-- Network requests to external hosts
-- Credential exposure
-
-### Rate Limiting
-
-API endpoints are rate-limited:
-
-```python
-from slate import rate_limiter
-
-@rate_limiter.limit("10/minute")
-async def api_endpoint():
-    ...
 ```
 
 ## Configuration Hierarchy

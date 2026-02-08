@@ -1,0 +1,144 @@
+# Modified: 2026-02-07T23:00:00Z | Author: COPILOT | Change: Create dependency fork sync workflow
+#
+# SLATE Dependency Fork Sync
+# Author: COPILOT | Created: 2026-02-07T23:00:00Z
+#
+# Monitors organizational forks of SLATE's upstream dependencies and keeps
+# them synced. Runs daily and on-demand.
+#
+# Forks tracked:
+#   - microsoft/vscode         (VS Code API)
+#   - ollama/ollama            (LLM inference)
+#   - chroma-core/chroma       (Vector store)
+#   - fastapi/fastapi          (Dashboard server)
+#   - pytorch/pytorch          (GPU compute)
+#   - huggingface/transformers (AI models)
+#   - huggingface/accelerate   (Multi-GPU)
+#   - encode/uvicorn           (ASGI server)
+#   - open-telemetry/opentelemetry-python (Observability)
+#   - actions/checkout         (CI/CD)
+#   - actions/upload-artifact  (CI/CD)
+#
+
+name: Fork Sync
+
+on:
+  schedule:
+    - cron: '0 7 * * *'  # Daily at 7am UTC
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'check'
+        type: choice
+        options:
+          - 'check'
+          - 'sync-all'
+          - 'init'
+          - 'status'
+      specific_repo:
+        description: 'Specific upstream repo (e.g. microsoft/vscode) — leave empty for all'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+# Modified: 2026-02-07T08:30:00Z | Author: COPILOT | Change: Add concurrency block per GitHub docs
+concurrency:
+  group: fork-sync-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  fork-sync:
+    name: Dependency Fork Sync
+    runs-on: [self-hosted, slate]
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python PATH
+        run: |
+          "$env:GITHUB_WORKSPACE\.venv\Scripts" | Out-File -Append $env:GITHUB_PATH
+
+      - name: Check fork drift
+        id: check
+        run: |
+          Write-Host "═══════════════════════════════════════════════════"
+          Write-Host "  Checking dependency fork drift"
+          Write-Host "═══════════════════════════════════════════════════"
+          
+          $action = '${{ inputs.action }}'
+          if (-not $action) { $action = 'check' }
+          
+          $specificRepo = '${{ inputs.specific_repo }}'
+          
+          switch ($action) {
+            'check' {
+              python slate/slate_dependency_forks.py --check
+            }
+            'sync-all' {
+              python slate/slate_dependency_forks.py --sync-all
+            }
+            'init' {
+              python slate/slate_dependency_forks.py --init
+            }
+            'status' {
+              python slate/slate_dependency_forks.py --status
+            }
+          }
+          
+          if ($specificRepo) {
+            Write-Host ""
+            Write-Host "Syncing specific repo: $specificRepo"
+            python slate/slate_dependency_forks.py --sync $specificRepo
+          }
+
+      - name: Daily sync (scheduled)
+        if: github.event_name == 'schedule'
+        run: |
+          Write-Host "Running daily fork sync..."
+          python slate/slate_dependency_forks.py --sync-all
+          
+          Write-Host ""
+          Write-Host "Post-sync drift check..."
+          python slate/slate_dependency_forks.py --check --json > fork_drift.json 2>$null
+          
+          $drift = Get-Content fork_drift.json -Raw | ConvertFrom-Json
+          $behind = ($drift | Where-Object { $_.behind_by -gt 0 } | Measure-Object).Count
+          
+          if ($behind -gt 0) {
+            Write-Host "::warning::$behind fork(s) still behind upstream after sync"
+          } else {
+            Write-Host "✓ All forks are current with upstream"
+          }
+
+      - name: Generate summary
+        if: always()
+        run: |
+          "## Dependency Fork Sync Report" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          "" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          "**Date**: $(Get-Date -Format 'yyyy-MM-dd HH:mm UTC')" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          "**Trigger**: ${{ github.event_name }}" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          "" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          
+          # Get status in JSON for summary table
+          $statusJson = python slate/slate_dependency_forks.py --status --json 2>$null
+          
+          if ($statusJson) {
+            $status = $statusJson | ConvertFrom-Json
+            
+            "| Upstream | Category | Priority | Forked | Latest Release |" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+            "|----------|----------|----------|--------|----------------|" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+            
+            foreach ($dep in $status) {
+              $forked = if ($dep.fork_exists) { "✓" } else { "✗" }
+              $release = if ($dep.latest_release) { $dep.latest_release } else { "—" }
+              "| $($dep.upstream) | $($dep.category) | $($dep.priority) | $forked | $release |" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+            }
+          }

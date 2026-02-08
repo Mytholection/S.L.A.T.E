@@ -337,8 +337,19 @@ class IntegratedAutonomousLoop:
                     self._inject_tasks(new_tasks[:5])
                     self._log(f"Injected {min(len(new_tasks), 5)} tech tree tasks")
 
-            # Phase 5: Execute tasks via unified loop
+            # Phase 5: Execute tasks via scheduler or direct loop
             batch_size = min(5, max_tasks - tasks_run)
+
+            # Lazy-load AI scheduler for GPU-aware task routing
+            if not hasattr(self, '_scheduler'):
+                try:
+                    from slate.slate_ai_scheduler import AIScheduler
+                    self._scheduler = AIScheduler()
+                    self._log("AI Scheduler initialized for GPU-aware routing")
+                except Exception as e:
+                    self._scheduler = None
+                    self._log(f"Scheduler unavailable, using direct execution: {e}", "WARN")
+
             for _ in range(batch_size):
                 tasks = auto.discover_tasks()
                 pending = [t for t in tasks if t.get("status") == "pending"]
@@ -349,7 +360,14 @@ class IntegratedAutonomousLoop:
                 prio = {"critical": 0, "high": 1, "medium": 2, "low": 3}
                 pending.sort(key=lambda t: prio.get(t.get("priority", "medium"), 2))
 
-                result = auto.execute_task(pending[0])
+                task = pending[0]
+
+                # Route GPU-intensive tasks through scheduler
+                if self._scheduler and self._should_use_scheduler(task):
+                    result = self._execute_via_scheduler(task, auto)
+                else:
+                    result = auto.execute_task(task)
+
                 tasks_run += 1
 
                 if result.get("success"):
@@ -390,6 +408,31 @@ class IntegratedAutonomousLoop:
 
         self._log(f"Integrated loop finished: {tasks_run} tasks executed")
         self.print_status()
+
+    def _should_use_scheduler(self, task: dict) -> bool:
+        """Check if task should use scheduler for GPU load balancing."""
+        gpu_keywords = ["code", "implement", "review", "train", "analyze", "refactor", "build"]
+        title = task.get("title", "").lower()
+        return any(kw in title for kw in gpu_keywords)
+
+    def _execute_via_scheduler(self, task: dict, auto) -> dict:
+        """Execute task via AI scheduler with GPU awareness and fallback."""
+        try:
+            if not self._scheduler.can_accept_task():
+                self._log("Scheduler at capacity or GPUs throttled, using direct execution", "WARN")
+                return auto.execute_task(task)
+
+            self._scheduler.sync_from_autonomous_loop([task])
+            result = self._scheduler.run_scheduled(max_tasks=1)
+
+            if result.get("executed", 0) > 0:
+                self._log(f"Task executed via scheduler (GPU-aware)")
+                return {"success": True, "via": "scheduler", "result": result}
+            # Fallback if scheduler didn't execute
+            return auto.execute_task(task)
+        except Exception as e:
+            self._log(f"Scheduler execution failed, falling back: {e}", "WARN")
+            return auto.execute_task(task)
 
     def _inject_tasks(self, tasks: list[dict]):
         """Inject generated tasks into current_tasks.json."""

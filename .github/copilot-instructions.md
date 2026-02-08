@@ -1,7 +1,7 @@
 # S.L.A.T.E. Copilot Instructions
-# Modified: 2026-02-07T02:45:00Z | Author: COPILOT | Change: Add Athena Dashboard webview documentation
+# Modified: 2026-02-07T04:57:00Z | Author: COPILOT | Change: Add AAA standards for ongoing development
 
-## MANDATORY PROTOCOL — Read Before Any Operation
+## MANDATORY PROTOCOL  Read Before Any Operation
 
 **Every Copilot session MUST begin by running SLATE protocols before performing work.**
 This is NOT optional. These protocols exist to ensure system consistency, prevent
@@ -10,9 +10,9 @@ regressions, and maintain the integrity of the agentic AI pipeline.
 ### Session Start Protocol (REQUIRED)
 Before ANY code changes, file creation, or task work, execute these in order:
 ```bash
-python slate/slate_status.py --quick          # 1. System health — confirm GPUs, Python, Ollama
+python slate/slate_status.py --quick          # 1. System health  confirm GPUs, Python, Ollama
 python slate/slate_runtime.py --check-all     # 2. Verify all 7 integrations are active
-python slate/slate_workflow_manager.py --status # 3. Check task queue — respect completion rules
+python slate/slate_workflow_manager.py --status # 3. Check task queue  respect completion rules
 ```
 
 ### Pre-Commit Protocol (REQUIRED)
@@ -28,49 +28,73 @@ Every code edit MUST include a timestamp + author comment:
 # Modified: YYYY-MM-DDTHH:MM:SSZ | Author: COPILOT | Change: description
 ```
 
+## Built-In Safeguards (ENFORCED)
+
+SLATE enforces these protections automatically:
+
+1) **ActionGuard** - Blocks dangerous patterns
+   - Destructive commands (`rm -rf`, `format`, `del /s`)
+   - Network exposure (`0.0.0.0` bindings)
+   - Dynamic execution (`eval`, `exec`)
+   - External paid API calls
+
+2) **SDK Source Guard** - Trusted publishers only
+   - Microsoft, NVIDIA, Meta, Google, Hugging Face
+   - Unknown PyPI packages blocked
+
+3) **PII Scanner** - Before GitHub sync
+   - API keys, tokens, credentials detected
+   - Personal info blocked from public boards
+
+4) **Resource Limits**
+   - Max concurrent tasks enforced
+   - Stale tasks (>4h) auto-flagged
+   - GPU memory monitored per-runner
+
 ## System Overview
 SLATE (Synchronized Living Architecture for Transformation and Evolution) is a local-first
 AI agent orchestration framework. All operations are LOCAL ONLY (127.0.0.1). Version 2.4.0.
 
 Repository: `SynchronizedLivingArchitecture/S.L.A.T.E`
-Python: 3.11+ via `.venv` at `E:\11132025\.venv\Scripts\python.exe`
-Runner: Self-hosted GitHub Actions runner `slate-runner` at `E:\11132025\actions-runner`
+Python: 3.11+ via `.venv` at `<workspace>\.venv\Scripts\python.exe`
+Runner: Self-hosted GitHub Actions runner `slate-runner` at `<workspace>\actions-runner`
 
-## SLATE Athena Dashboard (NEW — v2.4.0)
+## SLATE Dashboard (Material Design v2.4.0)
 
-**VS Code Sidebar Webview** — Blue/cyan glassmorphism theme with real-time monitoring.
+**VS Code Sidebar Webview** — Blue/cyan Material Design theme with real-time monitoring.
 
 ### Access the Dashboard:
-1. Click the **⚡ SLATE Athena** icon in the VS Code Activity Bar (sidebar)
+1. Click the **SLATE** icon in the VS Code Activity Bar (sidebar)
 2. Or run: Command Palette → "SLATE: Open Dashboard"
 3. Or use `@slate` chat participant
 
 ### Features:
-- **System Health**: Python, GPU, PyTorch, Ollama, Virtual Env status
-- **Live Metrics**: CPU cores & usage, RAM free, disk space
-- **GPU Info**: Detected GPUs with memory info (auto-refreshes every 10s)
-- **Quick Actions**:
-  - 🚀 Start Dashboard Server (port 8080)
-  - 🌐 Open in Browser
-  - 🔄 Refresh Status
+- **System Health**: Python, GPU, PyTorch, Ollama, Virtual Env status with color-coded badges
+- **Live Metrics**: CPU, RAM, Disk with progress bars and trend charts
+- **GPU Info**: Real-time memory usage, compute capability, temperature monitoring
+- **Ollama Models**: List of active models with sizes
+- **GitHub Runner**: Runner status, active jobs, queued workflows
+- **Recent Workflows**: Latest CI/CD run statuses
+- **Quick Actions**: Start Server, Open Dashboard, Refresh buttons
+- **Auto-refresh**: 5-second interval with timestamp
+- **Interactive**: Clickable badges, copy-to-clipboard functionality
 
 ### Commands:
 ```bash
 # VS Code Command Palette
-SLATE: Open Dashboard          # Show Athena sidebar
+SLATE: Open Dashboard          # Show sidebar dashboard
 SLATE: Refresh Dashboard       # Manual refresh
-SLATE: Start Dashboard Server  # Launch FastAPI server on 127.0.0.1:8080
 SLATE: Show System Status      # Terminal status output
 ```
 
-### Theme Customization (Athena):
-Located in `plugins/slate-copilot/src/dashboardViewProvider.ts` CSS `:root` section:
-- `--accent`: #3b82f6 (blue)
-- `--accent2`: #06b6d4 (cyan)
-- `--bg-root`: #0a0f1c (dark blue-black)
-- Glassmorphism: `backdrop-filter: blur(12px)` with 75% opacity
+### Theme (Material Design):
+- **Colors**: Blue (#3b82f6) and Cyan (#06b6d4) accents on dark gradient background
+- **Layout**: Responsive 2-column grid (mobile-friendly)
+- **Animation**: Smooth transitions, hover effects, elevation shadows
+- **Charts**: Real-time trend visualization for CPU and GPU metrics
+- **Glassmorphism**: backdrop-filter blur effects with semi-transparent cards
 
-## SLATE Protocol Commands — Use These, Not Ad-Hoc Commands
+## SLATE Protocol Commands  Use These, Not Ad-Hoc Commands
 
 ### System Health (run FIRST in every session)
 ```bash
@@ -159,7 +183,7 @@ slate/              # Core SDK modules (30 Python files)
   slate_model_trainer.py    # Custom SLATE model builder
   slate_unified_autonomous.py   # Unified autonomous task loop
   integrated_autonomous_loop.py # Self-healing autonomous brain
-  copilot_slate_runner.py   # Copilot ↔ autonomous bridge
+  copilot_slate_runner.py   # Copilot  autonomous bridge
   slate_project_board.py    # GitHub Projects V2 integration
   mcp_server.py             # MCP server for Claude Code
   action_guard.py           # Security enforcement (ActionGuard)
@@ -225,7 +249,7 @@ skills/             # Copilot Chat skill definitions
 ## Workflow Conventions
 - All jobs use `runs-on: [self-hosted, slate]`
 - Default shell: `powershell`
-- Python path step: `'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH`
+- Python path step: `"$env:GITHUB_WORKSPACE\.venv\Scripts" | Out-File -Append $env:GITHUB_PATH`
 - YAML paths use single quotes to avoid backslash escape issues
 
 ## Agent Routing (from slate.config.yaml)
@@ -235,19 +259,51 @@ skills/             # Copilot Chat skill definitions
 | test, validate, verify, coverage | BETA | Testing | Yes |
 | analyze, plan, research, document | GAMMA | Planning | No |
 | claude, mcp, sdk, integration | DELTA | External Bridge | No |
+| diagnose, investigate, troubleshoot, interactive, explain | COPILOT_CHAT | Chat Participant | No |
 | complex, multi-step | COPILOT | Full orchestration | Yes |
 
+## @slate Participant as Subagent (COPILOT_CHAT)
+The @slate VS Code chat participant is registered as the **COPILOT_CHAT** agent in the
+SLATE agent registry. This enables bidirectional task flow between the autonomous loop
+and the interactive chat interface.
+
+### Bridge Architecture
+```
+Autonomous Loop ──▶ copilot_agent_bridge.py ──▶ .slate_copilot_bridge.json
+                                                       │
+@slate Participant ◀── slate_agentBridge tool ◀────────┘
+       │
+       ▼
+.slate_copilot_bridge_results.json ──▶ Autonomous Loop picks up results
+```
+
+### Bridge Commands
+```bash
+python slate/copilot_agent_bridge.py --status     # Bridge health
+python slate/copilot_agent_bridge.py --pending     # Pending tasks for @slate
+python slate/copilot_agent_bridge.py --results     # Completed results
+python slate/copilot_agent_bridge.py --cleanup     # Clean stale entries
+```
+
+### How It Works
+1. Autonomous loop classifies a task matching `diagnose|investigate|troubleshoot|interactive|explain`
+2. Task is routed to COPILOT_CHAT agent → enqueued to `.slate_copilot_bridge.json`
+3. @slate participant polls via `slate_agentBridge` tool (action: 'poll')
+4. Participant processes the task using its full tool suite (20+ tools)
+5. Results written back via `slate_agentBridge` tool (action: 'complete')
+6. Copilot Runner picks up results and updates task status
+
 ## Security Rules (ENFORCED by ActionGuard)
-- ALL network bindings: `127.0.0.1` ONLY — never `0.0.0.0`
+- ALL network bindings: `127.0.0.1` ONLY  never `0.0.0.0`
 - No external telemetry (ChromaDB telemetry disabled)
-- No `curl.exe` (freezes on this system — use `urllib.request`)
+- No `curl.exe` (freezes on this system  use `urllib.request`)
 - Protected files in forks: `.github/workflows/*`, `CODEOWNERS`, action guards
 - Blocked patterns: `eval(`, `exec(os`, `rm -rf /`, `base64.b64decode`
 
 ## Terminal Rules
 - Use `isBackground=true` for long-running commands (servers, watchers, runner)
-- Never use `curl.exe` — use Python `urllib.request` or PowerShell `Invoke-RestMethod`
-- Python executable: `E:\11132025\.venv\Scripts\python.exe`
+- Never use `curl.exe`  use Python `urllib.request` or PowerShell `Invoke-RestMethod`
+- Python executable: `./.venv/Scripts/python.exe` (Windows) or `./.venv/bin/python` (Linux/macOS)
 - Always use `encoding='utf-8'` when opening files in Python on Windows
 - Git credential: `git credential fill` with `protocol=https` / `host=github.com`
 
@@ -265,10 +321,10 @@ Repository API base: `https://api.github.com/repos/SynchronizedLivingArchitectur
 
 ## When Copilot Does NOT Run Protocols
 If you skip the mandatory protocols above, you risk:
-1. **Stale task overload** — creating new tasks when existing ones need completion first
-2. **Integration drift** — editing code that depends on an offline service (Ollama, ChromaDB)
-3. **Security violations** — introducing `0.0.0.0` bindings or blocked patterns unchecked
-4. **Version mismatch** — SDK version diverging from pyproject.toml
-5. **GPU misconfiguration** — wrong model placement on dual-GPU system
+1. **Stale task overload**  creating new tasks when existing ones need completion first
+2. **Integration drift**  editing code that depends on an offline service (Ollama, ChromaDB)
+3. **Security violations**  introducing `0.0.0.0` bindings or blocked patterns unchecked
+4. **Version mismatch**  SDK version diverging from pyproject.toml
+5. **GPU misconfiguration**  wrong model placement on dual-GPU system
 
 **Always run the protocols. They take <5 seconds and prevent hours of debugging.**

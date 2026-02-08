@@ -1,48 +1,94 @@
-// Modified: 2026-02-07T23:50:00Z | Author: COPILOT | Change: Force dashboard view to primary side bar
+// Modified: 2026-02-07T15:00:00Z | Author: CLAUDE | Change: Add AI-powered Guided Install view
 import * as vscode from 'vscode';
 import { registerSlateParticipant } from './slateParticipant';
 import { registerSlateTools } from './tools';
-import { SlateDashboardProvider } from './dashboardViewProvider';
+import { SlateDashboardViewProvider } from './slateDashboardView';
+import { SlateControlBoardViewProvider } from './slateControlBoardView';
+import { registerGuidedInstallView } from './slateGuidedInstallView';
+import { registerServiceMonitor } from './slateServiceMonitor';
+
+const DASHBOARD_URL = 'http://127.0.0.1:8080';
+
+/** Status bar item showing SLATE is installed */
+let slateStatusBarItem: vscode.StatusBarItem;
 
 export function activate(context: vscode.ExtensionContext) {
-	console.log('[SLATE] Extension activated');
 	registerSlateTools(context);
 	registerSlateParticipant(context);
 
-	// Register Athena Dashboard webview provider
-	const dashboardProvider = new SlateDashboardProvider(context.extensionUri);
-	console.log('[SLATE] Dashboard provider registered');
+	// Create SLATE status bar indicator
+	slateStatusBarItem = vscode.window.createStatusBarItem(
+		vscode.StatusBarAlignment.Left,
+		100
+	);
+	slateStatusBarItem.text = '$(circuit-board) SLATE';
+	slateStatusBarItem.tooltip = 'S.L.A.T.E. — Synchronized Living Architecture for Transformation and Evolution\n\nClick to show system status';
+	slateStatusBarItem.command = 'slate.showStatus';
+	slateStatusBarItem.backgroundColor = undefined;
+	slateStatusBarItem.show();
+	context.subscriptions.push(slateStatusBarItem);
+
+	// Register service monitor for auto-restart
+	const serviceMonitor = registerServiceMonitor(context);
+
+	// Register the AI-powered Guided Install view
+	context.subscriptions.push(registerGuidedInstallView(context));
+
+	// Register the sidebar Control Board webview (above Dashboard)
+	const controlBoardViewProvider = new SlateControlBoardViewProvider(context.extensionUri);
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(
-			SlateDashboardProvider.viewType,
-			dashboardProvider
+			SlateControlBoardViewProvider.viewType,
+			controlBoardViewProvider,
+			{ webviewOptions: { retainContextWhenHidden: true } }
 		)
 	);
-	console.log('[SLATE] Dashboard view provider registered for viewType:', SlateDashboardProvider.viewType);
 
-	// Register commands
+	// Register the sidebar dashboard webview
+	const dashboardViewProvider = new SlateDashboardViewProvider(context.extensionUri);
+	context.subscriptions.push(
+		vscode.window.registerWebviewViewProvider(
+			SlateDashboardViewProvider.viewType,
+			dashboardViewProvider,
+			{ webviewOptions: { retainContextWhenHidden: true } }
+		)
+	);
+
+	// Refresh command
+	context.subscriptions.push(
+		vscode.commands.registerCommand('slate.refreshDashboard', () => {
+			dashboardViewProvider.refresh();
+		})
+	);
+
+	// Register the status command
 	context.subscriptions.push(
 		vscode.commands.registerCommand('slate.showStatus', async () => {
 			const terminal = vscode.window.createTerminal('SLATE Status');
 			terminal.show();
 			terminal.sendText(`"${getSlateConfig().pythonPath}" slate/slate_status.py --quick`);
-		}),
+		})
+	);
+
+	context.subscriptions.push(
 		vscode.commands.registerCommand('slate.openDashboard', async () => {
-			console.log('[SLATE] slate.openDashboard command executed');
-			try {
-				// Show the SLATE Athena view container in the sidebar
-				const result = await vscode.commands.executeCommand('workbench.view.extension.slate-athena');
-				console.log('[SLATE] workbench.view.extension.slate-athena executed, result:', result);
-			} catch (error) {
-				console.error('[SLATE] Error opening dashboard:', error);
-				vscode.window.showErrorMessage(`Failed to open dashboard: ${error}`);
-			}
-		}),
-		vscode.commands.registerCommand('slate.refreshDashboard', async () => {
-			await dashboardProvider.refresh();
-		}),
-		vscode.commands.registerCommand('slate.startDashboardServer', async () => {
-			await dashboardProvider.startDashboardServer();
+			const panel = vscode.window.createWebviewPanel(
+				'slateDashboard',
+				'SLATE Dashboard',
+				vscode.ViewColumn.One,
+				{
+					enableScripts: true,
+					retainContextWhenHidden: true,
+				}
+			);
+
+			panel.webview.onDidReceiveMessage((message) => {
+				if (message?.type === 'openExternal') {
+					void vscode.env.openExternal(vscode.Uri.parse(DASHBOARD_URL));
+				}
+			});
+
+			panel.webview.html = getDashboardHtml(panel.webview);
 		})
 	);
 }
@@ -58,20 +104,101 @@ export interface SlateConfig {
 /** Get SLATE configuration from workspace */
 export function getSlateConfig(): SlateConfig {
 	const workspaceFolders = vscode.workspace.workspaceFolders;
-	if (!workspaceFolders || workspaceFolders.length === 0) {
-		throw new Error('No workspace folder open. Please open the S.L.A.T.E workspace.');
-	}
-
-	const workspacePath = workspaceFolders[0].uri.fsPath;
-	const fs = require('fs');
-	const path = require('path');
-
-	// Check for .venv in workspace
-	const venvPath = path.join(workspacePath, '.venv', 'Scripts', 'python.exe');
-	const pythonPath = fs.existsSync(venvPath) ? venvPath : 'python';
+	const workspacePath = workspaceFolders?.[0]?.uri.fsPath ?? process.cwd();
 
 	return {
-		pythonPath,
+		pythonPath: `${workspacePath}\\.venv\\Scripts\\python.exe`,
 		workspacePath,
 	};
+}
+
+function getDashboardHtml(webview: vscode.Webview): string {
+	const nonce = getNonce();
+	const csp = [
+		"default-src 'none'",
+		`frame-src ${DASHBOARD_URL}`,
+		`img-src ${DASHBOARD_URL} data:`,
+		"style-src 'unsafe-inline'",
+		`script-src 'nonce-${nonce}'`,
+	].join('; ');
+
+	return `<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta http-equiv="Content-Security-Policy" content="${csp}" />
+	<title>SLATE Dashboard</title>
+	<style>
+		html, body {
+			height: 100%;
+			width: 100%;
+			margin: 0;
+			padding: 0;
+			background: #0b0c10;
+			color: #e5e7eb;
+			font-family: "Segoe UI", Arial, sans-serif;
+		}
+		.toolbar {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 10px 14px;
+			border-bottom: 1px solid #1f2937;
+			background: #0f1115;
+		}
+		.title {
+			font-size: 14px;
+			letter-spacing: 0.04em;
+			text-transform: uppercase;
+			color: #9ca3af;
+		}
+		.actions {
+			display: flex;
+			gap: 8px;
+		}
+		button {
+			background: #1f2937;
+			color: #e5e7eb;
+			border: 1px solid #374151;
+			border-radius: 6px;
+			padding: 6px 10px;
+			cursor: pointer;
+			font-size: 12px;
+		}
+		button:hover {
+			background: #374151;
+		}
+		.frame {
+			height: calc(100% - 44px);
+			width: 100%;
+			border: none;
+		}
+	</style>
+</head>
+<body>
+	<div class="toolbar">
+		<div class="title">SLATE Dashboard (127.0.0.1:8080)</div>
+		<div class="actions">
+			<button id="openExternal">Open in Browser</button>
+		</div>
+	</div>
+	<iframe class="frame" src="${DASHBOARD_URL}" title="SLATE Dashboard"></iframe>
+	<script nonce="${nonce}">
+		const vscode = acquireVsCodeApi();
+		document.getElementById('openExternal').addEventListener('click', () => {
+			vscode.postMessage({ type: 'openExternal' });
+		});
+	</script>
+</body>
+</html>`;
+}
+
+function getNonce(): string {
+	const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	let text = '';
+	for (let i = 0; i < 32; i += 1) {
+		text += possible.charAt(Math.floor(Math.random() * possible.length));
+	}
+	return text;
 }

@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1100" height="750" viewBox="0 0 1100 750"
+     xmlns="http://www.w3.org/2000/svg"
+     role="img" aria-label="S.L.A.T.E. System Architecture">
+
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0D1B2A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1B3A4B;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Primary Accent Gradient -->
+    <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#B85A3C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D4785A;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Status Gradients -->
+    <linearGradient id="activeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#22C55E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4ADE80;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Glow Effect -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Drop Shadow -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="4" stdDeviation="4"
+                    flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+
+    <!-- Arrow Marker -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#B85A3C"/>
+    </marker>
+
+    <!-- Arrow Marker (Active) -->
+    <marker id="arrowhead-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#22C55E"/>
+    </marker>
+
+    <!-- Grid Pattern -->
+    <pattern id="gridPattern" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1B3A4B" stroke-width="0.5" opacity="0.3"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="750" fill="url(#bgGradient)"/>
+
+  <!-- Grid Overlay -->
+  <rect width="1100" height="750" fill="url(#gridPattern)" opacity="0.5"/>
+
+  <!-- Connections Layer -->
+  <g class="connections-layer">
+
+    <g class="connection" data-from="dashboard" data-to="orchestrator">
+      <path d="M 212.0 123.75 C 154.75 123.75, 154.75 291.25, 97.5 291.25" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="cli" data-to="orchestrator">
+      <path d="M 416.0 123.75 C 256.75 123.75, 256.75 291.25, 97.5 291.25" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="vscode" data-to="orchestrator">
+      <path d="M 620.0 123.75 C 358.75 123.75, 358.75 291.25, 97.5 291.25" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="claude" data-to="orchestrator">
+      <path d="M 824.0 123.75 C 460.75 123.75, 460.75 291.25, 97.5 291.25" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="copilot" data-to="orchestrator">
+      <path d="M 1018.0 123.75 C 557.75 123.75, 557.75 291.25, 97.5 291.25" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="orchestrator" data-to="router">
+      <path d="M 237.5 291.25 C 295.0 291.25, 295.0 291.25, 352.5 291.25" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="orchestrator" data-to="scheduler">
+      <path d="M 237.5 291.25 C 422.5 291.25, 422.5 291.25, 607.5 291.25" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="router" data-to="taskqueue">
+      <path d="M 492.5 291.25 C 680.0 291.25, 680.0 291.25, 867.5 291.25" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="router" data-to="runner">
+      <path d="M 492.5 291.25 C 321.25 291.25, 321.25 458.75, 150.0 458.75" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="scheduler" data-to="multirunner">
+      <path d="M 747.5 291.25 C 613.75 291.25, 613.75 458.75, 480.0 458.75" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="taskqueue" data-to="actionguard">
+      <path d="M 997.5 291.25 C 908.75 291.25, 908.75 458.75, 820.0 458.75" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="multirunner" data-to="ollama">
+      <path d="M 620.0 458.75 C 358.75 458.75, 358.75 626.25, 97.5 626.25" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="multirunner" data-to="foundry">
+      <path d="M 620.0 458.75 C 486.25 458.75, 486.25 626.25, 352.5 626.25" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="ollama" data-to="chromadb">
+      <path d="M 237.5 626.25 C 432.5 626.25, 432.5 626.25, 627.5 626.25" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="scheduler" data-to="gpu">
+      <path d="M 747.5 291.25 C 810.0 291.25, 810.0 626.25, 872.5 626.25" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" />
+      
+    </g>
+
+    <g class="connection" data-from="ollama" data-to="gpu">
+      <path d="M 237.5 626.25 C 555.0 626.25, 555.0 626.25, 872.5 626.25" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+      
+    </g>
+
+    <g class="connection" data-from="foundry" data-to="gpu">
+      <path d="M 492.5 626.25 C 682.5 626.25, 682.5 626.25, 872.5 626.25" fill="none" stroke="#B85A3C" stroke-width="2"
+            marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+      
+    </g>
+  </g>
+
+  <!-- Components Layer -->
+  <g class="components-layer" filter="url(#shadow)">
+
+    <g class="component" data-id="dashboard" data-type="service">
+      <rect x="72.0" y="93.75" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="84.0" cy="105.75" r="5" fill="#22C55E"/>
+      <text x="142.0" y="121.75" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Dashboard</text>
+      <text x="142.0" y="137.75" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">localhost:8080</text>
+    </g>
+
+    <g class="component" data-id="cli" data-type="service">
+      <rect x="276.0" y="93.75" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="288.0" cy="105.75" r="5" fill="#22C55E"/>
+      <text x="346.0" y="121.75" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">CLI Tools</text>
+      <text x="346.0" y="137.75" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">slate/*.py</text>
+    </g>
+
+    <g class="component" data-id="vscode" data-type="service">
+      <rect x="480.0" y="93.75" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="492.0" cy="105.75" r="5" fill="#22C55E"/>
+      <text x="550.0" y="121.75" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">VS Code</text>
+      <text x="550.0" y="137.75" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">@slate Extension</text>
+    </g>
+
+    <g class="component" data-id="claude" data-type="ai">
+      <rect x="684.0" y="88.75" width="140" height="70"
+            rx="8" fill="#3D1E10" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="696.0" cy="100.75" r="5" fill="#22C55E"/>
+      <text x="809.0" y="106.75" font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="14" fill="#B85A3C">&#129504;</text>
+      <text x="754.0" y="121.75" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Claude Code</text>
+      <text x="754.0" y="137.75" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">MCP Server</text>
+    </g>
+
+    <g class="component" data-id="copilot" data-type="external">
+      <rect x="898.0" y="93.75" width="120" height="60"
+            rx="8" fill="none" stroke="#6B7280" stroke-width="2" stroke-dasharray="5,5"/>
+      <circle cx="910.0" cy="105.75" r="4" fill="#22C55E"/>
+      <text x="958.0" y="123.75" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#CAC4BF">GitHub Copilot</text>
+    </g>
+
+    <g class="component" data-id="orchestrator" data-type="service">
+      <rect x="97.5" y="261.25" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="109.5" cy="273.25" r="5" fill="#22C55E"/>
+      <text x="167.5" y="289.25" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Orchestrator</text>
+      <text x="167.5" y="305.25" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">slate_orchestrator.py</text>
+    </g>
+
+    <g class="component" data-id="router" data-type="service">
+      <rect x="352.5" y="261.25" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="364.5" cy="273.25" r="5" fill="#22C55E"/>
+      <text x="422.5" y="289.25" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Task Router</text>
+      <text x="422.5" y="305.25" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Workflow Dispatch</text>
+    </g>
+
+    <g class="component" data-id="scheduler" data-type="service">
+      <rect x="607.5" y="261.25" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="619.5" cy="273.25" r="5" fill="#22C55E"/>
+      <text x="677.5" y="289.25" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">GPU Scheduler</text>
+      <text x="677.5" y="305.25" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Load Balancing</text>
+    </g>
+
+    <g class="component" data-id="taskqueue" data-type="queue">
+      <polygon points="882.5,266.25 1012.5,266.25 982.5,316.25 852.5,316.25" fill="#2A2436" stroke="#B85A3C" stroke-width="2"/>
+      <circle cx="892.5" cy="276.25" r="4" fill="#22C55E"/>
+      <text x="932.5" y="295.25" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Task Queue</text>
+    </g>
+
+    <g class="component" data-id="runner" data-type="external">
+      <rect x="150.0" y="428.75" width="120" height="60"
+            rx="8" fill="none" stroke="#6B7280" stroke-width="2" stroke-dasharray="5,5"/>
+      <circle cx="162.0" cy="440.75" r="4" fill="#22C55E"/>
+      <text x="210.0" y="458.75" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#CAC4BF">GitHub Runner</text>
+    </g>
+
+    <g class="component" data-id="multirunner" data-type="service">
+      <rect x="480.0" y="428.75" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="492.0" cy="440.75" r="5" fill="#22C55E"/>
+      <text x="550.0" y="456.75" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Multi-Runner</text>
+      <text x="550.0" y="472.75" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Scales to Hardware</text>
+    </g>
+
+    <g class="component" data-id="actionguard" data-type="service">
+      <rect x="820.0" y="428.75" width="140" height="60"
+            rx="8" fill="#2A2624" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="832.0" cy="440.75" r="5" fill="#22C55E"/>
+      <text x="890.0" y="456.75" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">ActionGuard</text>
+      <text x="890.0" y="472.75" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Security Layer</text>
+    </g>
+
+    <g class="component" data-id="ollama" data-type="ai">
+      <rect x="97.5" y="591.25" width="140" height="70"
+            rx="8" fill="#3D1E10" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="109.5" cy="603.25" r="5" fill="#22C55E"/>
+      <text x="222.5" y="609.25" font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="14" fill="#B85A3C">&#129504;</text>
+      <text x="167.5" y="624.25" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Ollama</text>
+      <text x="167.5" y="640.25" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">:11434 FREE</text>
+    </g>
+
+    <g class="component" data-id="foundry" data-type="ai">
+      <rect x="352.5" y="591.25" width="140" height="70"
+            rx="8" fill="#3D1E10" stroke="#B85A3C" stroke-width="2"/>
+      
+      <circle cx="364.5" cy="603.25" r="5" fill="#22C55E"/>
+      <text x="477.5" y="609.25" font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="14" fill="#B85A3C">&#129504;</text>
+      <text x="422.5" y="624.25" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Foundry Local</text>
+      <text x="422.5" y="640.25" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">:5272 ONNX</text>
+    </g>
+
+    <g class="component" data-id="chromadb" data-type="database">
+      <!-- Cylinder body -->
+      <path d="M 627.5 596.25
+               L 627.5 656.25
+               A 50.0 10 0 0 0 727.5 656.25
+               L 727.5 596.25
+               A 50.0 10 0 0 0 627.5 596.25"
+            fill="#1E3A5F" stroke="#B85A3C" stroke-width="2"/>
+      <!-- Top ellipse -->
+      <ellipse cx="677.5" cy="596.25" rx="50.0" ry="10"
+               fill="#1E3A5F" stroke="#B85A3C" stroke-width="2"/>
+      <circle cx="639.5" cy="604.25" r="4" fill="#22C55E"/>
+      <text x="677.5" y="631.25" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">ChromaDB</text>
+      <text x="677.5" y="646.25" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Vector Store</text>
+    </g>
+
+    <g class="component" data-id="gpu" data-type="gpu">
+      <polygon points="896.5,586.25 968.5,586.25 992.5,626.25 968.5,666.25 896.5,666.25 872.5,626.25" fill="#3D2914" stroke="#B85A3C" stroke-width="2"/>
+      <circle cx="906.5" cy="598.25" r="4" fill="#22C55E"/>
+      <text x="932.5" y="624.25" text-anchor="middle"
+            font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="12" font-weight="600"
+            fill="#E8E2DE">Your GPU(s)</text>
+      <text x="932.5" y="640.25" text-anchor="middle"
+            font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10"
+            fill="#CAC4BF">Auto-Detected</text>
+    </g>
+  </g>
+
+  <!-- Title -->
+  <text x="40" y="45"
+        font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="24" font-weight="700"
+        fill="#E8E2DE">S.L.A.T.E. System Architecture</text>
+
+  <!-- Legend -->
+  <g class="legend" transform="translate(950, 670)">
+    <text x="0" y="0" font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="10" font-weight="600" fill="#CAC4BF">Status</text>
+    <circle cx="8" cy="15" r="4" fill="#22C55E"/>
+    <text x="18" y="18" font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10" fill="#CAC4BF">Active</text>
+    <circle cx="8" cy="30" r="4" fill="#F59E0B"/>
+    <text x="18" y="33" font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10" fill="#CAC4BF">Pending</text>
+    <circle cx="8" cy="45" r="4" fill="#EF4444"/>
+    <text x="18" y="48" font-family="'Consolas', 'JetBrains Mono', monospace" font-size="10" fill="#CAC4BF">Error</text>
+  </g>
+
+  <!-- Version Badge -->
+  <g class="version-badge">
+    <rect x="990" y="40" width="90" height="24" rx="12" fill="#B85A3C"/>
+    <text x="1035" y="56" text-anchor="middle"
+          font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="11" font-weight="600"
+          fill="#FFFFFF">v2.5</text>
+  </g>
+</svg>

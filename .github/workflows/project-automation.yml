@@ -1,3 +1,4 @@
+# Modified: 2026-02-07T04:56:45Z | Author: COPILOT | Change: Normalize paths and clean workflow artifacts
 # GitHub Projects automation using gh CLI
 # Security: PII scanning prevents personal data from reaching public project boards
 # Cost: Uses self-hosted runner only (no GitHub-hosted runner costs)
@@ -31,6 +32,10 @@ on:
         type: string
         default: '5'
 
+concurrency:
+  group: project-automation-${{ github.event_name }}-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: false
+
 env:
   PROJECT_OWNER: SynchronizedLivingArchitecture
 
@@ -51,7 +56,7 @@ jobs:
 
       - name: Setup Python
         run: |
-          'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH
+          "$env:GITHUB_WORKSPACE\\.venv\\Scripts" | Out-File -Append $env:GITHUB_PATH
 
       - name: Scan for PII
         id: scan
@@ -157,7 +162,7 @@ jobs:
 
       - name: Setup Python
         run: |
-          'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH
+          "$env:GITHUB_WORKSPACE\\.venv\\Scripts" | Out-File -Append $env:GITHUB_PATH
 
       - name: Board Status
         if: inputs.action == 'board-status'
@@ -262,7 +267,7 @@ jobs:
 
       - name: Setup Python
         run: |
-          'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH
+          "$env:GITHUB_WORKSPACE\\.venv\\Scripts" | Out-File -Append $env:GITHUB_PATH
 
       - name: Process KANBAN Board
         env:

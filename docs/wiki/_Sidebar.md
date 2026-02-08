@@ -9,8 +9,8 @@
 
 ## Core Concepts
 - [Architecture](Architecture)
-- [Agent System](Agents)
-- [Task Management](Agents#task-management)
+- [GitHub Integration](Architecture#github-integration)
+- [Built-In Safeguards](Architecture#built-in-safeguards)
 
 ## AI Integration
 - [AI Backends](AI-Backends)
@@ -26,6 +26,18 @@
 - [Contributor Guide](Contributor-Guide)
 - [Fork Setup](Contributor-Guide#getting-started)
 - [Making PRs](Contributor-Guide#making-contributions)
+
+
+## Specifications
+- **[Overview](Specifications)** - All specs and relationships
+- [x] [Dashboard Monochrome Theme](Spec-005-Monochrome-Theme)
+- [x] [Natural Theme System](Spec-006-Natural-Theme-System)
+- [x] [Unified Design System](Spec-007-Design-System)
+- [x] [Guided Experience](Spec-008-Guided-Experience)
+- [x] [Copilot Roadmap Awareness](Spec-009-Copilot-Roadmap-Awareness)
+- [x] [Generative Onboarding](Spec-010-Generative-Onboarding)
+- [x] [Schematic Diagram SDK](Spec-011-Schematic-SDK)
+- [~] [Schematic GUI Layout](Spec-012-Schematic-GUI-Layout)
 
 ## Advanced
 - [Development](Development)

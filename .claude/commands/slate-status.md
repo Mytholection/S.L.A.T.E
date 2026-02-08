@@ -25,7 +25,7 @@ For startup script status (services only):
 
 Report the results showing:
 1. Service status (running/stopped) - Dashboard, Ollama
-2. GPU availability and configuration (dual RTX 5070 Ti)
+2. GPU availability and configuration (auto-detected)
 3. Python environment validation (3.11+)
 4. PyTorch and CUDA status
 5. Any warnings or issues detected

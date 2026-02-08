@@ -19,6 +19,12 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+# Fix Windows console encoding for Unicode characters (✓, ✗, etc.)
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+
 def check_integration(name, check_fn, details_fn=None):
     try:
         status = check_fn()

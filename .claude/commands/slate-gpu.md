@@ -1,6 +1,6 @@
 # /slate-gpu
 
-Manage dual-GPU configuration for SLATE's Ollama LLM backend.
+Manage GPU configuration for SLATE's Ollama LLM backend. Supports single and multi-GPU setups.
 
 ## Usage
 /slate-gpu [status | configure | preload | balance]
@@ -14,7 +14,7 @@ Based on the argument provided (default: status), execute the appropriate comman
 .\.venv\Scripts\python.exe slate/slate_gpu_manager.py --status
 ```
 
-**Configure dual-GPU:**
+**Configure GPU(s):**
 ```powershell
 .\.venv\Scripts\python.exe slate/slate_gpu_manager.py --configure
 ```
@@ -29,9 +29,9 @@ Based on the argument provided (default: status), execute the appropriate comman
 .\.venv\Scripts\python.exe slate/slate_gpu_manager.py --json
 ```
 
-## GPU Layout
-- GPU 0 (Primary): slate-coder, slate-planner, mistral-nemo — heavy inference
-- GPU 1 (Secondary): slate-fast, nomic-embed-text, llama3.2 — quick tasks
+## GPU Layout (auto-configured based on your hardware)
+- Single GPU: All models on GPU 0
+- Multi-GPU: Heavy models on GPU 0, light models distributed across remaining GPUs
 
 Report the results showing:
 1. Per-GPU memory usage and temperature

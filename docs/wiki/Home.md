@@ -1,15 +1,41 @@
 # S.L.A.T.E. Wiki
+<!-- Modified: 2026-02-07T14:30:00Z | Author: CLAUDE | Change: Add themed visuals and enhanced content -->
 
-Welcome to the **S.L.A.T.E.** (Synchronized Living Architecture for Transformation and Evolution) documentation wiki.
+<div align="center">
 
-## What is SLATE?
+![SLATE Logo](../assets/slate-logo-v2.svg)
 
-SLATE is a local-first AI agent orchestration framework that:
+**Synchronized Living Architecture for Transformation and Evolution**
 
-- Coordinates multiple AI models (Ollama, Foundry Local, external APIs)
-- Runs entirely on your machine - no cloud dependencies
-- Automatically optimizes for your hardware (GPU/CPU)
-- Manages complex multi-step workflows
+*Turn your local hardware into an AI operations center for GitHub*
+
+</div>
+
+---
+
+## Why SLATE?
+
+GitHub Actions is powerful. But if you want AI in your pipeline, you're paying per-token to cloud providers. Your code gets sent to external servers. You're rate-limited.
+
+**SLATE changes that.** Your local machine becomes the brain behind your GitHub operations.
+
+## What You Get
+
+<table>
+<tr>
+<th colspan="3" align="center">Core Capabilities</th>
+</tr>
+<tr>
+<td align="center" width="33%"><strong>Local AI Engine</strong><br><sub>Ollama + Foundry on your GPU<br>No API bills</sub></td>
+<td align="center" width="33%"><strong>Persistent Memory</strong><br><sub>ChromaDB codebase context<br>Learns over time</sub></td>
+<td align="center" width="33%"><strong>Live Dashboard</strong><br><sub>Real-time monitoring<br>localhost:8080</sub></td>
+</tr>
+<tr>
+<td align="center"><strong>GitHub Bridge</strong><br><sub>Self-hosted runner<br>Issues, PRs, Projects</sub></td>
+<td align="center"><strong>Claude Code Integration</strong><br><sub>MCP server + 26 tools<br>Slash commands</sub></td>
+<td align="center"><strong>Guided Experience</strong><br><sub>AI-driven setup<br>Zero-config onboarding</sub></td>
+</tr>
+</table>
 
 ## Quick Navigation
 
@@ -17,29 +43,33 @@ SLATE is a local-first AI agent orchestration framework that:
 |---------|-------------|
 | [Getting Started](Getting-Started) | Installation and first steps |
 | [Architecture](Architecture) | System design and components |
-| [Task Execution](Task-Execution) | Workflow-based task execution |
-| [AI Backends](AI-Backends) | Ollama, Foundry Local, external APIs |
 | [CLI Reference](CLI-Reference) | Command-line tools and options |
 | [Configuration](Configuration) | Settings and customization |
 | [Development](Development) | Contributing and extending SLATE |
 | [Troubleshooting](Troubleshooting) | Common issues and solutions |
 
-## Key Concepts
+## GitHub Integration
 
-### Local-First
-All SLATE services bind to `127.0.0.1`. Your code, prompts, and data never leave your machine.
+SLATE creates a bridge between your local hardware and GitHub:
 
-### Workflow-Based Execution
-SLATE uses GitHub Actions with a self-hosted runner for task execution:
-- **Task Queue**: Priority-based task management
-- **Workflow Dispatch**: CI/CD pipeline integration
-- **Local Runner**: GPU-enabled local execution
+```
+GitHub Issues → SLATE pulls to local queue → Local AI processes → Results pushed as commits/PR comments
+```
 
-### Hardware Optimization
-SLATE auto-detects your hardware and configures:
-- PyTorch settings (TF32, BF16, Flash Attention)
-- GPU memory allocation
-- Model selection based on VRAM
+**Built-in workflows:**
+- CI Pipeline (Push/PR) - Linting, tests, AI code review
+- AI Maintenance (Every 4h) - Codebase analysis, auto-docs
+- Nightly Jobs (Daily 4am) - Full test suite, dependency audit
+- Project Automation (Every 30min) - Sync Issues/PRs to boards
+
+## Built-In Safeguards
+
+| Guard | What It Does |
+|-------|--------------|
+| **ActionGuard** | Blocks `rm -rf`, `0.0.0.0` bindings, `eval()`, external API calls |
+| **SDK Source Guard** | Only trusted publishers (Microsoft, NVIDIA, Meta, Google) |
+| **PII Scanner** | Catches API keys and credentials before GitHub sync |
+| **Resource Limits** | Max tasks, stale detection, GPU memory monitoring |
 
 ## Getting Help
 
@@ -48,4 +78,8 @@ SLATE auto-detects your hardware and configures:
 
 ## Version
 
-Current version: **2.4.0**
+Current version: **2.5.0**
+
+---
+
+**The Philosophy:** Cloud for collaboration. Local for compute. Full control.

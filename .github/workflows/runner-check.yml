@@ -1,3 +1,4 @@
+# Modified: 2026-02-07T04:56:45Z | Author: COPILOT | Change: Normalize paths and clean workflow artifacts
 # Reusable workflow for smart runner selection with fallback
 # Priority: self-hosted (free) -> GitHub-hosted (paid fallback)
 name: Runner Check
@@ -24,6 +25,11 @@ on:
         description: 'Cost per minute (USD)'
         value: ${{ jobs.check.outputs.cost_per_minute }}
 
+# Modified: 2026-02-07T08:30:00Z | Author: COPILOT | Change: Add concurrency block per GitHub docs
+concurrency:
+  group: runner-check-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   check:
     name: Select Runner
@@ -46,12 +52,12 @@ jobs:
             2>/dev/null || echo "")
 
           if [ -n "$RUNNER_STATUS" ]; then
-            echo "✅ Self-hosted runner available: $RUNNER_STATUS"
+            echo "[OK] Self-hosted runner available: $RUNNER_STATUS"
             echo 'runner=["self-hosted", "slate"]' >> $GITHUB_OUTPUT
             echo "is_self_hosted=true" >> $GITHUB_OUTPUT
             echo "cost_per_minute=0" >> $GITHUB_OUTPUT
           else
-            echo "⚠️ Self-hosted runner not available"
+            echo "[WARN] Self-hosted runner not available"
             if [ "${{ inputs.fallback_enabled }}" == "true" ]; then
               echo "Using fallback runner: ${{ inputs.fallback_runner }}"
               echo 'runner="${{ inputs.fallback_runner }}"' >> $GITHUB_OUTPUT

@@ -1,11 +1,11 @@
 # S.L.A.T.E. Agent Instructions
-# Modified: 2026-02-07T00:30:00Z | Author: COPILOT | Change: Full rewrite with agent routing and protocol tooling
+# Modified: 2026-02-07T04:57:00Z | Author: COPILOT | Change: Add AAA standards for agent workflows
 
 ## Overview
 SLATE (Synchronized Living Architecture for Transformation and Evolution) is a local-first
 AI agent orchestration framework. Version 2.4.0. All operations LOCAL ONLY (127.0.0.1).
 
-## MANDATORY PROTOCOL — All Agents Must Follow
+## MANDATORY PROTOCOL  All Agents Must Follow
 
 **Every agent session MUST begin by running SLATE protocols before performing work.**
 This ensures system consistency and prevents regressions.
@@ -34,11 +34,24 @@ Agents are routed by task pattern from `slate.config.yaml`:
 | test, validate, verify, coverage | BETA | Testing | Yes |
 | analyze, plan, research, document | GAMMA | Planning | No |
 | claude, mcp, sdk, integration | DELTA | External Bridge | No |
+| diagnose, investigate, troubleshoot, interactive, explain | COPILOT_CHAT | Chat Participant | No |
 | complex, multi-step | COPILOT | Full Orchestration | Yes |
 
-### @slate Agent
+### @slate Agent (COPILOT_CHAT)
 The `@slate` agent is the primary copilot chat participant for the SLATE system.
+It is registered as the **COPILOT_CHAT** agent in the agent registry, enabling
+bidirectional task flow between the autonomous loop and the interactive chat interface.
 It has access to all SLATE protocol commands and manages runner, workflows, and system health.
+
+#### Bridge Architecture
+```
+Autonomous Loop ──▶ copilot_agent_bridge.py ──▶ .slate_copilot_bridge.json
+                                                       │
+@slate Participant ◀── slate_agentBridge tool ◀────────┘
+       │
+       ▼
+.slate_copilot_bridge_results.json ──▶ Autonomous Loop picks up results
+```
 
 #### Available Tools
 - **slate-status**: System health check (`python slate/slate_status.py --quick`)
@@ -56,6 +69,29 @@ All code edits MUST include a timestamp + author comment:
 ```python
 # Modified: YYYY-MM-DDTHH:MM:SSZ | Author: COPILOT | Change: description
 ```
+
+## Built-In Safeguards (All Agents Must Respect)
+
+SLATE enforces these protections automatically:
+
+1) **ActionGuard** - Blocks dangerous patterns
+   - `rm -rf`, `format`, `del /s` (destructive commands)
+   - `0.0.0.0` bindings (network exposure)
+   - `eval()`, `exec()` (dynamic execution)
+   - External paid API calls
+
+2) **SDK Source Guard** - Trusted publishers only
+   - Microsoft, NVIDIA, Meta, Google, Hugging Face
+   - Unknown PyPI packages blocked
+
+3) **PII Scanner** - Before GitHub sync
+   - API keys, tokens, credentials detected
+   - Personal info blocked from public boards
+
+4) **Resource Limits**
+   - Max concurrent tasks enforced
+   - Stale tasks (>4h) flagged
+   - GPU memory monitored
 
 ## Protocol Commands
 ```bash
@@ -115,7 +151,7 @@ slate/              # Core SDK modules (30+ Python files)
   slate_model_trainer.py    # Custom SLATE model builder
   slate_unified_autonomous.py   # Unified autonomous task loop
   integrated_autonomous_loop.py # Self-healing autonomous brain
-  copilot_slate_runner.py   # Copilot ↔ autonomous bridge
+  copilot_slate_runner.py   # Copilot  autonomous bridge
   slate_project_board.py    # GitHub Projects V2 integration
   mcp_server.py             # MCP server for Claude Code
   action_guard.py           # Security enforcement (ActionGuard)
@@ -152,28 +188,28 @@ skills/             # Copilot Chat skill definitions
 - **Work folder**: `slate_work`
 - **GPUs**: 2x NVIDIA GeForce RTX 5070 Ti (Blackwell, compute 12.0, 16GB each)
 - **Pre-job hook**: Sets `CUDA_VISIBLE_DEVICES=0,1`, SLATE env vars, Python PATH
-- **Python**: `E:\11132025\.venv\Scripts\python.exe` (3.11.9)
+- **Python**: `<workspace>\.venv\Scripts\python.exe` (3.11.9)
 - **No `actions/setup-python`**: All jobs use `GITHUB_PATH` to prepend venv
 - **SLATE Custom Models**: slate-coder (12B), slate-fast (3B), slate-planner (7B)
 
 ## Workflow Conventions
 - All jobs: `runs-on: [self-hosted, slate]`
 - Default shell: `powershell`
-- Python setup step: `'E:\11132025\.venv\Scripts' | Out-File -Append $env:GITHUB_PATH`
+- Python setup step: `"$env:GITHUB_WORKSPACE\.venv\Scripts" | Out-File -Append $env:GITHUB_PATH`
 - YAML paths: Always single-quoted (avoid backslash escape issues)
 - Workflows: ci.yml, slate.yml, pr.yml, nightly.yml, cd.yml, docs.yml, fork-validation.yml, contributor-pr.yml, agentic.yml, docker.yml, release.yml
 
 ## Security Rules
-- ALL network bindings: `127.0.0.1` ONLY — never `0.0.0.0`
+- ALL network bindings: `127.0.0.1` ONLY  never `0.0.0.0`
 - No external telemetry (ChromaDB telemetry disabled)
-- No `curl.exe` (freezes on this system — use `urllib.request`)
+- No `curl.exe` (freezes on this system  use `urllib.request`)
 - Protected files in forks: `.github/workflows/*`, `CODEOWNERS`, action guards
 - Blocked patterns: `eval(`, `exec(os`, `rm -rf /`, `base64.b64decode`
 
 ## Terminal Rules
 - Use `isBackground=true` for long-running commands (servers, watchers, runner)
-- Never use `curl.exe` — use Python `urllib.request` or PowerShell `Invoke-RestMethod`
-- Python executable: `E:\11132025\.venv\Scripts\python.exe`
+- Never use `curl.exe`  use Python `urllib.request` or PowerShell `Invoke-RestMethod`
+- Python executable: `./.venv/Scripts/python.exe` (Windows) or `./.venv/bin/python` (Linux/macOS)
 - Always use `encoding='utf-8'` when opening files in Python on Windows
 - Git credential: `git credential fill` with `protocol=https` / `host=github.com`
 
