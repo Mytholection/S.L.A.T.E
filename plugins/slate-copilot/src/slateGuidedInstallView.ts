@@ -299,7 +299,11 @@ export class SlateGuidedInstallViewProvider implements vscode.WebviewViewProvide
 
 			// System Scan
 			case 'system-scan:detect-python':
-				return await this._runCommand('python --version');
+				// Use venv python first, fall back to bare 'python' command
+				return await this._runCommandOptional(
+					`"${pythonPath}" --version`,
+					await this._runCommandOptional('python --version', 'Python not found — install from python.org or Microsoft Store')
+				);
 			case 'system-scan:detect-gpu':
 				return await this._runCommand('nvidia-smi --query-gpu=name,memory.total --format=csv,noheader');
 			case 'system-scan:detect-ollama':
