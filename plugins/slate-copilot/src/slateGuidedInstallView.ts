@@ -575,9 +575,11 @@ export class SlateGuidedInstallViewProvider implements vscode.WebviewViewProvide
 		return response || 'Try @slate /run in VS Code chat to execute the full protocol.';
 	}
 
+	// Modified: 2026-02-08T01:20:00Z | Author: COPILOT | Change: Exclude the 'complete' meta-step from count — it's still executing when summary runs
 	private _generateSummary(): string {
-		const completed = this._steps.filter(s => s.status === 'complete').length;
-		const total = this._steps.length;
+		const actionSteps = this._steps.filter(s => s.id !== 'complete');
+		const completed = actionSteps.filter(s => s.status === 'complete').length;
+		const total = actionSteps.length;
 		return `${completed}/${total} steps completed successfully`;
 	}
 
