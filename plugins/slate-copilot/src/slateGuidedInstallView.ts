@@ -456,20 +456,55 @@ export class SlateGuidedInstallViewProvider implements vscode.WebviewViewProvide
 		return narrations[step.id] || `Processing ${step.title}...`;
 	}
 
+	/** Cached model name discovered from Ollama */
+	private _ollamaModel: string | null = null;
+
+	/** Detect the first available Ollama model (cached after first call) */
+	private async _getOllamaModel(): Promise<string | null> {
+		if (this._ollamaModel) return this._ollamaModel;
+		try {
+			const response = await fetch('http://127.0.0.1:11434/api/tags');
+			if (!response.ok) return null;
+			const data = await response.json() as { models?: Array<{ name: string }> };
+			const models = data.models?.map(m => m.name) || [];
+			// Prefer smaller/faster models for narration
+			const preferred = ['gemma3:4b', 'llama3:latest', 'mistral-nemo', 'deepseek-coder:latest'];
+			for (const p of preferred) {
+				if (models.some(m => m.includes(p.split(':')[0]))) {
+					this._ollamaModel = models.find(m => m.includes(p.split(':')[0])) || null;
+					return this._ollamaModel;
+				}
+			}
+			// Fall back to first available
+			this._ollamaModel = models[0] || null;
+			return this._ollamaModel;
+		} catch {
+			return null;
+		}
+	}
+
 	private async _queryOllama(prompt: string): Promise<string> {
 		try {
+			const model = await this._getOllamaModel();
+			if (!model) return '';
+
+			const controller = new AbortController();
+			const timeout = setTimeout(() => controller.abort(), 15000);
+
 			const response = await fetch('http://127.0.0.1:11434/api/generate', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					model: 'mistral-nemo',
+					model,
 					prompt: prompt,
 					stream: false,
 					options: { temperature: 0.7, num_predict: 100 },
 				}),
+				signal: controller.signal,
 			});
 
-			if (!response.ok) throw new Error('Ollama request failed');
+			clearTimeout(timeout);
+			if (!response.ok) return '';
 
 			const data = await response.json() as { response?: string };
 			return data.response?.trim() || '';
@@ -479,32 +514,52 @@ export class SlateGuidedInstallViewProvider implements vscode.WebviewViewProvide
 	}
 
 	private async _checkOllama(): Promise<string> {
-		const response = await fetch('http://127.0.0.1:11434/api/tags');
-		if (!response.ok) throw new Error('Ollama not responding');
-		return 'Ollama connected';
+		try {
+			const response = await fetch('http://127.0.0.1:11434/api/tags');
+			if (!response.ok) return 'Ollama not responding (will retry)';
+			return 'Ollama connected';
+		} catch {
+			return 'Ollama not detected (optional)';
+		}
 	}
 
 	private async _listOllamaModels(): Promise<string> {
-		const response = await fetch('http://127.0.0.1:11434/api/tags');
-		const data = await response.json() as { models?: Array<{ name: string }> };
-		const models = data.models?.map(m => m.name) || [];
-		return `${models.length} models: ${models.slice(0, 3).join(', ')}${models.length > 3 ? '...' : ''}`;
+		try {
+			const response = await fetch('http://127.0.0.1:11434/api/tags');
+			if (!response.ok) return 'Could not list models';
+			const data = await response.json() as { models?: Array<{ name: string }> };
+			const models = data.models?.map(m => m.name) || [];
+			return `${models.length} models: ${models.slice(0, 3).join(', ')}${models.length > 3 ? '...' : ''}`;
+		} catch {
+			return 'Models check skipped';
+		}
 	}
 
 	private async _ensureModel(modelName: string): Promise<string> {
-		const response = await fetch('http://127.0.0.1:11434/api/tags');
-		const data = await response.json() as { models?: Array<{ name: string }> };
-		const models = data.models?.map(m => m.name) || [];
+		try {
+			const response = await fetch('http://127.0.0.1:11434/api/tags');
+			if (!response.ok) return `${modelName} check skipped`;
+			const data = await response.json() as { models?: Array<{ name: string }> };
+			const models = data.models?.map(m => m.name) || [];
 
-		if (models.some(m => m.includes(modelName))) {
-			return `${modelName} available`;
+			if (models.some(m => m.includes(modelName))) {
+				return `${modelName} available`;
+			}
+			return `${modelName} not found (optional — ${models.length} other models available)`;
+		} catch {
+			return `${modelName} check skipped`;
 		}
-		return `${modelName} not found (optional)`;
 	}
 
 	private async _testInference(): Promise<string> {
-		const result = await this._queryOllama('Say "SLATE ready" in exactly 2 words.');
-		return result ? 'Inference working' : 'Inference test skipped';
+		try {
+			const model = await this._getOllamaModel();
+			if (!model) return 'No models available — inference skipped';
+			const result = await this._queryOllama('Say "SLATE ready" in exactly 2 words.');
+			return result ? `Inference working (${model})` : 'Inference test skipped (timeout)';
+		} catch {
+			return 'Inference test skipped';
+		}
 	}
 
 	private async _getAIRecommendations(): Promise<string> {
