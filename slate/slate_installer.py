@@ -270,6 +270,7 @@ class SlateInstaller:
         self.errors = []
         self._venv_python = None
         self._venv_pip = None
+        self._scan_report = None  # Stores dependency scan results
 
     def _python(self) -> Path:
         if self._venv_python:
@@ -298,6 +299,73 @@ class SlateInstaller:
                 self.tracker.add_log(msg)
             except Exception:
                 pass
+
+    # ── Step 0: Dependency Scan (SLATE Installation Ethos) ───────────────
+
+    def step_dependency_scan(self) -> bool:
+        """
+        Scan the system for existing dependencies before installing.
+
+        SLATE Installation Ethos:
+            1. SCAN: Detect if dependencies exist outside the environment
+            2. LINK: If found, create symlinks/junctions to reuse them
+            3. INSTALL: Only install directly to workspace if not found
+        """
+        _print_header("Step 0: Dependency Scan")
+
+        try:
+            from slate.slate_dependency_scanner import DependencyScanner
+
+            scanner = DependencyScanner(workspace=self.workspace, verbose=True)
+            self._log("->", "Scanning system for existing dependencies...")
+
+            # Run full scan
+            report = scanner.scan_all()
+            self._scan_report = report
+
+            # Report findings
+            found_count = sum(1 for r in report.results.values() if r.found)
+            total_count = len(report.results)
+            link_count = sum(1 for r in report.results.values() if r.action == "link")
+
+            self._log("i", f"Scanned {len(report.drives_scanned)} drives")
+            self._log("i", f"Found {found_count}/{total_count} dependencies already installed")
+
+            # Show what was found
+            for name, result in report.results.items():
+                if result.found:
+                    action_str = {"link": "-> can reuse", "skip": "-> in workspace", "install": "-> need fresh"}.get(result.action, "")
+                    loc_str = f" at {result.best_location.path}" if result.best_location else ""
+                    self._log("+", f"{name}: FOUND{loc_str} {action_str}")
+                else:
+                    self._log("!", f"{name}: NOT FOUND -> will install fresh")
+
+            # Create links for reusable dependencies
+            if link_count > 0:
+                self._log("->", f"Creating {link_count} links to existing dependencies...")
+                links_created = scanner.create_all_links()
+                self._log("+", f"Created {links_created} symlinks/junctions")
+
+            self.results["dependency_scan"] = {
+                "status": "complete",
+                "found": found_count,
+                "total": total_count,
+                "links_created": len(report.links_created),
+                "needs_install": report.needs_install,
+            }
+            return True
+
+        except ImportError as e:
+            self._log("!", f"Dependency scanner not available: {e}")
+            self._log("i", "Will perform fresh install of all dependencies")
+            self.results["dependency_scan"] = {"status": "skipped", "reason": "scanner_unavailable"}
+            return True  # Non-fatal
+
+        except Exception as e:
+            self._log("!", f"Dependency scan failed: {e}")
+            self._log("i", "Will perform fresh install of all dependencies")
+            self.results["dependency_scan"] = {"status": "error", "error": str(e)}
+            return True  # Non-fatal
 
     # ── Step 1: Git Clone / Init ─────────────────────────────────────────
 
@@ -374,6 +442,30 @@ class SlateInstaller:
         self._log("✓", f"Python {py_info['version']} ({py_info['executable']})")
 
         venv_path = self.workspace / ".venv"
+
+        # Check if scan found a compatible venv we can link to (SLATE Installation Ethos)
+        if self._scan_report and hasattr(self._scan_report, 'results'):
+            venv_result = self._scan_report.results.get('venv')
+            if venv_result and venv_result.action == "link" and venv_result.best_location:
+                source_venv = venv_result.best_location.path
+                if not venv_path.exists():
+                    self._log("→", f"Found compatible venv at {source_venv}")
+                    self._log("→", "Creating link instead of fresh venv (SLATE ethos)...")
+                    try:
+                        if _is_windows():
+                            result = _run(["cmd", "/c", "mklink", "/J", str(venv_path), str(source_venv)], timeout=10)
+                            if result.returncode == 0:
+                                self._log("✓", f"Linked to existing venv at {source_venv}")
+                                self.results["venv_setup"] = {"status": "linked", "source": str(source_venv)}
+                                return True
+                        else:
+                            venv_path.symlink_to(source_venv)
+                            self._log("✓", f"Linked to existing venv at {source_venv}")
+                            self.results["venv_setup"] = {"status": "linked", "source": str(source_venv)}
+                            return True
+                    except Exception as e:
+                        self._log("⚠", f"Link failed: {e}, will create fresh venv")
+
         if venv_path.exists() and self._python().exists():
             # Verify it works
             result = _run([str(self._python()), "-c", "import sys; print(sys.version)"], timeout=10)
@@ -1164,6 +1256,7 @@ class SlateInstaller:
 
         start_time = time.time()
         steps = [
+            ("Dependency Scan", self.step_dependency_scan),  # NEW: Scan first - SLATE ethos
             ("Git Repository", lambda: self.step_git_setup(target_dir, beta)),
             ("Virtual Environment", self.step_venv_setup),
             ("Core Dependencies", self.step_core_deps),
@@ -1217,6 +1310,12 @@ class SlateInstaller:
             print(f"  ⚠ {fork_display} installed with {failed} warning(s) ({elapsed:.1f}s)")
         print("═" * 64)
         print()
+        # Modified: 2026-02-09T07:10:00Z | Author: COPILOT | Change: Test install team - add AI hobbyist disclaimer and knowledge pointers
+        if failed == 0:
+            print("  ⚠ EXPERIMENTAL AI HOBBYIST PROJECT")
+            print("    Entirely created and managed by AI via vibe coding.")
+            print("    Production-ready aim - not for critical systems.")
+            print()
         print("  Next steps:")
         if _is_windows():
             print("    1. Activate:  .\\.venv\\Scripts\\activate")
@@ -1226,6 +1325,11 @@ class SlateInstaller:
         print("    3. In VS Code: Open workspace and use @slate /status")
         print("    4. System check: python slate/slate_status.py --quick")
         print("    5. Start services: python slate/slate_orchestrator.py start")
+        print()
+        print("  Knowledge & Docs:")
+        print("    • README:     https://github.com/SynchronizedLivingArchitecture/S.L.A.T.E#readme")
+        print("    • Wiki:       https://github.com/SynchronizedLivingArchitecture/S.L.A.T.E/wiki")
+        print("    • Components: https://synchronizedlivingarchitecture.github.io/S.L.A.T.E/components.html")
 
         if "personalization" in self.results and self.results["personalization"].get("status") == "skipped":
             print()

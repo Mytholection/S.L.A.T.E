@@ -155,6 +155,56 @@ def step_dashboard_boot(tracker, args):
         return True
 
 
+def step_dep_scan(tracker, args):
+    """Step: Scan system for existing dependencies to reuse (SLATE Installation Ethos)."""
+    tracker.start_step("dep_scan")
+    tracker.update_progress("dep_scan", 10, "Initializing dependency scanner...")
+
+    try:
+        from slate.slate_dependency_scanner import DependencyScanner
+
+        scanner = DependencyScanner(workspace=WORKSPACE_ROOT, verbose=False)
+        tracker.update_progress("dep_scan", 20, "Scanning for Python installations...")
+
+        # Run full scan
+        report = scanner.scan_all()
+
+        tracker.update_progress("dep_scan", 60, "Analyzing scan results...")
+
+        # Summarize findings
+        found_count = sum(1 for r in report.results.values() if r.found)
+        total_count = len(report.results)
+        link_count = sum(1 for r in report.results.values() if r.action == "link")
+        install_count = len(report.needs_install)
+
+        # Store scan results in args for later steps to use
+        if not hasattr(args, 'scan_report'):
+            args.scan_report = {}
+        args.scan_report = report
+
+        tracker.update_progress("dep_scan", 80, f"Found {found_count}/{total_count} deps, {link_count} can be linked")
+
+        # Create links if any are available
+        if link_count > 0:
+            tracker.update_progress("dep_scan", 90, "Creating links to existing dependencies...")
+            links_created = scanner.create_all_links()
+            details = f"Found {found_count}/{total_count} deps. Linked {links_created}, need install: {', '.join(report.needs_install) or 'none'}"
+        else:
+            details = f"Found {found_count}/{total_count} deps. Need install: {', '.join(report.needs_install) or 'none'}"
+
+        tracker.complete_step("dep_scan", success=True, details=details)
+        return True
+
+    except ImportError as e:
+        tracker.complete_step("dep_scan", success=True, warning=True,
+                              details=f"Scanner not available: {e}. Will install fresh.")
+        return True
+    except Exception as e:
+        tracker.complete_step("dep_scan", success=True, warning=True,
+                              details=f"Scan failed: {e}. Will install fresh.")
+        return True
+
+
 def step_python_check(tracker, args):
     """Step 1: Verify Python version."""
     tracker.start_step("python_check")
@@ -184,6 +234,33 @@ def step_venv_setup(tracker, args):
     """
     tracker.start_step("venv_setup")
     venv_path = WORKSPACE_ROOT / ".venv"
+
+    # Check if scan found a compatible venv we can link to
+    scan_report = getattr(args, 'scan_report', None)
+    if scan_report and hasattr(scan_report, 'results'):
+        venv_result = scan_report.results.get('venv')
+        if venv_result and venv_result.action == "link" and venv_result.best_location:
+            # Found an existing compatible venv - try to link it
+            source_venv = venv_result.best_location.path
+            if not venv_path.exists():
+                tracker.update_progress("venv_setup", 40, f"Linking to existing venv at {source_venv}")
+                try:
+                    if os.name == "nt":
+                        result = subprocess.run(
+                            ["cmd", "/c", "mklink", "/J", str(venv_path), str(source_venv)],
+                            capture_output=True, text=True, timeout=10
+                        )
+                        if result.returncode == 0:
+                            tracker.complete_step("venv_setup", success=True,
+                                                  details=f"Linked to existing venv at {source_venv}")
+                            return True
+                    else:
+                        venv_path.symlink_to(source_venv)
+                        tracker.complete_step("venv_setup", success=True,
+                                              details=f"Linked to existing venv at {source_venv}")
+                        return True
+                except Exception as e:
+                    tracker.update_progress("venv_setup", 50, f"Link failed: {e}, creating fresh venv")
 
     if venv_path.exists() and _get_python_exe().exists():
         tracker.update_progress("venv_setup", 80, "Virtual environment exists")
@@ -256,6 +333,15 @@ def step_deps_install(tracker, args):
         tracker.complete_step("deps_install", success=False,
                               error="pip not found in venv — venv may be corrupt")
         return False
+
+    # Check scan results for existing dependencies that were linked
+    scan_report = getattr(args, 'scan_report', None)
+    linked_deps = []
+    if scan_report and hasattr(scan_report, 'links_created'):
+        linked_deps = [link.get('target', '') for link in scan_report.links_created]
+        if linked_deps:
+            tracker.update_progress("deps_install", 5,
+                                    f"Using {len(linked_deps)} linked dependencies")
 
     # Upgrade pip first
     tracker.update_progress("deps_install", 5, "Upgrading pip")
@@ -1486,6 +1572,11 @@ def print_completion(success: bool, tracker=None):
     print()
 
     if success:
+        # Modified: 2026-02-09T07:10:00Z | Author: COPILOT | Change: Test install team - add AI hobbyist disclaimer and knowledge pointers
+        print("  ⚠ EXPERIMENTAL AI HOBBYIST PROJECT")
+        print("    Entirely created and managed by AI via vibe coding.")
+        print("    Production-ready aim - not for critical systems.")
+        print()
         print("  ───── Quick Start ─────")
         print()
         if os.name == "nt":
@@ -1516,6 +1607,12 @@ def print_completion(success: bool, tracker=None):
         print("    • Full check:  python install_slate.py --check")
         print("    • Update:      python install_slate.py --update")
         print("    • Installer:   python slate/slate_installer.py --check")
+        print()
+        print("  ───── Knowledge & Docs ─────")
+        print()
+        print("    • README:      https://github.com/SynchronizedLivingArchitecture/S.L.A.T.E#readme")
+        print("    • Wiki:        https://github.com/SynchronizedLivingArchitecture/S.L.A.T.E/wiki")
+        print("    • Components:  https://synchronizedlivingarchitecture.github.io/S.L.A.T.E/components.html")
         print()
     else:
         print("  ───── Troubleshooting ─────")
@@ -1643,10 +1740,11 @@ def main():
             pass
 
     # Define all installation steps in canonical order
-    # Modified: 2026-02-07T06:00:00Z | Author: COPILOT | Change: Full ecosystem coverage with all SLATE subsystems
+    # Modified: 2026-02-07T14:00:00Z | Author: COPILOT | Change: Add dependency scanner for SLATE installation ethos
     install_steps = [
         ("dashboard_boot", step_dashboard_boot),
         ("python_check",   step_python_check),
+        ("dep_scan",       step_dep_scan),  # NEW: Scan before install - SLATE ethos
         ("venv_setup",     step_venv_setup),
         ("deps_install",   step_deps_install),
         ("gpu_detect",     step_gpu_detect),
