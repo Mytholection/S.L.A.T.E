@@ -382,10 +382,13 @@ export class SlateGuidedInstallViewProvider implements vscode.WebviewViewProvide
 		}
 	}
 
+	// Modified: 2025-07-18T03:15:00Z | Author: COPILOT | Change: Fix arg quoting — split script name from args so flags aren't trapped inside path quotes
 	private async _runSlateCommand(script: string): Promise<string> {
 		const pythonPath = `${this._workspaceRoot}/.venv/Scripts/python.exe`;
-		const scriptPath = `${this._workspaceRoot}/slate/${script}`;
-		return this._runCommand(`"${pythonPath}" "${scriptPath}"`);
+		const [scriptName, ...args] = script.split(' ');
+		const scriptPath = `${this._workspaceRoot}/slate/${scriptName}`;
+		const argsStr = args.length > 0 ? ` ${args.join(' ')}` : '';
+		return this._runCommand(`"${pythonPath}" "${scriptPath}"${argsStr}`);
 	}
 
 	/** Run a command that may fail — return fallback instead of throwing */
