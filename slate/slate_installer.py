@@ -51,11 +51,18 @@ def _is_windows() -> bool:
     return os.name == "nt"
 
 
+# Modified: 2026-02-07T22:30:00Z | Author: COPILOT | Change: Fix _run to resolve .cmd wrappers on Windows (npm, vsce, code)
 def _run(cmd: list, timeout: int = 120, cwd: str = None, env: dict = None) -> subprocess.CompletedProcess:
     """Run a subprocess with sensible defaults."""
     merged_env = {**os.environ, **(env or {})}
+    resolved_cmd = [str(c) for c in cmd]
+    # On Windows, resolve .cmd/.bat wrappers (npm → npm.cmd, vsce → vsce.cmd)
+    if _is_windows() and resolved_cmd:
+        which = shutil.which(resolved_cmd[0])
+        if which:
+            resolved_cmd[0] = which
     return subprocess.run(
-        [str(c) for c in cmd],
+        resolved_cmd,
         capture_output=True, text=True, timeout=timeout,
         cwd=cwd, env=merged_env,
     )
